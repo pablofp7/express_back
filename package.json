@@ -1,0 +1,55 @@
+{
+  "name": "express_back",
+  "version": "1.0.0",
+  "description": "Back-End usando Express con Node.js",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:mysql": "node --watch server_launchers/server_sql.js",
+    "start:local": "node --watch ./server_launchers/server_local.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pablofp7/node_tutorial.git"
+  },
+  "keywords": [
+    "express",
+    "node",
+    "backend"
+  ],
+  "author": "Pablo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pablofp7/node_tutorial/issues"
+  },
+  "homepage": "https://github.com/pablofp7/node_tutorial#readme",
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "expr-eval": "^2.0.2",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "ms": "^2.1.3",
+    "mysql2": "^3.11.4",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.0.3",
+    "yamljs": "^0.3.0",
+    "yargs": "^17.7.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@stylistic/eslint-plugin": "^2.12.1",
+    "eslint": "^9.16.0",
+    "eslint-plugin-lodash": "^8.0.0",
+    "globals": "^15.13.0",
+    "prettier": "^3.4.2"
+  }
+}

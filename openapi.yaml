@@ -1,0 +1,448 @@
+openapi: 3.1.1
+
+info:
+  title: Movie and User Management API
+  description: API for managing movies and users, including authentication and CRUD operations.
+  version: 1.0.0
+servers:
+  - url: http://localhost:33333
+    description: Local development server
+tags:
+  - name: Users
+    description: User management API
+  - name: Movies
+    description: Movie management API
+
+paths:
+  /user/login:
+    post:
+      summary: Log in a user
+      tags:
+        - Users
+      description: |
+        Authenticates the user and provides both an access token and a refresh token.
+        The access token is returned in the Authorization header as Bearer <access_token>.
+        The refresh token is set in a Set-Cookie header.
+      requestBody:
+        description: User credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: User logged in successfully
+          headers:
+            Authorization:
+              description: "Contains the access token. Example: 'Bearer <access_token>'."
+              schema:
+                type: string
+            Set-Cookie:
+              description: 'Contains the refresh token. Example: refreshToken=<refresh_token>; HttpOnly; SameSite=Strict;.'
+              schema:
+                type: string
+        '401':
+          description: Invalid credentials
+
+  /user/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Users
+      description: Registers a new user with the provided credentials.
+      requestBody:
+        description: User registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully.
+        '400':
+          description: Validation failed for the provided data
+
+  /user/refresh-token:
+    get:
+      summary: Refresh access token
+      tags:
+        - Users
+      description: |
+        Refreshes the access token using the refresh token. The refresh token must be sent as a cookie (`refreshToken`),
+        and the new access token will be returned in the `Authorization` header.
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: Access token refreshed successfully
+          headers:
+            Authorization:
+              description: 'Contains the new access token. Example: `Bearer <access_token>`.'
+              schema:
+                type: string
+            Set-Cookie:
+              description: Contains the new refresh token if renewed.
+              schema:
+                type: string
+        401:
+          description: Invalid or missing refresh token
+
+    /user/{id}:
+      delete:
+      summary: Delete a user
+      tags:
+        - Users
+      description: Deletes a user by ID. Requires an admin role in the access token.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the user to delete
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully.
+                  userId:
+                    type: string
+                    format: uuid
+                    example: '550e8400-e29b-41d4-a716-446655440000'
+        '401':
+          description: Unauthorized, invalid, or missing access token
+        '403':
+          description: Access denied. Requires admin role.
+        '404':
+          description: User not found
+
+  /user/{id}:
+    patch:
+      summary: Update a user
+      tags:
+        - Users
+      description: Updates user data. Requires an admin role in the access token.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the user to update
+      requestBody:
+        description: User data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully.
+                  id:
+                    type: string
+                    format: uuid
+                    example: '550e8400-e29b-41d4-a716-446655440000'
+        '400':
+          description: Validation failed for the provided data
+        '401':
+          description: Unauthorized, invalid, or missing access token
+        '403':
+          description: Access denied. Requires admin role.
+        '404':
+          description: User not found
+
+  /user/{username}:
+    get:
+      summary: Get user by username
+      tags:
+        - Users
+      description: Retrieves user information by username.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The username of the user
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+  /user/logout:
+    post:
+      summary: Log out a user
+      tags:
+        - Users
+      description: |
+        Logs out the user. Requires an access token in the `Authorization` header.
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User logged out successfully
+        401:
+          description: Unauthorized, invalid or missing access token
+
+  /movies:
+    get:
+      summary: Get all movies
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      description: Retrieves all movies. Requires an access token in the `Authorization` header.
+      responses:
+        200:
+          description: A list of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+    post:
+      summary: Create a new movie
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      description: |
+        Creates a new movie. Requires an access token with the `admin` role in its payload.
+      requestBody:
+        description: Movie to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        '201':
+          description: Movie created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          description: Validation failed for the movie data
+        '401':
+          description: Unauthorized, missing, or invalid access token
+        '403':
+          description: Forbidden. Requires admin role.
+
+  /movies/{id}:
+    get:
+      summary: Get a movie by ID
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      description: |
+        Retrieves a movie by its ID. Requires an access token in the `Authorization` header.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the movie to retrieve.
+      responses:
+        '200':
+          description: A single movie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '401':
+          description: Unauthorized, missing, or invalid access token
+        '404':
+          description: Movie not found
+
+    delete:
+      summary: Delete a movie
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      description: |
+        Deletes a movie by its ID. Requires an access token with the `admin` role in its payload.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the movie to delete.
+      responses:
+        '200':
+          description: Movie deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Movie deleted
+        '401':
+          description: Unauthorized, missing, or invalid access token
+        '403':
+          description: Forbidden. Requires admin role.
+        '404':
+          description: Movie not found
+
+    patch:
+      summary: Update a movie
+      tags:
+        - Movies
+      security:
+        - bearerAuth: []
+      description: |
+        Updates an existing movie by ID. Requires an access token with the `admin` role in its payload.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the movie to update.
+      requestBody:
+        description: Movie data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Movie'
+      responses:
+        '200':
+          description: Movie updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          description: Validation failed for the movie data
+        '401':
+          description: Unauthorized, missing, or invalid access token
+        '403':
+          description: Forbidden. Requires admin role.
+        '404':
+          description: Movie not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Use an access token obtained during login. Add it to the `Authorization` header as `Bearer {token}`.
+        This token must be included in all requests requiring authentication.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: >
+        Use a refresh token sent in the `refreshToken` cookie to request a new access token. 
+        The cookie must be marked as `HttpOnly` and `SameSite=Strict` for security purposes.
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 'c9d9c234-e4c1-4d5a-9abc-3b15f2a33045'
+        title:
+          type: string
+          example: 'The Infinite Journey'
+        director:
+          type: string
+          example: 'Alexandra Smith'
+        releaseDate:
+          type: string
+          format: date
+          example: '2023-05-15'
+        genre:
+          type: string
+          example: 'Adventure, Fantasy'
+        description:
+          type: string
+          example: 'A group of explorers embarks on a daring journey to uncover the mysteries of a hidden realm beyond time.'
+      required:
+        - title
+        - director
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        username:
+          type: string
+          example: johndoe
+          description: 'The username of the user. Must be at least 3 characters long.'
+          minLength: 3
+        password:
+          type: string
+          format: password
+          description: 'The password of the user. Must be at least 6 characters long.'
+          minLength: 6
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+          description: 'The email of the user. Optional.'
+        age:
+          type: integer
+          format: int32
+          example: 25
+          description: 'The age of the user. Optional and must be a positive integer.'
+      required:
+        - username
+        - password
