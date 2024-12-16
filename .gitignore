@@ -12,7 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Entorno de producción local
-# .env
+.env
 # .env.*.local
 
 # Cache de npm y yarn
