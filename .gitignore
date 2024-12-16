@@ -1,0 +1,71 @@
+# Archivos y carpetas generales que no se deben versionar
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Entorno de producción local
+# .env
+# .env.*.local
+
+# Cache de npm y yarn
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+
+# Dependencias de Node.js (tanto para backend como para frontend)
+**/node_modules/
+
+# Compilaciones y builds
+**/build/
+**/dist/
+**/.parcel-cache/
+**/.next/
+**/out/
+
+# Archivos generados automáticamente
+**/.turbo/
+**/.cache/
+**/.nuxt/
+**/.expo/
+**/.eslintcache
+
+# Archivos de configuración específicos de IDE y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de tipo lock, en función del gestor de paquetes que utilices
+# Solo debes mantener uno de estos, dependiendo de si usas npm, yarn, o pnpm
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Archivos relacionados con testing
+coverage/
+**/jest-cache/
+**/jest-coverage/
+
+# Archivos de Firebase si usas Firebase para hosting
+.firebase/
+
+# Archivos de despliegue de Docker (si usas contenedores)
+docker-compose.override.yml
+
+# Archivos de builds y configuraciones para deployment que no deben ser versionados
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Backups y archivos temporales
+*.bak
+*.tmp
