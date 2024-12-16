@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Este proyecto es un backend desarrollado con **Express.js** que sigue la arquitectura **Modelo-Vista-Controlador (MVC)**. Ofrece funcionalidades para la gestión de usuarios y películas, incluyendo autenticación, autorización y operaciones CRUD.
+Este proyecto es un backend desarrollado con **Express.js** que sigue una arquitectura basada en **Controladores y Modelos** (MC). No incluye una capa de vista, ya que no se realiza **Server-Side Rendering (SSR)**; en su lugar, la responsabilidad de la interfaz de usuario recae en el frontend. Está diseñado y adaptado específicamente para **APIs REST**.
 
 ## Funcionalidades Principales
 
