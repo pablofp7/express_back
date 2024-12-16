@@ -85,19 +85,33 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue la arquite
 
 #### Usuarios
 
-- `POST /user/login`: Inicia sesión y devuelve tokens de acceso y refresco.
-- `POST /user/register`: Registra un nuevo usuario.
-- `GET /user/refresh-token`: Renueva el token de acceso.
-- `DELETE /user/{id}`: Elimina un usuario (requiere rol admin).
-- `PATCH /user/{id}`: Actualiza información de un usuario (requiere rol admin).
+- **POST `/user/login`**:  
+  Inicia sesión y devuelve tokens de acceso y refresco.
+- **POST `/user/register`**:  
+  Registra un nuevo usuario.
+- **GET `/user/refresh-token`**:  
+  Renueva el token de acceso usando el refresh token.
+- **POST `/user/logout`**:  
+  Cierra la sesión de un usuario autenticado, invalidando sus tokens.
+- **DELETE `/user/{id}`**:  
+  Elimina un usuario (requiere rol admin).
+- **PATCH `/user/{id}`**:  
+  Actualiza información de un usuario (requiere rol admin).
+- **GET `/user/:username`**:  
+  Devuelve la información de un usuario dado su nombre de usuario.
 
 #### Películas
 
-- `GET /movies`: Recupera todas las películas.
-- `POST /movies`: Crea una nueva película (requiere rol admin).
-- `GET /movies/{id}`: Recupera información de una película por ID.
-- `PATCH /movies/{id}`: Actualiza una película (requiere rol admin).
-- `DELETE /movies/{id}`: Elimina una película (requiere rol admin).
+- **GET `/movies`**:
+  Recupera todas las películas.
+- **POST `/movies`**:
+  Crea una nueva película (requiere rol admin).
+- **GET `/movies/{id}`**:
+  Recupera información de una película por ID.
+- **PATCH `/movies/{id}`**:
+  Actualiza una película (requiere rol admin).
+- **DELETE `/movies/{id}`**:
+  Elimina una película (requiere rol admin).
 
 ### Autenticación
 
@@ -106,17 +120,62 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue la arquite
 
 ## Testing
 
-Este proyecto incluye un plan de pruebas detallado:
+Este proyecto incluye un plan de pruebas detallado dividido en diferentes niveles:
 
-- **Pruebas unitarias:** Para middlewares, controladores y utilidades.
-- **Pruebas de integración:** Verificación de rutas y conexión con bases de datos.
-- **Pruebas funcionales:** Validación del comportamiento esperado de los endpoints principales.
+- **Pruebas unitarias**:  
+  Validan el correcto funcionamiento de componentes individuales, como middlewares, controladores y utilidades.
 
-Ejecuta las pruebas con:
+- **Pruebas de integración**:  
+  Verifican la interacción entre rutas, middlewares y bases de datos.
+
+- **Pruebas funcionales**:  
+  Validan el comportamiento completo de los endpoints principales.
+
+- **Pruebas E2E (End-to-End)**:  
+  Simulan flujos completos desde el punto de vista del cliente.
+
+### **Ejecución de Pruebas**
+
+Puedes ejecutar todas las pruebas o seleccionar un tipo específico usando los siguientes comandos:
+
+- **Todas las pruebas**:
+
+  ```bash
+  npm test
+  ```
+
+- **Pruebas unitarias**:
+
+  ```bash
+  npm run test:unit
+  ```
+
+- **Pruebas de integración**:
+
+  ```bash
+  npm run test:integration
+  ```
+
+- **Pruebas funcionales**:
+
+  ```bash
+  npm run test:functional
+  ```
+
+- **Pruebas E2E**:
+  ```bash
+  npm run test:e2e
+  ```
+
+### **Cobertura de Pruebas**
+
+Para medir la cobertura de las pruebas, utiliza el siguiente comando:
 
 ```bash
-npm test
+npx nyc npm test
 ```
+
+Esto generará un informe de cobertura que indica qué partes del código están probadas y cuáles no.
 
 <!-- ## Contribución
 
