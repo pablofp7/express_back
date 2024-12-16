@@ -108,7 +108,7 @@ Ejecuta las pruebas con:
 npm test
 ```
 
-## Contribución
+<!-- ## Contribución
 
 1. Realiza un fork de este repositorio.
 2. Crea una nueva rama para tus cambios:
@@ -119,4 +119,4 @@ npm test
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más información.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más información. -->
