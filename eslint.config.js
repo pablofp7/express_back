@@ -1,5 +1,5 @@
 import stylistic from '@stylistic/eslint-plugin'
-import validErrorCodesPlugin from './rules/validErrorCodes.js' // Path to your custom rule file
+import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js' // Path to your custom rule file
 
 export default [
   {
