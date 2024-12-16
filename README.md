@@ -26,7 +26,7 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue la arquite
 
 - **Node.js**
 - **Express.js**
-- **MySQL** y **MongoDB** (soportado por una capa de abstracción de bases de datos `dbConnection.js`).
+- **MySQL**, **SQLite** y **MongoDB** (soportado por una capa de abstracción de bases de datos `dbConnection.js`).
 - **JWT (JSON Web Tokens)** para autenticación y autorización.
 - **Middleware personalizados**:
   - `authMiddleware.js`: Verifica tokens de acceso y permisos.
@@ -63,13 +63,21 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue la arquite
    npm run start:mysql
    ```
 
-   Para usar la base de datos local:
+   Para usar la base de datos local o mongoDB:
 
    ```bash
    npm run start:local
    ```
 
+   o
+
+   ```bash
+   npm run start:mongo
+   ```
+
    El servidor se ejecutará en el puerto definido en el archivo .env (por defecto, 33333).
+
+   NOTA: Para local y sobre todo mongo no está la funcionalidad completa, se empezó a desarrollar con las tres opciones para aprender inyección de dependecias con varios modelos y demás, pero el avance final solo se llevó a cabo con las BBDD SQL (hay varios tipos).
 
 ## Uso
 

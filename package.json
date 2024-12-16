@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:mysql": "node --watch server_launchers/server_sql.js",
-    "start:local": "node --watch ./server_launchers/server_local.js"
+    "start:local": "node --watch server_launchers/server_local.js",
+    "start:mongo": "node --watch server_launchers/server_mongo.js"
   },
   "repository": {
     "type": "git",
