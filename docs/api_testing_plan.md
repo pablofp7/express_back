@@ -1,4 +1,3 @@
-
 # Plan de Pruebas para la API Movie and User Management
 
 ## Introducción
@@ -67,9 +66,9 @@ Probar la interacción entre módulos y rutas.
 
 Probar el funcionamiento completo de los endpoints.
 
-#### **Endpoints a Probar (Según OpenAPI):**
+#### **Endpoints a Probar (Descrito en OpenAPI):**
 
-##### **Usuarios:**
+### **Usuarios**
 
 - **POST `/user/login`**:
 
@@ -86,16 +85,36 @@ Probar el funcionamiento completo de los endpoints.
   - Solicitar un nuevo access token con un refresh token válido.
   - Manejar errores de tokens inválidos o ausentes.
 
+- **POST `/user/logout`**:
+
+  - Validar que un usuario autenticado pueda cerrar sesión correctamente.
+  - Probar errores con tokens ausentes o inválidos.
+
+- **PATCH `/user/{id}`**:
+
+  - Actualizar un usuario con datos válidos (requiere rol admin).
+  - Validar errores por permisos insuficientes, datos inválidos o usuario inexistente.
+
+- **GET `/user/:username`**:
+
+  - Obtener la información de un usuario por su nombre de usuario.
+  - Probar errores cuando el usuario no existe.
+
 - **DELETE `/user/{id}`**:
 
   - Probar eliminación de usuarios con rol admin.
   - Validar errores como token inválido, permisos insuficientes o usuario no encontrado.
 
-##### **Películas:**
+### **Películas**
 
 - **GET `/movies`**:
 
   - Validar que devuelve una lista de películas con un token válido.
+
+- **GET `/movies/{id}`**:
+
+  - Obtener una película específica por su ID.
+  - Probar errores cuando la película no existe o el ID es inválido.
 
 - **POST `/movies`**:
 
@@ -105,14 +124,14 @@ Probar el funcionamiento completo de los endpoints.
 - **PATCH `/movies/{id}`**:
 
   - Actualizar películas con datos válidos.
-  - Probar errores de permisos o películas inexistentes.
+  - Probar errores de permisos, ID inválido o película inexistente.
 
 - **DELETE `/movies/{id}`**:
 
   - Eliminar películas como admin.
   - Validar errores como película no encontrada o permisos insuficientes.
 
----
+  ***
 
 ### 4. **Pruebas de Extremo a Extremo (E2E)**
 
