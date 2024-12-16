@@ -61,13 +61,15 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue la arquite
 
    ```bash
    npm run start:mysql
-   Para usar la base de datos local:
    ```
+
+   Para usar la base de datos local:
 
    ```bash
    npm run start:local
-   El servidor se ejecutará en el puerto definido en el archivo .env (por defecto, 33333).
    ```
+
+   El servidor se ejecutará en el puerto definido en el archivo .env (por defecto, 33333).
 
 ## Uso
 
