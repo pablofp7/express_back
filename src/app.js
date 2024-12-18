@@ -26,7 +26,6 @@ export const createApp = ({ movieModel, userModel, tokenTransport }) => {
   const movieRouter = createMovieRouter({ movieModel, userModel })
   const userRouter = createUserRouter({ userModel, tokenTransport })
 
-  // Swagger setup
   const swaggerDocument = YAML.load('./openapi.yaml')
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 

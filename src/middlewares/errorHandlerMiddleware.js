@@ -1,38 +1,54 @@
 import { ERROR_TYPES } from '../utils/errors.js'
+import { config } from '../config/config.js'
 
 export const errorHandlerMiddleware = (err, req, res, _next) => {
   const isDevelopment = config.node_env !== 'production'
 
-  logError(err, isDevelopment)
+  // Determinar si el error es reconocido o no
+  const isRecognizedError = Boolean(ERROR_TYPES[err.code])
 
+  // Registrar el error en consola
+  logError(err, isDevelopment, isRecognizedError)
+
+  // Mapear el error para la respuesta
   const response = mapError(err, isDevelopment)
 
+  // Responder al cliente
   return respondWithError(res, response)
 }
 
-// Registra el error
-const logError = (err, isDevelopment) => {
+// Registra el error según su tipo
+const logError = (err, isDevelopment, isRecognizedError) => {
   if (isDevelopment) {
-    console.error('[DEV ERROR]:', err)
+    if (isRecognizedError) {
+      console.warn(`[DEV WARN - RECOGNIZED ERROR]:`, err)
+    }
+    else {
+      console.error(`[DEV ERROR - UNRECOGNIZED ERROR]:`, err)
+    }
   }
   else {
-    console.error(`ERROR:\n\tStatus: ${err.status}\n\tMessage: ${err.message}`)
+    console.error(
+      `ERROR:\n\tStatus: ${err.status}\n\tMessage: ${err.message}\n\tStack: ${
+        err.stack || 'No stack available'
+      }`,
+    )
   }
 }
 
 // Mapea errores según `ERROR_TYPES`
 const mapError = (error, isDevelopment) => {
-  // Si el error coincide con un tipo predefinido
+  // Si el error tiene un tipo predefinido
   const predefinedError = ERROR_TYPES[error.code]
   if (predefinedError) {
     return {
       status: predefinedError.statusCode,
       message: predefinedError.message,
-      ...(isDevelopment && error.debug && { debug: error.debug }),
+      ...(isDevelopment && error.stack && { debug: extractDebugInfo(error) }),
     }
   }
 
-  // Si es un error de base de datos no mapeado
+  // Si es un error relacionado con bases de datos no mapeado
   if (error.dbType) {
     return handleDatabaseError(error, isDevelopment)
   }
@@ -69,5 +85,14 @@ const handleDatabaseError = (error, isDevelopment) => {
     status: 500,
     message: `Unknown database error for type: ${error.dbType}`,
     ...(isDevelopment && { debug: extractDebugInfo(error) }),
+  }
+}
+
+// Extrae información de depuración del error
+const extractDebugInfo = (error) => {
+  return {
+    code: error.code,
+    stack: error.stack,
+    details: error.details || {},
   }
 }

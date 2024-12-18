@@ -1,156 +1,61 @@
+const createError = (category, code, statusCode, message) => ({
+  code: `${category}_${code}`,
+  statusCode,
+  message,
+})
+
 export const ERROR_TYPES = {
-  // Authentication and Token errors
-  AUTH_INVALID_TOKEN: {
-    code: 'AUTH_INVALID_TOKEN',
-    statusCode: 401,
-    message: 'Invalid or malformed token.',
-  },
-  AUTH_EXPIRED_TOKEN: {
-    code: 'AUTH_EXPIRED_TOKEN',
-    statusCode: 401,
-    message: 'The token has expired.',
-  },
-  AUTH_NO_TOKEN: {
-    code: 'AUTH_NO_TOKEN',
-    statusCode: 401,
-    message: 'No token provided.',
-  },
-  AUTH_ACCESS_DENIED: {
-    code: 'AUTH_ACCESS_DENIED',
-    statusCode: 403,
-    message: 'Access denied.',
-  },
-  AUTH_NO_USER_MODEL: {
-    code: 'AUTH_NO_USER_MODEL',
-    statusCode: 500,
-    message: 'UserModel instance is required for authentication.',
-  },
-  AUTH_ADMIN_ONLY: {
-    code: 'AUTH_ADMIN_ONLY',
-    statusCode: 403,
-    message: 'Access restricted to administrators only.',
-  },
-  AUTH_REFRESH_TOKEN_EXPIRED: {
-    code: 'AUTH_REFRESH_TOKEN_EXPIRED',
-    statusCode: 401,
-    message: 'The refresh token has expired.',
-  },
-  AUTH_INVALID_REFRESH_TOKEN: {
-    code: 'AUTH_INVALID_REFRESH_TOKEN',
-    statusCode: 401,
-    message: 'Invalid or expired refresh token.',
+  auth: {
+    INVALID_TOKEN: createError('AUTH', 'INVALID_TOKEN', 401, 'Invalid or malformed token.'),
+    EXPIRED_TOKEN: createError('AUTH', 'EXPIRED_TOKEN', 401, 'The token has expired.'),
+    NO_TOKEN: createError('AUTH', 'NO_TOKEN', 401, 'No token provided.'),
+    ACCESS_DENIED: createError('AUTH', 'ACCESS_DENIED', 403, 'Access denied.'),
+    ADMIN_ONLY: createError('AUTH', 'ADMIN_ONLY', 403, 'Access restricted to administrators only.'),
+    INVALID_REFRESH_TOKEN: createError('AUTH', 'INVALID_REFRESH_TOKEN', 401, 'Invalid or expired refresh token.'),
+    NO_REFRESH_TOKEN: createError('AUTH', 'NO_REFRESH_TOKEN', 401, 'No refresh token provided.'),
+    TOKEN_REVOKED: createError('AUTH', 'TOKEN_REVOKED', 401, 'Access token has been revoked.'), // Nuevo
   },
 
-  // User-related errors
-  USER_INVALID_CREDENTIALS: {
-    code: 'USER_INVALID_CREDENTIALS',
-    statusCode: 401,
-    message: 'Invalid username or password.',
-  },
-  USER_VALIDATION_ERROR: {
-    code: 'USER_VALIDATION_ERROR',
-    statusCode: 400,
-    message: 'User validation failed.',
-  },
-  USER_DUPLICATE: {
-    code: 'USER_DUPLICATE',
-    statusCode: 409,
-    message: 'Duplicate user entry.',
-  },
-  USER_REFRESH_TOKEN_ERROR: {
-    code: 'USER_REFRESH_TOKEN_ERROR',
-    statusCode: 500,
-    message: 'Error during token refresh.',
-  },
-  USER_REGISTRATION_ERROR: {
-    code: 'USER_REGISTRATION_ERROR',
-    statusCode: 400,
-    message: 'User registration failed.',
-  },
-  USER_MISSING_ID: {
-    code: 'USER_MISSING_ID',
-    statusCode: 400,
-    message: 'User ID is required.',
-  },
-  USER_UPDATE_ERROR: {
-    code: 'USER_UPDATE_ERROR',
-    statusCode: 400,
-    message: 'Failed to update user data.',
-  },
-  USER_MISSING_USERNAME: {
-    code: 'USER_MISSING_USERNAME',
-    statusCode: 400,
-    message: 'Username is required.',
-  },
-  USER_NO_REFRESH_TOKEN: {
-    code: 'USER_NO_REFRESH_TOKEN',
-    statusCode: 401,
-    message: 'No refresh token provided.',
+  user: {
+    INVALID_CREDENTIALS: createError('USER', 'INVALID_CREDENTIALS', 401, 'Invalid username or password.'),
+    VALIDATION_ERROR: createError('USER', 'VALIDATION_ERROR', 400, 'User validation failed.'),
+    DUPLICATE: createError('USER', 'DUPLICATE', 409, 'Duplicate user entry.'),
+    REGISTRATION_ERROR: createError('USER', 'REGISTRATION_ERROR', 400, 'User registration failed.'),
+    MISSING_ID: createError('USER', 'MISSING_ID', 400, 'User ID is required.'),
+    UPDATE_ERROR: createError('USER', 'UPDATE_ERROR', 400, 'Failed to update user data.'),
+    // INACTIVE_ACCOUNT: createError('USER', 'INACTIVE_ACCOUNT', 403, 'User account is inactive.'), // Ejemplo extra
   },
 
-  // Database errors
-  DB_DUPLICATE_ENTRY: {
-    code: 'DB_DUPLICATE_ENTRY',
-    statusCode: 409,
-    message: 'Duplicate database entry.',
-  },
-  DB_VALIDATION_ERROR: {
-    code: 'DB_VALIDATION_ERROR',
-    statusCode: 400,
-    message: 'Database validation failed.',
-  },
-  DB_CONNECTION_ERROR: {
-    code: 'DB_CONNECTION_ERROR',
-    statusCode: 500,
-    message: 'Database connection error.',
+  // Errores relacionados con bases de datos
+  database: {
+    DUPLICATE_ENTRY: createError('DB', 'DUPLICATE_ENTRY', 409, 'Duplicate database entry.'),
+    VALIDATION_ERROR: createError('DB', 'VALIDATION_ERROR', 400, 'Database validation failed.'),
+    CONNECTION_ERROR: createError('DB', 'CONNECTION_ERROR', 500, 'Database connection error.'),
+    MISSING_DB_CONFIG: createError('DB', 'MISSING_DB_CONFIG', 500, 'Database configuration is missing.'),
+    INVALID_DB_TYPE: createError('DB', 'INVALID_DB_TYPE', 400, 'Invalid database type provided.'),
+    QUERY_TIMEOUT: createError('DB', 'QUERY_TIMEOUT', 504, 'The database query took too long to execute.'),
+    TRANSACTION_ERROR: createError('DB', 'TRANSACTION_ERROR', 500, 'Database transaction failed.'),
+    UNAUTHORIZED_ACCESS: createError('DB', 'UNAUTHORIZED_ACCESS', 401, 'Unauthorized access to the database.'),
+    SCHEMA_MISMATCH: createError('DB', 'SCHEMA_MISMATCH', 500, 'Database schema does not match expected structure.'),
+    POOL_EXHAUSTED: createError('DB', 'POOL_EXHAUSTED', 503, 'No available connections in the database pool.'),
+    CONNECTION_CLOSED: createError('DB', 'CONNECTION_CLOSED', 500, 'The database connection is closed.'),
   },
 
-  // Movie-related errors
-  MOVIE_NOT_FOUND: {
-    code: 'MOVIE_NOT_FOUND',
-    statusCode: 404,
-    message: 'Movie not found.',
-  },
-  MOVIE_FETCH_ERROR: {
-    code: 'MOVIE_FETCH_ERROR',
-    statusCode: 500,
-    message: 'Error fetching movie data.',
-  },
-  MOVIE_CREATE_ERROR: {
-    code: 'MOVIE_CREATE_ERROR',
-    statusCode: 500,
-    message: 'Error creating movie.',
-  },
-  MOVIE_VALIDATION_ERROR: {
-    code: 'MOVIE_VALIDATION_ERROR',
-    statusCode: 400,
-    message: 'Movie validation failed.',
-  },
-  INVALID_MOVIE: {
-    code: 'INVALID_MOVIE',
-    statusCode: 400,
-    message: 'Invalid movie input.',
+  // Errores relacionados con películas
+  movie: {
+    FETCH_ERROR: createError('MOVIE', 'FETCH_ERROR', 500, 'Error fetching movie data.'),
+    CREATE_ERROR: createError('MOVIE', 'CREATE_ERROR', 500, 'Error creating movie.'),
+    VALIDATION_ERROR: createError('MOVIE', 'VALIDATION_ERROR', 400, 'Movie validation failed.'),
+    NOT_FOUND: createError('MOVIE', 'NOT_FOUND', 404, 'Movie not found.'),
+    DELETE_ERROR: createError('MOVIE', 'DELETE_ERROR', 500, 'Error deleting movie.'),
+    UPDATE_ERROR: createError('MOVIE', 'UPDATE_ERROR', 500, 'Error updating movie.'),
   },
 
-  // General errors
-  INVALID_INPUT: {
-    code: 'INVALID_INPUT',
-    statusCode: 400,
-    message: 'Invalid input provided.',
-  },
-  INVALID_UUID: {
-    code: 'INVALID_UUID',
-    statusCode: 400,
-    message: 'Invalid UUID format.',
-  },
-  GENERAL_NOT_FOUND: {
-    code: 'GENERAL_NOT_FOUND',
-    statusCode: 404,
-    message: 'The requested resource was not found.',
-  },
-  SERVER_ERROR: {
-    code: 'SERVER_ERROR',
-    statusCode: 500,
-    message: 'An unexpected server error occurred.',
+  // Errores generales
+  general: {
+    INVALID_INPUT: createError('GENERAL', 'INVALID_INPUT', 400, 'Invalid input provided.'),
+    INVALID_UUID: createError('GENERAL', 'INVALID_UUID', 400, 'Invalid UUID format.'),
+    NOT_FOUND: createError('GENERAL', 'NOT_FOUND', 404, 'The requested resource was not found.'),
+    SERVER_ERROR: createError('GENERAL', 'SERVER_ERROR', 500, 'An unexpected server error occurred.'),
   },
 }

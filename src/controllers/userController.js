@@ -339,7 +339,6 @@ export class UserController {
     console.log(`User found for username ${username}:`, user)
 
     // Devuelve todos los campos del usuario, excepto la contraseña
-    // eslint-disable-next-line no-unused-vars
     const { _password, ...safeUser } = user
     res.status(200).json(safeUser)
   })

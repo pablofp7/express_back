@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise'
 import { createClient } from '@libsql/client'
 import { CustomError } from '../utils/customError.js'
+import { ERROR_TYPES } from '../utils/errors.js'
 import { getDatabaseConfigs } from './dbConfig.js'
 
 export class DbConn {
@@ -14,9 +15,7 @@ export class DbConn {
     const dbType = userDbType || movieDbType
 
     if (!dbType) {
-      throw new CustomError('DB_CONNECTION_ERROR', {
-        message: 'No database type specified during initialization',
-      })
+      throw new CustomError(ERROR_TYPES.database.MISSING_DB_CONFIG.code)
     }
 
     this.type = dbType
@@ -36,17 +35,11 @@ export class DbConn {
           this.client = await this.createMySQLConnectionPool({ dbParams })
           break
         default:
-          throw new CustomError('DB_CONNECTION_ERROR', {
-            message: `Invalid database type: ${dbType}`,
-          })
+          throw new CustomError(ERROR_TYPES.database.INVALID_DB_TYPE.code)
       }
     }
-    catch (error) {
-      throw new CustomError('DB_CONNECTION_ERROR', {
-        message: 'Error initializing database connection',
-        dbType: this.type,
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
     }
   }
 
@@ -63,11 +56,8 @@ export class DbConn {
         queueLimit: 0,
       })
     }
-    catch (error) {
-      throw new CustomError('DB_CONNECTION_ERROR', {
-        message: 'Error creating MySQL connection pool',
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
     }
   }
 
@@ -78,20 +68,12 @@ export class DbConn {
         authToken: dbParams.token,
       })
     }
-    catch (error) {
-      throw new CustomError('DB_CONNECTION_ERROR', {
-        message: 'Error creating Turso client',
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
     }
   }
 
-  async query({
-    query,
-    queryParams,
-    resource = 'Unknown',
-    operation = 'Unknown',
-  }) {
+  async query({ query, queryParams }) {
     try {
       if (this.type === 'turso') {
         const results = await this.client.execute({
@@ -108,16 +90,8 @@ export class DbConn {
         return results
       }
     }
-    catch (error) {
-      throw new CustomError('DB_VALIDATION_ERROR', {
-        message: 'Error executing query',
-        dbType: this.type,
-        resource,
-        operation,
-        query,
-        queryParams,
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.QUERY_ERROR.code)
     }
   }
 
@@ -131,13 +105,8 @@ export class DbConn {
         await this.transactionConnection.beginTransaction()
       }
     }
-    catch (error) {
-      throw new CustomError('DB_VALIDATION_ERROR', {
-        message: 'Error starting transaction',
-        dbType: this.type,
-        operation: 'BEGIN_TRANSACTION',
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
     }
   }
 
@@ -151,13 +120,8 @@ export class DbConn {
         await this.transactionConnection.release()
       }
     }
-    catch (error) {
-      throw new CustomError('DB_VALIDATION_ERROR', {
-        message: 'Error committing transaction',
-        dbType: this.type,
-        operation: 'COMMIT_TRANSACTION',
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
     }
     finally {
       this.transactionConnection = null
@@ -179,13 +143,8 @@ export class DbConn {
         await this.transactionConnection.release()
       }
     }
-    catch (error) {
-      throw new CustomError('DB_VALIDATION_ERROR', {
-        message: 'Error rolling back transaction',
-        dbType: this.type,
-        operation: 'ROLLBACK_TRANSACTION',
-        originalError: error.message,
-      })
+    catch (_error) {
+      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
     }
     finally {
       this.transactionConnection = null

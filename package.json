@@ -8,11 +8,11 @@
     "start:mysql": "node --watch server_launchers/server_sql.js",
     "start:local": "node --watch server_launchers/server_local.js",
     "start:mongo": "node --watch server_launchers/server_mongo.js",
-    "test": "mocha tests --recursive",
-    "test:unit": "mocha tests/unit --recursive",
-    "test:integration": "mocha tests/integration --recursive",
-    "test:functional": "mocha tests/functional --recursive",
-    "test:e2e": "mocha tests/e2e --recursive"
+    "test": "mocha tests --recursive --reporter list",
+    "test:unit": "mocha tests/unit --recursive --reporter list",
+    "test:integration": "mocha tests/integration --recursive --reporter list",
+    "test:functional": "mocha tests/functional --recursive --reporter list",
+    "test:e2e": "mocha tests/e2e --recursive --reporter list"
   },
   "repository": {
     "type": "git",
@@ -52,9 +52,14 @@
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@stylistic/eslint-plugin": "^2.12.1",
+    "chai": "^5.1.2",
     "eslint": "^9.16.0",
     "eslint-plugin-lodash": "^8.0.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^15.13.0",
-    "prettier": "^3.4.2"
+    "mocha": "^11.0.1",
+    "nyc": "^17.1.0",
+    "prettier": "^3.4.2",
+    "sinon": "^19.0.2"
   }
 }

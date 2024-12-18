@@ -1,11 +1,13 @@
 import stylistic from '@stylistic/eslint-plugin'
 import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js' // Path to your custom rule file
+import unusedImports from 'eslint-plugin-unused-imports' // Importa el plugin correctamente
 
 export default [
   {
     plugins: {
       '@stylistic': stylistic,
       'valid-error-codes': validErrorCodesPlugin, // Register the custom ESLint plugin
+      'unused-imports': unusedImports, // Registra el plugin correctamente
     },
     rules: {
       // Include all Stylistic JS recommended rules
@@ -20,11 +22,19 @@ export default [
 
       // Error prevention
       'eqeqeq': ['error', 'always'], // Enforce strict equality
-      'no-unused-vars': ['error', { // Avoid unused variables
+
+      // Use eslint-plugin-unused-imports to handle unused variables and imports
+      'no-unused-vars': 'off', // Disable the default rule
+      'unused-imports/no-unused-vars': ['error', {
         vars: 'all',
+        varsIgnorePattern: '^_', // Ignorar variables que comiencen con "_"
         args: 'after-used',
-        argsIgnorePattern: '^_',
+        argsIgnorePattern: '^_', // Ignorar argumentos que comiencen con "_"
+        caughtErrors: 'all', // Ignorar errores en bloques catch
+        caughtErrorsIgnorePattern: '^_', // Ignorar errores en catch que comiencen con "_"
       }],
+
+      // Other general best practices
       'no-duplicate-imports': 'error', // Disallow duplicate imports
       'no-shadow': 'error', // Prevent shadowing of variables in the outer scope
 

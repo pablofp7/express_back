@@ -43,22 +43,12 @@ const validateRefreshLogic = async (req, res, next, userModel) => {
     next() // Continúa al siguiente middleware o controlador
   }
   catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      throw new CustomError('AUTH_REFRESH_TOKEN_EXPIRED', {
-        message: 'Refresh token expired',
-        resource: 'Token',
-        operation: 'JWT_VERIFY',
-        originalError: err.message,
-      })
-    }
-    else {
-      console.error('Error con el refresh token:', err)
-      throw new CustomError('AUTH_INVALID_REFRESH_TOKEN', {
-        message: 'Invalid or expired refresh token',
-        resource: 'Token',
-        operation: 'JWT_VERIFY',
-        originalError: err.message,
-      })
-    }
+    console.error('Error con el refresh token:', err)
+    throw new CustomError('AUTH_INVALID_REFRESH_TOKEN', {
+      message: 'Invalid or expired refresh token',
+      resource: 'Token',
+      operation: 'JWT_VERIFY',
+      originalError: err.message,
+    })
   }
 }

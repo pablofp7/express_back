@@ -16,13 +16,8 @@ export class MovieController {
       console.log('Devolviendo las películas: ')
       res.json(movies)
     }
-    catch (err) {
-      throw new CustomError('MOVIE_FETCH_ERROR', {
-        message: 'Error fetching movies',
-        resource: 'Movie',
-        operation: 'GET_ALL',
-        originalError: err.message,
-      })
+    catch (_err) {
+      throw new CustomError('MOVIE_FETCH_ERROR')
     }
   })
 
@@ -32,12 +27,7 @@ export class MovieController {
     try {
       const movie = await this.movieModel.getById({ id })
       if (movie) return res.json(movie)
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        message: `Movie with id ${id} not found`,
-        resource: 'Movie',
-        operation: 'GET_BY_ID',
-        resourceValue: id,
-      })
+      throw new CustomError('GENERAL_NOT_FOUND')
     }
     catch (err) {
       if (err.code === 'GENERAL_NOT_FOUND') {
@@ -51,12 +41,7 @@ export class MovieController {
     const result = await validateMovie(req.body)
 
     if (!result.success) {
-      throw new CustomError('MOVIE_VALIDATION_ERROR', {
-        message: 'Movie validation failed',
-        resource: 'Movie',
-        operation: 'CREATE',
-        validationErrors: result.error.message,
-      })
+      throw new CustomError('MOVIE_VALIDATION_ERROR')
     }
 
     try {
@@ -64,13 +49,8 @@ export class MovieController {
       console.log('Creación de una nueva película: ', newMovie)
       res.status(201).json(newMovie)
     }
-    catch (err) {
-      throw new CustomError('MOVIE_CREATE_ERROR', {
-        message: 'Error creating movie',
-        resource: 'Movie',
-        operation: 'CREATE',
-        originalError: err.message,
-      })
+    catch (_err) {
+      throw new CustomError('MOVIE_CREATE_ERROR')
     }
   })
 
