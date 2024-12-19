@@ -1,8 +1,3 @@
-// Determina el tipo de error a usar basado en el código proporcionado (code):
-// - Si 'code' está definido y existe en ERROR_TYPES, se utiliza el error correspondiente.
-// - Si 'code' está definido pero no existe en ERROR_TYPES, se usa el error genérico SERVER_ERROR como respaldo.
-// - Si 'code' no está definido, también se asigna el error genérico SERVER_ERROR como valor por defecto.
-// Esto asegura que siempre se asigne un tipo de error válido, evitando fallos inesperados.
 export class CustomError extends Error {
   constructor({
     origError,
