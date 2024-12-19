@@ -6,7 +6,7 @@ export default [
   {
     plugins: {
       '@stylistic': stylistic,
-      'valid-error-codes': validErrorCodesPlugin, // Register the custom ESLint plugin
+      'valid-error-structure': validErrorCodesPlugin, // Register the custom ESLint plugin
       'unused-imports': unusedImports, // Registra el plugin correctamente
     },
     rules: {
@@ -50,7 +50,7 @@ export default [
       'prefer-template': 'error', // Enforce using template literals
 
       // Custom error code validation rule
-      'valid-error-codes/valid-error-codes': 'error', // Enforce valid error codes
+      'valid-error-structure/valid-error-structure': 'error', // Enforce valid error codes
     },
   },
 ]

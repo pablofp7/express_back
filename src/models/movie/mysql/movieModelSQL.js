@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DbConn } from '../../../database/dbConnection.js'
-import { checkUUID } from '../../../utils/uuidValidation.js'
 import { CustomError } from '../../../utils/customError.js'
 
 export class MovieModel {
@@ -111,11 +110,9 @@ export class MovieModel {
     })
 
     if (!movies || movies.length === 0) {
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        resource: 'Movie',
-        resourceValue: id,
-        operation: 'GET_BY_ID',
-        message: 'Movie not found.',
+      throw new CustomError({
+        origError: new Error('Movie not found'),
+        errorType: ERROR_TYPES.movie.NOT_FOUND,
       })
     }
 
@@ -209,11 +206,9 @@ export class MovieModel {
       })
 
       if (result.affectedRows === 0) {
-        throw new CustomError('GENERAL_NOT_FOUND', {
-          resource: 'Movie',
-          resourceValue: id,
-          operation: 'DELETE',
-          message: 'Movie not found.',
+        throw new CustomError({
+          origError: new Error('Movie not found'),
+          errorType: ERROR_TYPES.movie.NOT_FOUND,
         })
       }
 
@@ -246,12 +241,11 @@ export class MovieModel {
       ([key, value]) => allowedFields.includes(key) && value !== undefined,
     )
 
+    // OJO!! ESTO ES MAS DEL CONTROLADOR
     if (fields.length === 0 && !genre) {
-      throw new CustomError('INVALID_INPUT', {
-        resource: 'Movie',
-        operation: 'UPDATE',
-        resourceValue: id,
-        message: 'No valid fields or genres provided to update.',
+      throw new CustomError({
+        origError: new Error('No valid fields or genres provided to update'),
+        errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
       })
     }
 
@@ -278,11 +272,9 @@ export class MovieModel {
         })
 
         if (result.affectedRows === 0) {
-          throw new CustomError('GENERAL_NOT_FOUND', {
-            resource: 'Movie',
-            operation: 'UPDATE_FIELDS',
-            resourceValue: id,
-            message: 'Movie not found.',
+          throw new CustomError({
+            origError: new Error('Movie not found'),
+            errorType: ERROR_TYPES.movie.NOT_FOUND,
           })
         }
       }
@@ -380,11 +372,9 @@ export class MovieModel {
       })
 
       if (!rows || rows.length === 0 || !rows[0]?.id) {
-        throw new CustomError('GENERAL_NOT_FOUND', {
-          resource: 'Genre',
-          resourceValue: trimmedGenre,
-          operation: 'FETCH_ID',
-          message: `No ID found for genre: "${trimmedGenre}"`,
+        throw new CustomError({
+          origError: new Error(`No ID found for genre: "${trimmedGenre}"`),
+          errorType: ERROR_TYPES.general.NOT_FOUND,
         })
       }
 

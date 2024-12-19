@@ -67,6 +67,7 @@ export const ERROR_TYPES = {
     CONNECTION_ERROR: createError('DB', 'CONNECTION_ERROR', 500, 'Database connection error.'),
     MISSING_DB_CONFIG: createError('DB', 'MISSING_DB_CONFIG', 500, 'Database configuration is missing.'),
     INVALID_DB_TYPE: createError('DB', 'INVALID_DB_TYPE', 400, 'Invalid database type provided.'),
+    QUERY_ERROR: createError('DB', 'QUERY_ERROR', 500, 'Database query error.'),
     QUERY_TIMEOUT: createError('DB', 'QUERY_TIMEOUT', 504, 'The database query took too long to execute.'),
     TRANSACTION_ERROR: createError('DB', 'TRANSACTION_ERROR', 500, 'Database transaction failed.'),
     UNAUTHORIZED_ACCESS: createError('DB', 'UNAUTHORIZED_ACCESS', 401, 'Unauthorized access to the database.'),

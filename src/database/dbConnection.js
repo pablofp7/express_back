@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise'
 import { createClient } from '@libsql/client'
-import { CustomError } from '../utils/customError.js'
-import { ERROR_TYPES } from '../utils/errors.js'
+import { CustomError, ERROR_TYPES } from '../utils/customError.js'
 import { getDatabaseConfigs } from './dbConfig.js'
 
 export class DbConn {
@@ -15,7 +14,10 @@ export class DbConn {
     const dbType = userDbType || movieDbType
 
     if (!dbType) {
-      throw new CustomError(ERROR_TYPES.database.MISSING_DB_CONFIG.code)
+      throw new CustomError({
+        origError: new Error('Database type is missing'),
+        errorType: ERROR_TYPES.database.MISSING_DB_CONFIG,
+      })
     }
 
     this.type = dbType
@@ -35,17 +37,23 @@ export class DbConn {
           this.client = await this.createMySQLConnectionPool({ dbParams })
           break
         default:
-          throw new CustomError(ERROR_TYPES.database.INVALID_DB_TYPE.code)
+          throw new CustomError({
+            origError: new Error(`Invalid database type: ${dbType}`),
+            errorType: ERROR_TYPES.database.INVALID_DB_TYPE,
+          })
       }
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR,
+      })
     }
   }
 
   async createMySQLConnectionPool({ dbParams }) {
     try {
-      return await mysql.createPool({
+      return mysql.createPool({
         host: dbParams.host,
         user: dbParams.user,
         password: dbParams.password,
@@ -56,20 +64,26 @@ export class DbConn {
         queueLimit: 0,
       })
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR, // Este error existe y es adecuado para problemas de conexión
+      })
     }
   }
 
   async createTursoClient({ dbParams }) {
     try {
-      return await createClient({
+      return createClient({
         url: dbParams.url,
         authToken: dbParams.token,
       })
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.CONNECTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR, // Error existente y apropiado
+      })
     }
   }
 
@@ -90,8 +104,11 @@ export class DbConn {
         return results
       }
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.QUERY_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.QUERY_ERROR,
+      })
     }
   }
 
@@ -105,8 +122,11 @@ export class DbConn {
         await this.transactionConnection.beginTransaction()
       }
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Este error existe y es adecuado
+      })
     }
   }
 
@@ -120,8 +140,11 @@ export class DbConn {
         await this.transactionConnection.release()
       }
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Error existente y apropiado
+      })
     }
     finally {
       this.transactionConnection = null
@@ -143,8 +166,11 @@ export class DbConn {
         await this.transactionConnection.release()
       }
     }
-    catch (_error) {
-      throw new CustomError(ERROR_TYPES.database.TRANSACTION_ERROR.code)
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Error existente y adecuado
+      })
     }
     finally {
       this.transactionConnection = null
