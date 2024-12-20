@@ -176,4 +176,31 @@ export class DbConn {
       this.transactionConnection = null
     }
   }
+
+  async executeTransaction(functionsToExecute = []) {
+    if (!Array.isArray(functionsToExecute)) {
+      throw new TypeError('functionsToExecute must be an array of functions.')
+    }
+
+    await this.beginTransaction()
+
+    try {
+      // Ejecutar cada función en secuencia
+      for (const fn of functionsToExecute) {
+        if (typeof fn !== 'function') {
+          throw new TypeError('Each item in functionsToExecute must be a function.')
+        }
+        await fn() // Ejecuta la función, que retorna una promesa
+      }
+
+      await this.commitTransaction()
+    }
+    catch (error) {
+      await this.rollbackTransaction()
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
+      })
+    }
+  }
 }

@@ -4,53 +4,58 @@ import unusedImports from 'eslint-plugin-unused-imports' // Importa el plugin co
 
 export default [
   {
+    files: ['**/*.js'], // Aplica esta configuración a archivos .js
+    languageOptions: {
+      ecmaVersion: 'latest', // Habilita ES2021+
+      sourceType: 'module', // Indica que usas módulos ES6 (import/export)
+      globals: {
+        console: 'readonly', // Define las globales estándar de Node.js
+        process: 'readonly',
+        __dirname: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        Buffer: 'readonly',
+        // Agrega otras globales aquí si las necesitas
+      },
+    },
     plugins: {
       '@stylistic': stylistic,
       'valid-error-structure': validErrorCodesPlugin, // Register the custom ESLint plugin
       'unused-imports': unusedImports, // Registra el plugin correctamente
     },
     rules: {
-      // Include all Stylistic JS recommended rules
       ...stylistic.configs['recommended-flat'].rules,
 
-      // General JavaScript best practices
-      'prefer-const': 'error', // Prefer const for variables never reassigned
-      'no-var': 'error', // Disallow var declarations
-      'object-shorthand': ['error', 'always'], // Use shorthand for object methods and properties
-      'arrow-parens': ['error', 'always'], // Enforce parentheses for arrow functions
-      '@stylistic/arrow-parens': 'off', // Disable conflicting Stylistic-specific rule
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'object-shorthand': ['error', 'always'],
+      'arrow-parens': ['error', 'always'],
+      '@stylistic/arrow-parens': 'off',
+      'eqeqeq': ['error', 'always'],
+      'no-undef': 'error', // Detecta variables no definidas
 
-      // Error prevention
-      'eqeqeq': ['error', 'always'], // Enforce strict equality
-
-      // Use eslint-plugin-unused-imports to handle unused variables and imports
-      'no-unused-vars': 'off', // Disable the default rule
+      'no-unused-vars': 'off',
       'unused-imports/no-unused-vars': ['error', {
         vars: 'all',
-        varsIgnorePattern: '^_', // Ignorar variables que comiencen con "_"
+        varsIgnorePattern: '^_',
         args: 'after-used',
-        argsIgnorePattern: '^_', // Ignorar argumentos que comiencen con "_"
-        caughtErrors: 'all', // Ignorar errores en bloques catch
-        caughtErrorsIgnorePattern: '^_', // Ignorar errores en catch que comiencen con "_"
+        argsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '^_',
       }],
-
-      // Other general best practices
-      'no-duplicate-imports': 'error', // Disallow duplicate imports
-      'no-shadow': 'error', // Prevent shadowing of variables in the outer scope
-
-      // Line length and formatting
+      'no-duplicate-imports': 'error',
+      'no-shadow': 'error',
       'max-len': ['error', {
-        code: 300, // Max characters per line
-        ignoreComments: true, // Ignore long comments
-        ignoreUrls: true, // Ignore long URLs
-        ignoreStrings: false, // Enforce split strings
-        ignoreTemplateLiterals: false, // Enforce split template literals
-        ignoreRegExpLiterals: true, // Ignore long regex patterns
+        code: 300,
+        ignoreComments: true,
+        ignoreUrls: true,
+        ignoreStrings: false,
+        ignoreTemplateLiterals: false,
+        ignoreRegExpLiterals: true,
       }],
-      'prefer-template': 'error', // Enforce using template literals
+      'prefer-template': 'error',
 
-      // Custom error code validation rule
-      'valid-error-structure/valid-error-structure': 'error', // Enforce valid error codes
+      'valid-error-structure/valid-error-structure': 'error',
     },
   },
 ]

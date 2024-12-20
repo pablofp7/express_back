@@ -1,33 +1,33 @@
 import { CustomError, ERROR_TYPES } from '../utils/customError.js'
 import { config } from '../config/config.js'
 
-export const errorHandlerMiddleware = (err, _req, res, _next) => {
+export const errorHandlerMiddleware = (error, _req, res, _next) => {
   // Verificar si el error es un CustomError
-  if (!(err instanceof CustomError)) {
-    throw err
+  if (!(error instanceof CustomError)) {
+    throw error
   }
 
   const isDevelopment = config.node_env !== 'production'
 
   // Registrar el error en consola
-  logError(err, isDevelopment)
+  logError(error, isDevelopment)
 
   // Mapear el error para la respuesta
-  const response = mapError(err, isDevelopment)
+  const response = mapError(error, isDevelopment)
 
   // Responder al cliente
   return respondWithError(res, response)
 }
 
 // Registrar el error según el entorno
-const logError = (err, isDevelopment) => {
+const logError = (error, isDevelopment) => {
   if (isDevelopment) {
-    console.warn(`[DEV ERROR]:`, err)
+    console.warn(`[DEV ERROR]:`, error)
   }
   else {
     console.error(
-      `ERROR:\n\tCode: ${err.code}\n\tStatus: ${err.status}\n\tMessage: ${err.message}\n\tStack: ${
-        err.stack || 'No stack available'
+      `ERROR:\n\tCode: ${error.code}\n\tStatus: ${error.status}\n\tMessage: ${error.message}\n\tStack: ${
+        error.stack || 'No stack available'
       }`,
     )
   }

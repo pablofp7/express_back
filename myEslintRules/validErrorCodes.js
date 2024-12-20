@@ -1,5 +1,19 @@
 import { ERROR_TYPES } from '../src/utils/customError.js' // Adjust the path if necessary
 
+const flattenErrorPaths = (errorTypes) => {
+  const paths = []
+
+  // Recorre cada categoría principal (auth, user, etc.)
+  Object.entries(errorTypes).forEach(([category, errors]) => {
+    // Recorre cada error dentro de la categoría
+    Object.keys(errors).forEach((errorKey) => {
+      paths.push(`ERROR_TYPES.${category}.${errorKey}`)
+    })
+  })
+
+  return paths
+}
+
 export default {
   rules: {
     'valid-error-structure': {
@@ -18,9 +32,7 @@ export default {
 
       create(context) {
         // Flatten ERROR_TYPES to retrieve all valid error type references
-        const validErrorTypes = Object.values(ERROR_TYPES)
-          .flatMap((category) => Object.values(category))
-          .map((error) => error.code)
+        const errorPaths = flattenErrorPaths(ERROR_TYPES)
 
         // Add debugging output for valid error types
 
@@ -33,30 +45,30 @@ export default {
               let hasValidErrorType = false
 
               arg.properties.forEach((property) => {
-                // Check for `origError` property
-                if (
-                  property.key.name === 'origError'
-                  && property.value.type === 'NewExpression'
-                  && property.value.callee.name === 'Error'
-                ) {
-                  hasOrigError = true
+                if (property.key.name === 'origError') {
+                  hasOrigError = true // Solo valida que la propiedad exista
                 }
 
                 // Check for `errorType` property and validate it
                 if (property.key.name === 'errorType' && property.value.type === 'MemberExpression') {
                   let currentNode = property.value
-                  const errorTypeParts = []
+                  const parts = []
 
-                  // Traverse the MemberExpression to reconstruct the full error type
+                  // Reconstruir el path completo
                   while (currentNode.type === 'MemberExpression') {
-                    errorTypeParts.unshift(currentNode.property.name) // Add property name to the front
-                    currentNode = currentNode.object // Move to the object part
+                    parts.unshift(currentNode.property.name)
+                    currentNode = currentNode.object
                   }
 
                   if (currentNode.type === 'Identifier' && currentNode.name === 'ERROR_TYPES') {
-                    const errorTypeCode = errorTypeParts.join('_').toUpperCase() // Normalize case
+                    // Añadir ERROR_TYPES al inicio
+                    parts.unshift('ERROR_TYPES')
 
-                    if (validErrorTypes.includes(errorTypeCode)) {
+                    // Construir el path completo
+                    const fullPath = parts.join('.')
+
+                    // console.log(`Checking path: ${fullPath}`)
+                    if (errorPaths.includes(fullPath)) {
                       hasValidErrorType = true
                     }
                   }

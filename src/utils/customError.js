@@ -9,9 +9,9 @@ export class CustomError extends Error {
     }
 
     // Validar si el errorType es válido; si no, asignar el error genérico
-    const { code, message, statusCode } = errorType || ERROR_TYPES.general.SERVER_ERROR
+    const { code, message, status } = errorType || ERROR_TYPES.general.SERVER_ERROR
 
-    if (!code || !message || !statusCode) {
+    if (!code || !message || !status) {
       throw new Error('The "errorType" parameter must be well-formed or will default to a generic error.')
     }
 
@@ -20,7 +20,7 @@ export class CustomError extends Error {
 
     // Asignar propiedades principales
     this.code = code
-    this.status = statusCode
+    this.status = status
 
     // Asignar campos adicionales
     Object.assign(this, additionalFields)
@@ -32,9 +32,9 @@ export class CustomError extends Error {
   }
 }
 
-const createError = (category, code, statusCode, message) => ({
+const createError = (category, code, status, message) => ({
   code: `${category}_${code}`,
-  statusCode,
+  status,
   message,
 })
 

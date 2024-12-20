@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DbConn } from '../../../database/dbConnection.js'
-import { CustomError } from '../../../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../../../utils/customError.js'
 
 export class MovieModel {
   constructor({ movieDbType }) {
@@ -60,8 +60,6 @@ export class MovieModel {
     const movies = await this.databaseConnection.query({
       query,
       queryParams,
-      resource: 'Movie',
-      operation: 'GET_ALL',
     })
 
     return movies.map((movie) => ({
@@ -77,8 +75,6 @@ export class MovieModel {
   }
 
   async getById({ id }) {
-    checkUUID(id)
-
     const queryParams = [id.toLowerCase()]
     const query = `
       SELECT 
@@ -105,16 +101,7 @@ export class MovieModel {
     const movies = await this.databaseConnection.query({
       query,
       queryParams,
-      resource: 'Movie',
-      operation: 'GET_BY_ID',
     })
-
-    if (!movies || movies.length === 0) {
-      throw new CustomError({
-        origError: new Error('Movie not found'),
-        errorType: ERROR_TYPES.movie.NOT_FOUND,
-      })
-    }
 
     // Formatear y retornar los resultados
     return movies.map((movie) => ({
@@ -133,99 +120,60 @@ export class MovieModel {
 
     const uuid = uuidv4() // Generar un UUID válido para la nueva película
 
-    await this.databaseConnection.beginTransaction()
+    // Define las funciones que se ejecutarán en la transacción
+    const insertMovie = () => this.databaseConnection.query({
+      query: `INSERT INTO movie (id, title, year, director, duration, poster, rate) 
+              VALUES (?, ?, ?, ?, ?, ?, ?);`,
+      queryParams: [uuid, title, year, director, duration, poster, rate],
+    })
 
-    try {
-      // Inserta la película en la tabla `movie`
-      await this.databaseConnection.query({
-        query: `INSERT INTO movie (id, title, year, director, duration, poster, rate) 
-                VALUES (?, ?, ?, ?, ?, ?, ?);`,
-        queryParams: [uuid, title, year, director, duration, poster, rate],
-        resource: 'Movie',
-        operation: 'INSERT',
-      })
-
-      // Verifica o crea géneros y obtiene sus IDs
-      const genresIDs = await this.checkGenres(genre)
-
-      // Inserta las relaciones en `movie_genres`
+    let genresIDs = []
+    const verifyAndInsertGenres = async () => {
+      genresIDs = await this.checkGenres(genre) // Reasignamos directamente
       await Promise.all(
         genresIDs.map(({ genreId }) =>
           this.databaseConnection.query({
-            query:
-              'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
+            query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
             queryParams: [uuid, genreId],
-            resource: 'MovieGenres',
-            operation: 'INSERT_RELATIONS',
           }),
         ),
       )
-
-      // Confirma la transacción
-      await this.databaseConnection.commitTransaction()
-
-      // Retorna el objeto de la película creada
-      return {
-        id: uuid,
-        title,
-        year,
-        director,
-        duration,
-        poster,
-        rate,
-        genres: genresIDs.map(({ genre: g }) => g),
-      }
     }
-    catch (error) {
-      // Revertir la transacción en caso de error
-      await this.databaseConnection.rollbackTransaction()
-      throw error // Relanzar el error para manejo en niveles superiores
+
+    await this.databaseConnection.executeTransaction([
+      insertMovie,
+      verifyAndInsertGenres,
+    ])
+
+    return {
+      id: uuid,
+      title,
+      year,
+      director,
+      duration,
+      poster,
+      rate,
+      genres: genresIDs.map(({ genre: g }) => g),
     }
   }
 
   async delete({ id }) {
-    checkUUID(id)
+    const deleteRelations = () => this.databaseConnection.query({
+      query: 'DELETE FROM movie_genres WHERE movie_id = ?',
+      queryParams: [id],
+    })
 
-    await this.databaseConnection.beginTransaction()
+    const deleteMovie = () => this.databaseConnection.query({
+      query: 'DELETE FROM movie WHERE id = ?',
+      queryParams: [id],
+    })
 
-    try {
-      // Elimina las relaciones de géneros asociadas a la película
-      await this.databaseConnection.query({
-        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-        queryParams: [id],
-        resource: 'MovieGenres',
-        operation: 'DELETE_RELATIONS',
-      })
+    await this.databaseConnection.executeTransaction([deleteRelations, deleteMovie])
 
-      // Elimina la película de la tabla `movie`
-      const result = await this.databaseConnection.query({
-        query: 'DELETE FROM movie WHERE id = ?',
-        queryParams: [id],
-        resource: 'Movie',
-        operation: 'DELETE',
-      })
-
-      if (result.affectedRows === 0) {
-        throw new CustomError({
-          origError: new Error('Movie not found'),
-          errorType: ERROR_TYPES.movie.NOT_FOUND,
-        })
-      }
-
-      // Confirma la transacción
-      await this.databaseConnection.commitTransaction()
-      return true
-    }
-    catch (error) {
-      // Revertir la transacción en caso de error
-      await this.databaseConnection.rollbackTransaction()
-      throw error // Relanzar el error para manejo en niveles superiores
-    }
+    return true
   }
 
   async update({ id, input }) {
-    checkUUID(id)
-
     const allowedFields = [
       'title',
       'year',
@@ -241,18 +189,10 @@ export class MovieModel {
       ([key, value]) => allowedFields.includes(key) && value !== undefined,
     )
 
-    // OJO!! ESTO ES MAS DEL CONTROLADOR
-    if (fields.length === 0 && !genre) {
-      throw new CustomError({
-        origError: new Error('No valid fields or genres provided to update'),
-        errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
-      })
-    }
+    let result
 
-    await this.databaseConnection.beginTransaction()
-
-    try {
-      // Actualiza los campos generales si hay campos válidos
+    // Función para actualizar los campos generales
+    const updateFields = async () => {
       if (fields.length > 0) {
         const setClause = fields.map(([key]) => `${key} = ?`).join(', ')
         const values = fields.map(([_, value]) => value)
@@ -264,29 +204,21 @@ export class MovieModel {
           WHERE id = ?;
         `
 
-        const result = await this.databaseConnection.query({
+        // Ejecuta la consulta de actualización
+        result = await this.databaseConnection.query({
           query,
           queryParams,
-          resource: 'Movie',
-          operation: 'UPDATE_FIELDS',
         })
-
-        if (result.affectedRows === 0) {
-          throw new CustomError({
-            origError: new Error('Movie not found'),
-            errorType: ERROR_TYPES.movie.NOT_FOUND,
-          })
-        }
       }
+    }
 
-      // Actualiza los géneros si se proporcionaron
+    // Función para actualizar los géneros
+    const updateGenres = async () => {
       if (genre) {
         // Elimina los géneros existentes
         await this.databaseConnection.query({
           query: 'DELETE FROM movie_genres WHERE movie_id = ?',
           queryParams: [id],
-          resource: 'MovieGenres',
-          operation: 'DELETE_GENRES',
         })
 
         // Verifica o crea géneros y obtiene sus IDs
@@ -296,27 +228,19 @@ export class MovieModel {
         await Promise.all(
           genresIDs.map(({ genreId }) =>
             this.databaseConnection.query({
-              query:
-                'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
+              query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
               queryParams: [id, genreId],
-              resource: 'MovieGenres',
-              operation: 'INSERT_GENRES',
             }),
           ),
         )
       }
-
-      // Confirma la transacción
-      await this.databaseConnection.commitTransaction()
-
-      // Retorna la película actualizada
-      return this.getById({ id })
     }
-    catch (error) {
-      // Revertir la transacción en caso de error
-      await this.databaseConnection.rollbackTransaction()
-      throw error // Relanzar el error para manejo en niveles superiores
-    }
+
+    // Ejecutar las funciones dentro de la transacción
+    await this.databaseConnection.executeTransaction([updateFields, updateGenres])
+
+    // Retorna el resultado al controlador
+    return result
   }
 
   async checkGenres(genres) {
@@ -331,8 +255,6 @@ export class MovieModel {
         query: `
           SELECT id, name FROM genre WHERE LOWER(name) = LOWER(?)`,
         queryParams: [trimmedGenre],
-        resource: 'Genre',
-        operation: 'CHECK_EXISTENCE',
       })
 
       if (rows && rows.length > 0) {
@@ -351,8 +273,6 @@ export class MovieModel {
           await this.databaseConnection.query({
             query: 'INSERT INTO genre (name) VALUES (?)',
             queryParams: [genre],
-            resource: 'Genre',
-            operation: 'INSERT',
           })
           console.log(`El género "${genre}" fue insertado.`)
         }),
@@ -367,8 +287,6 @@ export class MovieModel {
         query: `
           SELECT id FROM genre WHERE LOWER(name) = LOWER(?)`,
         queryParams: [trimmedGenre],
-        resource: 'Genre',
-        operation: 'FETCH_ID',
       })
 
       if (!rows || rows.length === 0 || !rows[0]?.id) {

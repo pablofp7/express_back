@@ -27,27 +27,14 @@ const userSchema = z.object({
   age: z.number().int().positive().optional(),
 })
 
-async function validateSchema(input, schema, resource, operation) {
-  const result = schema.safeParse(input)
-  if (!result.success) {
-    const errors = result.error.issues.reduce((acc, issue) => {
-      acc[issue.path[0]] = issue.message
-      return acc
-    }, {})
-    throw new CustomError('USER_VALIDATION_ERROR', {
-      message: 'Validation failed',
-      resource,
-      operation,
-      details: errors,
-    })
-  }
-  return { success: true, data: result.data }
+async function validateSchema(input, schema) {
+  return schema.safeParse(input).success
 }
 
 export async function validateUser(input) {
-  return validateSchema(input, userSchema, 'User', 'VALIDATION')
+  return validateSchema(input, userSchema)
 }
 
 export async function validatePartialUser(input) {
-  return validateSchema(input, userSchema.partial(), 'User', 'PARTIAL_VALIDATION')
+  return validateSchema(input, userSchema.partial())
 }

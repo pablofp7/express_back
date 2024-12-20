@@ -1,5 +1,4 @@
 import z from 'zod'
-import { CustomError } from '../utils/customError.js'
 
 const movieSchema = z.object({
   title: z.string({
@@ -39,27 +38,14 @@ const movieSchema = z.object({
   ),
 })
 
-async function validateSchema(input, schema, resource, operation) {
-  const result = schema.safeParse(input)
-  if (!result.success) {
-    const errors = result.error.issues.reduce((acc, issue) => {
-      acc[issue.path[0]] = issue.message
-      return acc
-    }, {})
-    throw new CustomError('INVALID_MOVIE', {
-      message: 'Validation failed',
-      resource,
-      operation,
-      details: errors,
-    })
-  }
-  return { success: true, data: result.data }
+async function validateSchema(input, schema) {
+  return schema.safeParse(input).success
 }
 
 export async function validateMovie(input) {
-  return validateSchema(input, movieSchema, 'Movie', 'VALIDATION')
+  return validateSchema(input, movieSchema)
 }
 
 export async function validatePartialMovie(input) {
-  return validateSchema(input, movieSchema.partial(), 'Movie', 'PARTIAL_VALIDATION')
+  return validateSchema(input, movieSchema.partial())
 }

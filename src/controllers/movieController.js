@@ -14,6 +14,12 @@ export class MovieController {
     console.log('Solicitadas todas las películas filtradas por género: ', genre)
     try {
       const movies = await this.movieModel.getAll({ genre })
+      // if (!movies || movies.length === 0) {
+      //   throw new CustomError({
+      //     origError: new Error('Movie not found'),
+      //     errorType: ERROR_TYPES.movie.NOT_FOUND,
+      //   })
+      // }
       console.log('Devolviendo las películas: ')
       res.json(movies)
     }
@@ -24,6 +30,10 @@ export class MovieController {
 
   getById = asyncHandler(async (req, res) => {
     const { id } = req.params
+    if (!checkUUID(id)) {
+      // LANZAR CUSTOM ERROR
+    }
+
     console.log('Solicitadas las películas por id: ', id)
     try {
       const movie = await this.movieModel.getById({ id })
@@ -57,6 +67,10 @@ export class MovieController {
 
   delete = asyncHandler(async (req, res) => {
     const { id } = req.params
+    if (!checkUUID(id)) {
+      // LANZAR CUSTOM ERROR
+    }
+
     try {
       const result = await this.movieModel.delete({ id })
       if (!result) {
@@ -66,6 +80,13 @@ export class MovieController {
           operation: 'DELETE',
           resourceValue: id,
         })
+
+        // if (result.affectedRows === 0) {
+        //   throw new CustomError({
+        //     origError: new Error('Movie not found'),
+        //     errorType: ERROR_TYPES.movie.NOT_FOUND,
+        //   })
+        // }
       }
       console.log('Eliminación de una película: ', id)
       res.json({ message: 'Movie deleted' })
@@ -77,6 +98,10 @@ export class MovieController {
 
   update = asyncHandler(async (req, res) => {
     const result = await validatePartialMovie(req.body)
+
+    if (!checkUUID(id)) {
+      // LANZAR CUSTOM ERROR
+    }
 
     if (!result.success) {
       throw new CustomError('MOVIE_VALIDATION_ERROR', {
@@ -93,6 +118,21 @@ export class MovieController {
         id,
         input: result.data,
       })
+
+      // Validar que haya campos válidos o géneros para actualizar
+      // if (fields.length === 0 && !genre) {
+      //   throw new CustomError({
+      //     origError: new Error('No valid fields or genres provided to update'),
+      //     errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
+      //   })
+      // }
+
+      // if (result.affectedRows === 0) {
+      //   throw new CustomError({
+      //     origError: new Error('Movie not found'),
+      //     errorType: ERROR_TYPES.movie.NOT_FOUND,
+      //   })
+      // }
 
       if (!updatedMovie) {
         throw new CustomError('GENERAL_NOT_FOUND', {
