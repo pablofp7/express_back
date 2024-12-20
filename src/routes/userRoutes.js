@@ -4,9 +4,9 @@ import { authMiddleware } from '../middlewares/authMiddleware.js'
 import { sensitiveLimiter } from '../middlewares/rateLimitMiddleware.js'
 import { validateRefreshMiddleware } from '../middlewares/validateRefreshMiddleware.js'
 
-export const createUserRouter = ({ userModel, tokenTransport }) => {
+export const createUserRouter = ({ userModel }) => {
   const userRouter = Router()
-  const userController = new UserController({ userModel, tokenTransport })
+  const userController = new UserController({ userModel })
 
   // Rutas para logear o registrar (para usuarios no autenticados)
   userRouter.post('/login', sensitiveLimiter, userController.login)

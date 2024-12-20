@@ -4,29 +4,25 @@ import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 
 export class UserController {
-  constructor({ userModel, tokenTransport }) {
+  constructor({ userModel }) {
     // Lo dejo por si quiero hacer inyección de dependencias en un futuro para el modelo del Usuario
     this.userModel = userModel
-    this.tokenTransport = tokenTransport
     // this.userModel.init()
   }
 
-  // Maneja el inicio de sesión de un usuario
   login = asyncHandler(async (req, res) => {
-    // Validar usuario
-    const result = await validatePartialUser(req.body)
-    if (!result.success) {
-      return res.status(400).json({ error: result.errors })
+    if (!await validatePartialUser(req.body)) {
+      // LANZAR ERROR DE VALIDACIÓN
     }
 
-    const { username, password } = result.data
+    const { username, password } = req.body
     const user = await this.userModel.checkUserPassword({
       username,
       passToCheck: password,
     })
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid username or password' })
+      // LANZAR ERROR DE CREDENCIALES INVÁLIDAS
     }
 
     // Generar tokens usando la función utilitaria
@@ -64,26 +60,10 @@ export class UserController {
       maxAge: config.refreshTokenLifetime, // 1 día
     })
 
-    if (this.tokenTransport === 'cookie') {
-      res
-        .cookie('authToken', accessToken, {
-          httpOnly: true,
-          secure: config.node_env === 'production',
-          sameSite: 'Strict',
-          maxAge: config.accessTokenLifetime, // 1 hora
-        })
-        .status(200)
-        .json({ message: 'Login successful' })
-    }
-    else if (this.tokenTransport === 'header') {
-      res
-        .setHeader('Authorization', `Bearer ${accessToken}`)
-        .status(200)
-        .json({ message: 'Login successful' })
-    }
-    else {
-      res.status(500).json({ message: 'Server misconfiguration' })
-    }
+    res
+      .setHeader('Authorization', `Bearer ${accessToken}`)
+      .status(200)
+      .json({ message: 'Login successful' })
 
     if (config.node_env !== 'production') {
       console.log(`Access Token (Authorization Header): Bearer ${accessToken}`)
@@ -96,11 +76,10 @@ export class UserController {
 
   logout = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies?.refreshToken
-    const accessToken
-      = req.cookies?.authToken || req.headers.authorization?.split(' ')[1]
+    const accessToken = req.headers.authorization?.split(' ')[1]
 
     if (!refreshToken) {
-      return res.status(400).json({ message: 'No refresh token provided.' })
+      // LANZAR ERROR DE FALTA DE TOKEN
     }
 
     try {
@@ -129,7 +108,7 @@ export class UserController {
     }
     catch (err) {
       console.error('Error during logout:', err)
-      res.status(500).json({ message: 'An error occurred during logout.' })
+      // LANZAR ERROR DE SERVIDOR
     }
   })
 
@@ -150,34 +129,13 @@ export class UserController {
         expiresIn: config.accessTokenLifetime,
       })
 
-      // Enviar el nuevo access token según el transporte configurado
-      if (this.tokenTransport === 'cookie') {
-        res
-          .cookie('authToken', accessToken, {
-            httpOnly: true,
-            secure: config.node_env === 'production',
-            sameSite: 'Strict',
-            maxAge: config.accessTokenLifetime,
-          })
-          .status(200)
-          .json({ message: 'Token refreshed successfully' })
-      }
-      else if (this.tokenTransport === 'header') {
-        res
-          .setHeader('Authorization', `Bearer ${accessToken}`)
-          .status(200)
-          .json({
-            message: 'Token refreshed successfully',
-            accessToken,
-          })
-      }
-      else {
-        throw new CustomError('SERVER_ERROR', {
-          message: 'Server misconfiguration',
-          resource: 'User',
-          operation: 'REFRESH_TOKEN',
+      res
+        .setHeader('Authorization', `Bearer ${accessToken}`)
+        .status(200)
+        .json({
+          message: 'Token refreshed successfully',
+          accessToken,
         })
-      }
 
       if (config.node_env !== 'production') {
         console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)

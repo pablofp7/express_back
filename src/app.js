@@ -12,7 +12,7 @@ import { createUserRouter } from './routes/userRoutes.js'
 import { blacklistMiddleware } from './middlewares/blacklistMiddleware.js'
 import { generalLimiter } from './middlewares/rateLimitMiddleware.js'
 
-export const createApp = ({ movieModel, userModel, tokenTransport }) => {
+export const createApp = ({ movieModel, userModel }) => {
   const port = config.port // Puerto obtenido del fichero de configuración
   const app = express()
   app.use(json())
@@ -24,7 +24,7 @@ export const createApp = ({ movieModel, userModel, tokenTransport }) => {
   app.use(generalLimiter)
 
   const movieRouter = createMovieRouter({ movieModel, userModel })
-  const userRouter = createUserRouter({ userModel, tokenTransport })
+  const userRouter = createUserRouter({ userModel })
 
   const swaggerDocument = YAML.load('./openapi.yaml')
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))

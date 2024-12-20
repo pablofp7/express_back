@@ -158,37 +158,31 @@ export class MovieModel {
   }
 
   async delete({ id }) {
-    const deleteRelations = () => this.databaseConnection.query({
-      query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-      queryParams: [id],
-    })
+    let result
 
-    const deleteMovie = () => this.databaseConnection.query({
-      query: 'DELETE FROM movie WHERE id = ?',
-      queryParams: [id],
-    })
+    const deleteRelations = async () => {
+      await this.databaseConnection.query({
+        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
+        queryParams: [id],
+      })
+    }
 
-    await this.databaseConnection.executeTransaction([deleteRelations, deleteMovie])
+    const deleteMovie = async () => {
+      result = await this.databaseConnection.query({
+        query: 'DELETE FROM movie WHERE id = ?',
+        queryParams: [id],
+      })
+    }
 
-    return true
+    await this.databaseConnection.executeTransaction([
+      deleteRelations,
+      deleteMovie,
+    ])
+
+    return result
   }
 
-  async update({ id, input }) {
-    const allowedFields = [
-      'title',
-      'year',
-      'director',
-      'duration',
-      'poster',
-      'rate',
-    ]
-    const { genre, ...otherFields } = input
-
-    // Filtrar campos válidos para la actualización
-    const fields = Object.entries(otherFields).filter(
-      ([key, value]) => allowedFields.includes(key) && value !== undefined,
-    )
-
+  async update({ id, fields, genre }) {
     let result
 
     // Función para actualizar los campos generales
@@ -204,7 +198,6 @@ export class MovieModel {
           WHERE id = ?;
         `
 
-        // Ejecuta la consulta de actualización
         result = await this.databaseConnection.query({
           query,
           queryParams,
@@ -239,7 +232,7 @@ export class MovieModel {
     // Ejecutar las funciones dentro de la transacción
     await this.databaseConnection.executeTransaction([updateFields, updateGenres])
 
-    // Retorna el resultado al controlador
+    // Retornar el resultado al controlador
     return result
   }
 
