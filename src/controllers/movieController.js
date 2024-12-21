@@ -6,14 +6,15 @@ import { checkUUID } from '../utils/uuidValidation.js'
 export class MovieController {
   constructor({ movieModel }) {
     this.movieModel = movieModel
+    // this.movieModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
   getAll = asyncHandler(async (req, res) => {
     const { genre } = req.query
-    console.log('Solicitadas todas las películas filtradas por género: ', genre)
+    console.log(`Solicitadas todas las películas${genre ? ` filtradas por género: ${genre}` : ''}.`)
     const movies = await this.movieModel.getAll({ genre })
 
-    console.log('Devolviendo las películas: ')
+    console.log('Devolviendo las películas.')
     res.status(200).json(movies)
   })
 
@@ -40,16 +41,16 @@ export class MovieController {
   })
 
   create = asyncHandler(async (req, res) => {
-    const result = req.body
+    const input = req.body
 
-    if (!await validateMovie(result)) {
+    if (!await validateMovie(input)) {
       throw new CustomError({
         origError: new Error('Invalid movie data'),
         errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
       })
     }
 
-    const newMovie = await this.movieModel.create({ input: result.data })
+    const newMovie = await this.movieModel.create({ input })
     console.log('Creación de una nueva película: ', newMovie)
     res.status(201).json(newMovie)
   })

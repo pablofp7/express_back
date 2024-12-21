@@ -13,11 +13,11 @@ import { blacklistMiddleware } from './middlewares/blacklistMiddleware.js'
 import { generalLimiter } from './middlewares/rateLimitMiddleware.js'
 
 export const createApp = ({ movieModel, userModel }) => {
-  const port = config.port // Puerto obtenido del fichero de configuración
+  const port = config.port
   const app = express()
   app.use(json())
   app.use(corsMiddleware)
-  app.disable('x-powered-by') // deshabilitar el header X-Powered-By: Express
+  app.disable('x-powered-by')
 
   app.use(cookieParser())
   app.use(blacklistMiddleware)

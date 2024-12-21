@@ -2,30 +2,54 @@ import { validateUser, validatePartialUser } from '../utils/userValidation.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
+import { CustomError, ERROR_TYPES } from '../utils/customError.js'
+import bcrypt from 'bcrypt'
 
 export class UserController {
   constructor({ userModel }) {
-    // Lo dejo por si quiero hacer inyección de dependencias en un futuro para el modelo del Usuario
     this.userModel = userModel
-    // this.userModel.init()
+    // this.userModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
-  login = asyncHandler(async (req, res) => {
-    if (!await validatePartialUser(req.body)) {
-      // LANZAR ERROR DE VALIDACIÓN
+  register = asyncHandler(async (req, res) => {
+    const input = req.body
+
+    if (!await validateUser(input)) {
+      throw new CustomError({
+        origError: new Error('Invalid user data'),
+        errorType: ERROR_TYPES.user.VALIDATION_ERROR,
+
+      })
     }
 
+    const newUser = await this.userModel.createUser({ input })
+    console.log('Usuario registrado:', newUser)
+    res.status(201).json(newUser)
+  })
+
+  login = asyncHandler(async (req, res) => {
     const { username, password } = req.body
-    const user = await this.userModel.checkUserPassword({
-      username,
-      passToCheck: password,
-    })
+
+    if (!await validatePartialUser({ username, password })) {
+      throw new CustomError({
+        origError: new Error('Invalid input data'),
+        errorType: ERROR_TYPES.user.VALIDATION_ERROR,
+      })
+    }
+
+    const user = await this.userModel.authenticateUser({ username, password })
 
     if (!user) {
-      // LANZAR ERROR DE CREDENCIALES INVÁLIDAS
+      await bcrypt.compare(
+        'fakePassword',
+        '$2b$10$ABCDEFGHIJKLMNOPQRSTUVWXyZ1234567890abcdefghi',
+      )
+      throw new CustomError({
+        origError: new Error('Invalid credentials'),
+        errorType: ERROR_TYPES.user.INVALID_CREDENTIALS,
+      })
     }
 
-    // Generar tokens usando la función utilitaria
     const accessToken = jwt.sign(
       { username, role: user.role, userId: user.id },
       config.jwtSecret,
@@ -37,7 +61,6 @@ export class UserController {
       { expiresIn: config.refreshTokenLifetime },
     )
 
-    // Guardar tokens en la base de datos
     await this.userModel.saveToken({
       userId: user.id,
       token: accessToken,
@@ -52,12 +75,11 @@ export class UserController {
       expiresIn: config.refreshTokenLifetime,
     })
 
-    // Configurar cookies y/o encabezados
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: config.node_env === 'production',
+      secure: config.nodeEnv === 'production',
       sameSite: 'Strict',
-      maxAge: config.refreshTokenLifetime, // 1 día
+      maxAge: config.refreshTokenLifetime,
     })
 
     res
@@ -65,118 +87,19 @@ export class UserController {
       .status(200)
       .json({ message: 'Login successful' })
 
-    if (config.node_env !== 'production') {
+    if (config.nodeEnv !== 'production') {
       console.log(`Access Token (Authorization Header): Bearer ${accessToken}`)
-      const setCookieHeader = res.getHeader('Set-Cookie') // Obtiene el encabezado Set-Cookie
+      const setCookieHeader = res.getHeader('Set-Cookie')
       console.log(
-        `Refresh Token (Set-Cookie Header / En futuras request -> Cookie Header: <cookie>):  ${setCookieHeader}`,
+        `Refresh Token (Set-Cookie Header): ${setCookieHeader}`,
       )
     }
   })
 
-  logout = asyncHandler(async (req, res) => {
-    const refreshToken = req.cookies?.refreshToken
-    const accessToken = req.headers.authorization?.split(' ')[1]
-
-    if (!refreshToken) {
-      // LANZAR ERROR DE FALTA DE TOKEN
-    }
-
-    try {
-      // Revocar el refresh token en la base de datos
-      await this.userModel.revokeToken(refreshToken)
-
-      if (accessToken) {
-        // Revocar el access token en la base de datos
-        await this.userModel.revokeToken(accessToken)
-      }
-
-      // Limpiar cookies en el cliente
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: config.node_env === 'production',
-        sameSite: 'Strict',
-      })
-
-      res.clearCookie('authToken', {
-        httpOnly: true,
-        secure: config.node_env === 'production',
-        sameSite: 'Strict',
-      })
-
-      res.status(200).json({ message: 'Logout successful.' })
-    }
-    catch (err) {
-      console.error('Error during logout:', err)
-      // LANZAR ERROR DE SERVIDOR
-    }
-  })
-
-  // Refresh Token
-  refreshToken = asyncHandler(async (req, res) => {
-    const { username, role, userId } = req.refreshTokenData // Extraemos username y role
-
-    const accessToken = jwt.sign({ username, role, userId }, config.jwtSecret, {
-      expiresIn: config.accessTokenLifetime,
-    })
-
-    try {
-      // Guardar el nuevo access token en la base de datos
-      await this.userModel.saveToken({
-        userId: req.refreshTokenData.userId || null,
-        token: accessToken,
-        type: 'access',
-        expiresIn: config.accessTokenLifetime,
-      })
-
-      res
-        .setHeader('Authorization', `Bearer ${accessToken}`)
-        .status(200)
-        .json({
-          message: 'Token refreshed successfully',
-          accessToken,
-        })
-
-      if (config.node_env !== 'production') {
-        console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)
-      }
-    }
-    catch (err) {
-      console.error('Error al guardar el nuevo access token:', err)
-      throw new CustomError('USER_REFRESH_TOKEN_ERROR', {
-        message: 'Error saving the new access token.',
-        resource: 'Token',
-        operation: 'REFRESH_TOKEN',
-        originalError: err.message,
-      })
-    }
-  })
-
-  // Registro de usuario
-  register = asyncHandler(async (req, res) => {
-    const result = await validateUser(req.body)
-
-    if (!result.success) {
-      console.error('Errores en el registro al validar:', result.errors)
-      throw new CustomError('USER_REGISTRATION_ERROR', {
-        message: 'Validation failed during registration',
-        resource: 'User',
-        operation: 'REGISTER',
-        validationErrors: result.errors,
-      })
-    }
-
-    const newUser = await this.userModel.createUser({ input: result.data })
-    console.log('Usuario registrado:', newUser)
-    res.status(201).json(newUser)
-  })
-
-  // Eliminar usuario
   deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params
 
     if (!id) {
-      console.log('Falta el ID del usuario')
       throw new CustomError('USER_MISSING_ID', {
         message: 'Missing user ID',
         resource: 'User',
@@ -184,10 +107,9 @@ export class UserController {
       })
     }
 
-    const isDeleted = await this.userModel.deleteUser({ userId: id })
+    const result = await this.userModel.deleteUser({ userId: id })
 
-    if (!isDeleted) {
-      console.log('No se ha podido eliminar el usuario con ID:', id)
+    if (!result || result.affectedRows === 0) {
       throw new CustomError('GENERAL_NOT_FOUND', {
         message: `User with ID ${id} not found`,
         resource: 'User',
@@ -196,8 +118,102 @@ export class UserController {
       })
     }
 
-    console.log('Usuario eliminado con éxito:', id)
-    res.status(200).json({ message: 'User deleted successfully.', userId: id })
+    res.status(200).json({ message: 'User deleted successfully' })
+  })
+
+  logout = asyncHandler(async (req, res) => {
+    const refreshToken = req.cookies?.refreshToken
+    const accessToken = req.headers.authorization?.split(' ')[1]
+
+    if (!refreshToken) {
+      throw new CustomError({
+        origError: new Error('No refresh token provided'),
+        errorType: ERROR_TYPES.auth.NO_REFRESH_TOKEN,
+      })
+    }
+
+    if (typeof refreshToken !== 'string' || refreshToken.trim() === '') {
+      throw new CustomError({
+        origError: new Error('Invalid refresh token format'),
+        errorType: ERROR_TYPES.auth.INVALID_REFRESH_TOKEN,
+      })
+    }
+
+    if (accessToken && (typeof accessToken !== 'string' || accessToken.trim() === '')) {
+      throw new CustomError({
+        origError: new Error('Invalid access token format'),
+        errorType: ERROR_TYPES.auth.INVALID_TOKEN,
+      })
+    }
+
+    const revokeRefreshResult = await this.userModel.revokeToken(refreshToken)
+
+    if (!revokeRefreshResult || revokeRefreshResult.affectedRows === 0) {
+      throw new CustomError({
+        origError: new Error('Refresh token not found or already revoked'),
+        errorType: ERROR_TYPES.auth.TOKEN_REVOKED,
+      })
+    }
+
+    if (accessToken) {
+      const revokeAccessResult = await this.userModel.revokeToken(accessToken)
+
+      if (!revokeAccessResult || revokeAccessResult.affectedRows === 0) {
+        throw new CustomError({
+          origError: new Error('Access token not found or already revoked'),
+          errorType: ERROR_TYPES.auth.TOKEN_REVOKED,
+        })
+      }
+    }
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: config.node_env === 'production',
+      sameSite: 'Strict',
+    })
+
+    res.clearCookie('authToken', {
+      httpOnly: true,
+      secure: config.node_env === 'production',
+      sameSite: 'Strict',
+    })
+
+    res.status(200).json({ message: 'Logout successful.' })
+  })
+
+  // Refresh Token
+  refreshToken = asyncHandler(async (req, res) => {
+    const { username, role, userId } = req.refreshTokenData
+
+    if (!username || !role || !userId) {
+      throw new CustomError({
+        origError: new Error('Invalid refresh token data'),
+        errorType: ERROR_TYPES.auth.INVALID_REFRESH_TOKEN,
+      })
+    }
+
+    const accessToken = jwt.sign({ username, role, userId }, config.jwtSecret, {
+      expiresIn: config.accessTokenLifetime,
+    })
+
+    await this.userModel.saveToken({
+      userId,
+      token: accessToken,
+      type: 'access',
+      expiresIn: config.accessTokenLifetime,
+    })
+
+    res
+      .setHeader('Authorization', `Bearer ${accessToken}`)
+      .status(200)
+      .json({
+        message: 'Token refreshed successfully',
+        accessToken,
+      })
+
+    if (config.node_env !== 'production') {
+      console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)
+    }
   })
 
   // Actualizar usuario
@@ -246,58 +262,48 @@ export class UserController {
     res.status(200).json({ message: 'User updated successfully.', id })
   })
 
-  // Obtener ID de usuario por nombre de usuario
   getIdByUsername = asyncHandler(async (req, res) => {
     const { username } = req.params
 
     if (!username) {
-      throw new CustomError('USER_MISSING_USERNAME', {
-        message: 'Missing username parameter',
-        resource: 'User',
-        operation: 'GET_ID_BY_USERNAME',
+      throw new CustomError({
+        origError: new Error('Missing username parameter'),
+        errorType: ERROR_TYPES.user.VALIDATION_ERROR,
       })
     }
 
     const user = await this.userModel.getUserByUsername({ username })
+
     if (!user) {
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        message: `User not found for username: ${username}`,
-        resource: 'User',
-        operation: 'GET_ID_BY_USERNAME',
-        resourceValue: username,
+      throw new CustomError({
+        origError: new Error(`User not found for username: ${username}`),
+        errorType: ERROR_TYPES.general.NOT_FOUND,
       })
     }
 
-    console.log(`User found for username ${username}:`, user)
     res.status(200).json({ id: user.id })
   })
 
-  // Obtener detalles completos de usuario por nombre de usuario
   getUser = asyncHandler(async (req, res) => {
     const { username } = req.params
 
     if (!username) {
-      throw new CustomError('USER_MISSING_USERNAME', {
-        message: 'Missing username parameter',
-        resource: 'User',
-        operation: 'GET_USER',
+      throw new CustomError({
+        origError: new Error('Missing username parameter'),
+        errorType: ERROR_TYPES.user.VALIDATION_ERROR,
       })
     }
 
     const user = await this.userModel.getUserByUsername({ username })
+
     if (!user) {
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        message: `User not found for username: ${username}`,
-        resource: 'User',
-        operation: 'GET_USER',
-        resourceValue: username,
+      throw new CustomError({
+        origError: new Error(`User not found for username: ${username}`),
+        errorType: ERROR_TYPES.general.NOT_FOUND,
       })
     }
 
-    console.log(`User found for username ${username}:`, user)
-
-    // Devuelve todos los campos del usuario, excepto la contraseña
-    const { _password, ...safeUser } = user
+    const { password: _hidden, ...safeUser } = user
     res.status(200).json(safeUser)
   })
 }

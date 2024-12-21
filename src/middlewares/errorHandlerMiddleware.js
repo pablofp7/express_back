@@ -7,7 +7,7 @@ export const errorHandlerMiddleware = (error, _req, res, _next) => {
     throw error
   }
 
-  const isDevelopment = config.node_env !== 'production'
+  const isDevelopment = config.nodeEnv !== 'production'
 
   // Registrar el error en consola
   logError(error, isDevelopment)
