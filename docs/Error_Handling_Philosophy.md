@@ -59,6 +59,19 @@ The API uses a centralized error-handling middleware (`errorHandlerMiddleware`) 
 
 ## Layered Error Handling
 
+### Middleware Layer
+- **Responsibilities:**
+  - Pre-process requests before reaching the controller, such as:
+    - **Authentication and Authorization:** Validates access tokens (e.g., `authMiddleware`) and ensures appropriate user roles (e.g., `requireAdmin`).
+    - **Validation:** Handles specific validation checks, such as validating refresh tokens (`validateRefreshMiddleware`) before continuing the request flow.
+    - **Rate Limiting:** Implements general and sensitive request limits (e.g., `generalLimiter`, `sensitiveLimiter`).
+    - **Cross-Origin Resource Sharing (CORS):** Validates allowed origins.
+    - **IP Blacklist Validation:** Rejects requests from disallowed IP addresses.
+  - Throws `CustomError` instances for violations, ensuring consistency in error handling across the application.
+- **Error Management:**
+  - Middleware errors (e.g., invalid tokens, access denied, rate limits exceeded) are caught and processed before the request reaches the controller.
+  - Not all routes require the same middleware stack, allowing flexible configuration based on the route's needs.
+
 ### Controller Layer
 - **Responsibilities:**
   - Validate incoming requests.
@@ -99,10 +112,11 @@ The model layer is designed to focus exclusively on its primary role: generating
 
 ## Example Error Flow
 
-1. **Controller:** Receives a request to create a resource, validates the input, and calls the model.
-2. **Model:** Constructs an SQL query and delegates execution to the `DatabaseConnection`.
-3. **DatabaseConnection:** Executes the query and throw any database-related `CustomError`.
-4. **Middleware:** The `errorHandlerMiddleware` catches the `CustomError`, logs it, maps it for the client, and sends a standardized response.
+1. **Middleware:** Handles pre-processing tasks like authentication, validation (e.g., access token and refresh token checks), rate limiting, and CORS. Throws `CustomError` for violations (e.g., invalid token, unauthorized access).
+2. **Controller:** Receives a validated request, processes it, and calls the model. Handles validation errors and rethrows them as `CustomError` instances if needed.
+3. **Model:** Constructs an SQL query and delegates execution to the `DatabaseConnection`.
+4. **DatabaseConnection:** Executes the query and throws any database-related `CustomError`.
+5. **ErrorHandlerMiddleware:** Catches the `CustomError`, logs it, maps it for the client, and sends a standardized response.
 
 ---
 

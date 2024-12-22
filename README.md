@@ -80,7 +80,18 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue una arquit
 
 ## Uso
 
-### Endpoints Clave
+### **Endpoints Clave**
+
+Antes de profundizar en los endpoints clave, puedes explorar y probar todos los endpoints de esta API de forma interactiva usando **Swagger UI**.
+
+- **GET `/api-docs`**:  
+  Accede a la documentación interactiva generada a partir del archivo `openapi.yaml`.  
+  Para acceder:  
+  1. Asegúrate de que el servidor está en ejecución.  
+  2. Abre la siguiente URL en tu navegador (reemplaza `<api-port>` con el puerto configurado en tu entorno, por defecto es `3000`):  
+     ```
+     http://localhost:<api-port>/api-docs
+     ```
 
 #### Usuarios
 
