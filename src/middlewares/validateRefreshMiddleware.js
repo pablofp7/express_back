@@ -1,54 +1,43 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
-import { CustomError } from '../utils/customError.js'
+import { CustomError, ERROR_TYPES } from '../utils/customError.js'
 
 export const validateRefreshMiddleware = ({ userModel }) => {
   if (!userModel) {
-    throw new CustomError('AUTH_NO_USER_MODEL', {
-      message: 'UserModel instance is required for validateRefreshMiddleware',
-      operation: 'INITIALIZATION',
-      resource: 'Middleware',
+    throw new CustomError({
+      origError: new Error('UserModel instance is required'),
+      errorType: ERROR_TYPES.general.SERVER_ERROR,
     })
   }
 
   return async (req, res, next) => {
-    await validateRefreshLogic(req, res, next, userModel)
-  }
-}
+    const refreshToken = req.cookies?.refreshToken
 
-const validateRefreshLogic = async (req, res, next, userModel) => {
-  const refreshToken = req.cookies?.refreshToken // Obtenemos el refresh token desde las cookies
+    if (!refreshToken) {
+      throw new CustomError({
+        origError: new Error('No refresh token provided'),
+        errorType: ERROR_TYPES.auth.NO_REFRESH_TOKEN,
+      })
+    }
 
-  if (!refreshToken) {
-    throw new CustomError('USER_NO_REFRESH_TOKEN', {
-      message: 'Refresh token is required',
-      resource: 'Token',
-      operation: 'AUTH',
-    })
-  }
+    try {
+      const decoded = jwt.verify(refreshToken, config.refreshTokenSecret)
+      const { username, role, userId } = decoded
 
-  try {
-    // Verificar la firma del token y decodificarlo
-    const decoded = jwt.verify(refreshToken, config.refreshTokenSecret)
-    const { username, role, userId } = decoded // Extraemos username y role desde el token
+      if (!username || !role || !userId) {
+        throw new Error('Decoded token is missing required fields')
+      }
 
-    console.log('Token decodificado:', decoded)
+      await userModel.checkToken(refreshToken)
 
-    // Verificar que el token está activo en la base de datos
-    await userModel.checkToken(refreshToken)
-    console.log('Token válido y encontrado en la base de datos')
-
-    // Adjuntar los datos decodificados al objeto `req` para el siguiente middleware/controlador
-    req.refreshTokenData = { username, role, userId }
-    next() // Continúa al siguiente middleware o controlador
-  }
-  catch (err) {
-    console.error('Error con el refresh token:', err)
-    throw new CustomError('AUTH_INVALID_REFRESH_TOKEN', {
-      message: 'Invalid or expired refresh token',
-      resource: 'Token',
-      operation: 'JWT_VERIFY',
-      originalError: err.message,
-    })
+      req.refreshTokenData = { username, role, userId }
+      next()
+    }
+    catch (err) {
+      throw new CustomError({
+        origError: err,
+        errorType: ERROR_TYPES.auth.INVALID_REFRESH_TOKEN,
+      })
+    }
   }
 }

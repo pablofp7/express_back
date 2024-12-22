@@ -1,26 +1,29 @@
 import rateLimit from 'express-rate-limit'
 import { blacklist } from '../utils/blacklist.js'
+import { CustomError, ERROR_TYPES } from '../utils/error.js'
 
-// Limitador general
 export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // Ventana de 15 minutos
-  max: 100, // Máximo de solicitudes permitidas por IP
-  handler: (req, res) => {
-    blacklist.add(req.ip) // Añadir la IP a la lista negra
-    res
-      .status(429)
-      .json({ message: 'Too many requests, you have been blocked' })
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  handler: (req, res, next) => {
+    const error = new CustomError({
+      origError: new Error('Too many requests'),
+      errorType: ERROR_TYPES.general.TOO_MANY_REQUESTS,
+    })
+    blacklist.add(req.ip)
+    next(error)
   },
 })
 
-// Limitador sensible (por ejemplo, para login)
 export const sensitiveLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // Ventana de 15 minutos
-  max: 10, // Máximo de solicitudes permitidas por IP
-  handler: (req, res) => {
-    blacklist.add(req.ip) // Añadir la IP a la lista negra
-    res.status(429).json({
-      message: 'Too many requests on sensitive route, you have been blocked',
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  handler: (req, res, next) => {
+    const error = new CustomError({
+      origError: new Error('Too many requests on sensitive route'),
+      errorType: ERROR_TYPES.general.TOO_MANY_REQUESTS,
     })
+    blacklist.add(req.ip)
+    next(error)
   },
 })

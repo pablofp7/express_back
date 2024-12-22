@@ -1,80 +1,65 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
-import { CustomError } from '../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../utils/customError.js'
 
-export const authMiddleware = ({
-  requireAdmin = false,
-  userModel = null,
-} = {}) => {
+export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) => {
   if (!userModel) {
-    throw new CustomError('AUTH_NO_USER_MODEL', {
-      message: 'authMiddleware requires a userModel instance as part of its options.',
-      operation: 'INITIALIZATION',
-      resource: 'Middleware',
+    throw new CustomError({
+      origError: new Error('authMiddleware requires a userModel instance.'),
+      errorType: ERROR_TYPES.general.INVALID_INPUT,
     })
   }
 
   return async (req, res, next) => {
+    let token
+
+    if (req.headers.authorization) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+    if (!token) {
+      throw new CustomError({
+        origError: new Error('No token provided'),
+        errorType: ERROR_TYPES.auth.NO_TOKEN,
+      })
+    }
+
+    if (typeof token !== 'string') {
+      throw new CustomError({
+        origError: new Error('Invalid token format'),
+        errorType: ERROR_TYPES.auth.INVALID_TOKEN,
+      })
+    }
+
+    let decoded
     try {
-      let token
-
-      if (req.headers.authorization) {
-        token = req.headers.authorization.split(' ')[1]
-      }
-
-      if (!token && req.cookies?.authToken) {
-        token = req.cookies.authToken
-      }
-
-      if (!token) {
-        throw new CustomError('AUTH_NO_TOKEN', {
-          message: 'No token provided',
-          resource: 'Token',
-          operation: 'AUTH',
-        })
-      }
-
-      let decoded
-      try {
-        decoded = jwt.verify(token, config.jwtSecret)
-      }
-      catch (err) {
-        if (err.name === 'TokenExpiredError') {
-          throw new CustomError('AUTH_EXPIRED_TOKEN', {
-            message: 'Token has expired',
-            resource: 'Token',
-            operation: 'JWT_VERIFY',
-            originalError: err.message,
-          })
-        }
-
-        throw new CustomError('AUTH_INVALID_TOKEN', {
-          message: 'Invalid token',
-          resource: 'Token',
-          operation: 'JWT_VERIFY',
-          originalError: err.message,
-        })
-      }
-
-      // Verificar el token en el modelo de usuario
-      await userModel.checkToken(token)
-
-      req.user = decoded
-
-      // Verificar si se requiere un rol de administrador
-      if (requireAdmin && req.user?.role?.toLowerCase() !== 'admin') {
-        throw new CustomError('AUTH_ADMIN_ONLY', {
-          message: 'Access denied. Admins only.',
-          resource: 'Role',
-          operation: 'AUTH',
-          userRole: req.user?.role,
-        })
-      }
-
-      next()
+      decoded = jwt.verify(token, config.jwtSecret)
     }
     catch (err) {
-      next(err)
+      if (err.name === 'TokenExpiredError') {
+        throw new CustomError({
+          origError: new Error('Token has expired'),
+          errorType: ERROR_TYPES.auth.EXPIRED_TOKEN,
+        })
+      }
+
+      throw new CustomError({
+        origError: new Error('Invalid token'),
+        errorType: ERROR_TYPES.auth.INVALID_TOKEN,
+      })
     }
+
+    await userModel.checkToken(token)
+
+    req.user = decoded
+
+    if (requireAdmin && req.user?.role?.toLowerCase() !== 'admin') {
+      throw new CustomError({
+        origError: new Error('Access denied. Admins only.'),
+        errorType: ERROR_TYPES.auth.ADMIN_ONLY,
+      })
+    }
+
+    next()
   }
 }
