@@ -67,6 +67,7 @@ The API uses a centralized error-handling middleware (`errorHandlerMiddleware`) 
 - **Error Management:**
   - Validation errors are caught and processed here.
   - Any issues detected before interacting with the model are handled directly.
+  - Validation errors do not include details about specific invalid fields; the backend simply responds with an error. Detailed field-level validation is handled on the frontend.
 
 ### Model Layer
 - **Responsibilities:**
