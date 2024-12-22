@@ -77,7 +77,7 @@ Este proyecto es un backend desarrollado con **Express.js** que sigue una arquit
 
    El servidor se ejecutará en el puerto definido en el archivo .env (por defecto, 33333).
 
-   NOTA: Para local y sobre todo mongo no está la funcionalidad completa, se empezó a desarrollar con las tres opciones para aprender inyección de dependecias con varios modelos y demás, pero el avance final solo se llevó a cabo con las BBDD SQL (hay varios tipos).
+   **NOTA**: Para local y sobre todo mongo no está la funcionalidad completa, se empezó a desarrollar con las tres opciones para aprender inyección de dependecias con varios modelos y demás, pero el avance final solo se llevó a cabo con las BBDD SQL (hay varios tipos).
 
 ## Uso
 

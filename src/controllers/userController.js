@@ -216,31 +216,47 @@ export class UserController {
     }
   })
 
-  // Actualizar usuario
   updateUser = asyncHandler(async (req, res) => {
     const { id } = req.params
 
     if (!id) {
-      console.log('Falta el ID del usuario')
-      throw new CustomError('USER_MISSING_ID', {
-        message: 'Missing user ID',
-        resource: 'User',
-        operation: 'UPDATE',
+      throw new CustomError({
+        origError: new Error('Missing user ID'),
+        errorType: ERROR_TYPES.user.MISSING_ID,
       })
     }
 
-    const result = await validatePartialUser(req.body)
+    const validationResult = await validatePartialUser(req.body)
 
-    if (!result.success) {
-      console.error('Errores en el formato de los datos para actualizar:', result.errors)
-      throw new CustomError('USER_UPDATE_ERROR', {
-        message: 'Validation failed during update',
-        resource: 'User',
-        operation: 'UPDATE',
-        validationErrors: result.errors,
+    if (!validationResult) {
+      throw new CustomError({
+        origError: new Error('Validation failed during update'),
+        errorType: ERROR_TYPES.user.VALIDATION_ERROR,
       })
+    }
 
-      // Revisado hasta este error
+    const allowedFields = ['email', 'password', 'age']
+    const { role, ...otherFields } = req.body
+
+    const fields = Object.entries(otherFields).filter(
+      ([key, value]) => allowedFields.includes(key) && value !== undefined,
+    )
+
+    if (fields.length === 0 && !role) {
+      throw new CustomError({
+        origError: new Error('No valid fields or role provided for update'),
+        errorType: ERROR_TYPES.general.INVALID_INPUT,
+      })
+    }
+
+    if (role) {
+      const validRoles = ['User', 'Admin', 'Guest']
+      if (!validRoles.includes(role)) {
+        throw new CustomError({
+          origError: new Error('Invalid role provided'),
+          errorType: ERROR_TYPES.general.INVALID_INPUT,
+        })
+      }
     }
 
     const isUpdated = await this.userModel.updateUser({
@@ -249,16 +265,12 @@ export class UserController {
     })
 
     if (!isUpdated) {
-      console.log('No se encontró el usuario con ID:', id)
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        message: `User with ID ${id} not found`,
-        resource: 'User',
-        operation: 'UPDATE',
-        resourceValue: id,
+      throw new CustomError({
+        origError: new Error(`User with ID ${id} not found`),
+        errorType: ERROR_TYPES.general.NOT_FOUND,
       })
     }
 
-    console.log('Usuario actualizado:', id)
     res.status(200).json({ message: 'User updated successfully.', id })
   })
 

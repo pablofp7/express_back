@@ -129,8 +129,6 @@ export class UserModel {
   }
 
   async updateUser({ userId, userData }) {
-    checkUUID(userId)
-
     const allowedFields = ['email', 'password', 'age']
     const { role, ...otherFields } = userData
 
@@ -138,93 +136,51 @@ export class UserModel {
       ([key, value]) => allowedFields.includes(key) && value !== undefined,
     )
 
-    if (fields.length === 0 && !role) {
-      throw new CustomError('INVALID_INPUT', {
-        resource: 'User',
-        resourceValue: userId,
-        operation: 'UPDATE',
-        message: 'No valid fields or role provided for update.',
-      })
-    }
-
-    await this.databaseConnection.beginTransaction()
-
-    try {
-      if (fields.length > 0) {
-        for (let i = 0; i < fields.length; i++) {
-          const [key, value] = fields[i]
-          if (key === 'password') {
-            const salt = parseInt(config.salt, 10)
-            const hashedPassword = await bcrypt.hash(value, salt)
-            fields[i][1] = hashedPassword
-          }
+    const updateFields = async () => {
+      for (let i = 0; i < fields.length; i++) {
+        const [key, value] = fields[i]
+        if (key === 'password') {
+          const salt = parseInt(config.salt, 10)
+          const hashedPassword = await bcrypt.hash(value, salt)
+          fields[i][1] = hashedPassword
         }
+      }
 
-        const setClause = fields.map(([key]) => `${key} = ?`).join(', ')
-        const values = fields.map(([_, value]) => value)
-        const queryParams = [...values, userId]
+      const setClause = fields.map(([key]) => `${key} = ?`).join(', ')
+      const values = fields.map(([_, value]) => value)
+      const queryParams = [...values, userId]
 
-        const query = `
+      await this.databaseConnection.query({
+        query: `
           UPDATE user
           SET ${setClause}
           WHERE id = ?;
-        `
-
-        const result = await this.databaseConnection.query({
-          query,
-          queryParams,
-        })
-
-        if (result.affectedRows === 0) {
-          throw new CustomError('GENERAL_NOT_FOUND', {
-            resource: 'User',
-            resourceValue: userId,
-            operation: 'UPDATE_FIELDS',
-            message: 'User not found.',
-          })
-        }
-      }
-
-      if (role) {
-        const validRoles = ['User', 'Admin', 'Guest']
-        if (!validRoles.includes(role)) {
-          throw new CustomError('INVALID_INPUT', {
-            resource: 'Role',
-            resourceValue: role,
-            operation: 'UPDATE_ROLE',
-            message: 'Invalid role provided.',
-          })
-        }
-
-        const roleResult = await this.databaseConnection.query({
-          query: 'SELECT id FROM role WHERE LOWER(name) = LOWER(?)',
-          queryParams: [role],
-        })
-
-        const roleId = roleResult[0]?.id
-
-        if (!roleId) {
-          throw new CustomError('GENERAL_NOT_FOUND', {
-            resource: 'Role',
-            resourceValue: role,
-            operation: 'FETCH_ROLE',
-            message: 'Role not found.',
-          })
-        }
-
-        await this.databaseConnection.query({
-          query: 'UPDATE user_roles SET role_id = ? WHERE user_id = ?',
-          queryParams: [roleId, userId],
-        })
-      }
-
-      await this.databaseConnection.commitTransaction()
-      return true
+        `,
+        queryParams,
+      })
     }
-    catch (error) {
-      await this.databaseConnection.rollbackTransaction()
-      throw error // Propaga los errores de DbConn o errores personalizados
+
+    const updateRole = async () => {
+      const roleResult = await this.databaseConnection.query({
+        query: 'SELECT id FROM role WHERE LOWER(name) = LOWER(?)',
+        queryParams: [role],
+      })
+
+      const roleId = roleResult[0]?.id
+
+      await this.databaseConnection.query({
+        query: 'UPDATE user_roles SET role_id = ? WHERE user_id = ?',
+        queryParams: [roleId, userId],
+      })
     }
+
+    const tasks = []
+    if (fields.length > 0) tasks.push(updateFields)
+    if (role) tasks.push(updateRole)
+
+    await this.databaseConnection.executeTransaction(tasks)
+
+    return true
   }
 
   async getUserById({ userId }) {
