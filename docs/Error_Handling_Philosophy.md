@@ -62,7 +62,7 @@ The API uses a centralized error-handling middleware (`errorHandlerMiddleware`) 
 ### Middleware Layer
 - **Responsibilities:**
   - Pre-process requests before reaching the controller, such as:
-    - **Authentication and Authorization:** Validates access tokens (e.g., `authMiddleware`) and ensures appropriate user roles (e.g., `requireAdmin`).
+    - **Authentication and Authorization:** Validates access tokens (e.g., `authMiddleware`) and ensures appropriate user roles.
     - **Validation:** Handles specific validation checks, such as validating refresh tokens (`validateRefreshMiddleware`) before continuing the request flow.
     - **Rate Limiting:** Implements general and sensitive request limits (e.g., `generalLimiter`, `sensitiveLimiter`).
     - **Cross-Origin Resource Sharing (CORS):** Validates allowed origins.

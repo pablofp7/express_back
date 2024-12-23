@@ -1,201 +1,207 @@
-# README - Back End para Movie and User Management
 
-## Descripción
+# README - Back End for Movie and User Management
 
-Este proyecto es un backend desarrollado con **Express.js** que sigue una arquitectura basada en **Controladores y Modelos** (MC). No incluye una capa de vista, ya que no se realiza **Server-Side Rendering (SSR)**; en su lugar, la responsabilidad de la interfaz de usuario recae en el frontend. Está diseñado y adaptado específicamente para **APIs REST**.
+## Description
 
-## Funcionalidades Principales
+This project is a backend developed with **Express.js** that follows a **Model-Controller (MC)** architecture. It does not include a view layer, as there is no **Server-Side Rendering (SSR)**; instead, the responsibility for the user interface lies with the frontend. It is specifically designed and adapted for **REST APIs**.
 
-### Usuarios
+## Main Features
 
-- Registro de nuevos usuarios.
-- Inicio de sesión con emisión de tokens:
-  - **Access Token**: Token de corta duración para acceder a recursos protegidos.
-  - **Refresh Token**: Token de larga duración enviado en una cookie segura.
-- Renovación del Access Token utilizando el Refresh Token.
-- Recuperación de información de usuarios.
-- Actualización y eliminación de usuarios (requiere permisos de administrador).
+### Users
 
-### Películas
+- Registration of new users.
+- Login with token issuance:
+  - **Access Token**: Short-lived token to access protected resources.
+  - **Refresh Token**: Long-lived token sent in a secure cookie.
+- Renewal of the Access Token using the Refresh Token.
+- Retrieval of user information.
+- Updating and deletion of users (requires admin permissions).
 
-- Recuperación de la lista completa de películas.
-- Creación, actualización y eliminación de películas (requiere permisos de administrador).
-- Recuperación de información de películas por ID.
+### Movies
 
-## Tecnologías y Herramientas
+- Retrieval of the complete movie list.
+- Creation, updating, and deletion of movies (requires admin permissions).
+- Retrieval of movie information by ID.
+
+## Technologies and Tools
 
 - **Node.js**
 - **Express.js**
-- **MySQL**, **SQLite** y **MongoDB** (soportado por una capa de abstracción de bases de datos `dbConnection.js`).
-- **JWT (JSON Web Tokens)** para autenticación y autorización.
-- **Middleware personalizados**:
-  - `authMiddleware.js`: Verifica tokens de acceso y permisos.
-  - `validateRefreshMiddleware.js`: Valida tokens de refresco para renovación.
-- **OpenAPI 3.1.1** para la documentación de la API.
+- **MySQL**, **SQLite**, and **MongoDB** (supported by a `dbConnection.js` database abstraction layer).
+- **JWT (JSON Web Tokens)** for authentication and authorization.
+- **Custom middleware**:
+  - `authMiddleware.js`: Verifies access tokens and permissions.
+  - `validateRefreshMiddleware.js`: Validates refresh tokens for renewal.
+  - `generalLimiter.js`: Implements general request rate limiting.
+  - `sensitiveLimiter.js`: Adds stricter rate limiting for sensitive endpoints.
+  - `corsMiddleware.js`: Handles Cross-Origin Resource Sharing (CORS) validation.
+  - `ipBlacklistMiddleware.js`: Blocks requests from blacklisted IP addresses.
+- **OpenAPI 3.1.1** for API documentation.
 
-## Instalación
+## Installation
 
-1. Clona este repositorio:
+1. Clone this repository:
 
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone <REPOSITORY_URL>
    ```
 
-2. Instala las dependencias:
+2. Install dependencies:
    ```bash
    npm install
    ```
-3. Configura las variables de entorno:
-   Copia el archivo .env.example y renńombralo como .env:
+
+3. Configure the environment variables:
+   Copy the `.env.example` file and rename it to `.env`:
 
    ```bash
    cp .env.example .env
    ```
 
-   A continuación, edita el archivo .env y completa las variables necesarias según tu entorno.
+   Then edit the `.env` file and complete the necessary variables according to your environment.
 
-4. Inicia el servidor según la base de datos que quieras usar:
+4. Start the server based on the database you want to use:
 
-   Para usar MySQL:
+   To use MySQL:
 
    ```bash
    npm run start:mysql
    ```
 
-   Para usar la base de datos local o mongoDB:
+   To use the local database or MongoDB:
 
    ```bash
    npm run start:local
    ```
 
-   o
+   or
 
    ```bash
    npm run start:mongo
    ```
 
-   El servidor se ejecutará en el puerto definido en el archivo .env (por defecto, 33333).
+   The server will run on the port defined in the `.env` file (default: 3000).
 
-  **NOTA**: Para local y sobre todo mongo no está la funcionalidad completa, se empezó a desarrollar con las tres opciones para aprender inyección de dependecias con varios modelos y demás, pero el avance final solo se llevó a cabo con las BBDD SQL (hay varios tipos).
+   **NOTE**: Local and MongoDB functionalities are not fully implemented. Development began with all three options to practice dependency injection with multiple models, but the final implementation focused only on SQL databases (several types are available).
 
-## Uso
+## Usage
 
-### **Endpoints Clave**
+### **Key Endpoints**
 
-Antes de profundizar en los endpoints clave, puedes explorar y probar todos los endpoints de esta API de forma interactiva usando **Swagger UI**.
+Before diving into the key endpoints, you can explore and test all API endpoints interactively using **Swagger UI**.
 
 - **GET `/api-docs`**:  
-  Accede a la documentación interactiva generada a partir del archivo `openapi.yaml`.  
-  Para acceder:  
-  1. Asegúrate de que el servidor está en ejecución.  
-  2. Abre la siguiente URL en tu navegador (reemplaza `<api-port>` con el puerto configurado en tu entorno, por defecto es `3000`):  
+  Access the interactive documentation generated from the `openapi.yaml` file.  
+  To access:  
+  1. Ensure the server is running.  
+  2. Open the following URL in your browser (replace `<api-port>` with the port configured in your environment, default is `3000`):  
      ```
      http://localhost:<api-port>/api-docs
      ```
 
-#### Usuarios
+#### Users
 
 - **POST `/user/login`**:  
-  Inicia sesión y devuelve tokens de acceso y refresco.
+  Logs in and returns access and refresh tokens.
 - **POST `/user/register`**:  
-  Registra un nuevo usuario.
+  Registers a new user.
 - **GET `/user/refresh-token`**:  
-  Renueva el token de acceso usando el refresh token.
+  Renews the access token using the refresh token.
 - **POST `/user/logout`**:  
-  Cierra la sesión de un usuario autenticado, invalidando sus tokens.
+  Logs out an authenticated user, invalidating their tokens.
 - **DELETE `/user/{id}`**:  
-  Elimina un usuario (requiere rol admin).
+  Deletes a user (requires admin role).
 - **PATCH `/user/{id}`**:  
-  Actualiza información de un usuario (requiere rol admin).
+  Updates user information (requires admin role).
 - **GET `/user/:username`**:  
-  Devuelve la información de un usuario dado su nombre de usuario.
+  Retrieves user information by username.
 
-#### Películas
+#### Movies
 
-- **GET `/movies`**:
-  Recupera todas las películas.
-- **POST `/movies`**:
-  Crea una nueva película (requiere rol admin).
-- **GET `/movies/{id}`**:
-  Recupera información de una película por ID.
-- **PATCH `/movies/{id}`**:
-  Actualiza una película (requiere rol admin).
-- **DELETE `/movies/{id}`**:
-  Elimina una película (requiere rol admin).
+- **GET `/movies`**:  
+  Retrieves all movies.
+- **POST `/movies`**:  
+  Creates a new movie (requires admin role).
+- **GET `/movies/{id}`**:  
+  Retrieves movie information by ID.
+- **PATCH `/movies/{id}`**:  
+  Updates a movie (requires admin role).
+- **DELETE `/movies/{id}`**:  
+  Deletes a movie (requires admin role).
 
-### Autenticación
+### Authentication
 
-- **Access Token**: Enviado en el header `Authorization: Bearer <token>`.
-- **Refresh Token**: Enviado en una cookie `refresh-token` con propiedades `HttpOnly` y `SameSite` para mayor seguridad.
+- **Access Token**: Sent in the `Authorization: Bearer <token>` header.
+- **Refresh Token**: Sent in a `refresh-token` cookie with `HttpOnly` and `SameSite` properties for added security.
 
 ## Testing
 
-Este proyecto incluye un plan de pruebas detallado dividido en diferentes niveles:
+This project includes a detailed testing plan divided into different levels:
 
-- **Pruebas unitarias**:  
-  Validan el correcto funcionamiento de componentes individuales, como middlewares, controladores y utilidades.
+- **Unit Tests**:  
+  Validate the correct functionality of individual components, such as middleware, controllers, and utilities.
 
-- **Pruebas de integración**:  
-  Verifican la interacción entre rutas, middlewares y bases de datos.
+- **Integration Tests**:  
+  Verify the interaction between routes, middleware, and databases.
 
-- **Pruebas funcionales**:  
-  Validan el comportamiento completo de los endpoints principales.
+- **Functional Tests**:  
+  Validate the complete behavior of key endpoints.
 
-- **Pruebas E2E (End-to-End)**:  
-  Simulan flujos completos desde el punto de vista del cliente.
+- **End-to-End (E2E) Tests**:  
+  Simulate complete flows from the client perspective.
 
-### **Ejecución de Pruebas**
+### **Running Tests**
 
-Puedes ejecutar todas las pruebas o seleccionar un tipo específico usando los siguientes comandos:
+You can run all tests or select a specific type using the following commands:
 
-- **Todas las pruebas**:
+- **All tests**:
 
   ```bash
   npm test
   ```
 
-- **Pruebas unitarias**:
+- **Unit tests**:
 
   ```bash
   npm run test:unit
   ```
 
-- **Pruebas de integración**:
+- **Integration tests**:
 
   ```bash
   npm run test:integration
   ```
 
-- **Pruebas funcionales**:
+- **Functional tests**:
 
   ```bash
   npm run test:functional
   ```
 
-- **Pruebas E2E**:
+- **E2E tests**:
   ```bash
   npm run test:e2e
   ```
 
-### **Cobertura de Pruebas**
+### **Test Coverage**
 
-Para medir la cobertura de las pruebas, utiliza el siguiente comando:
+To measure test coverage, use the following command:
 
 ```bash
 npx nyc npm test
 ```
 
-Esto generará un informe de cobertura que indica qué partes del código están probadas y cuáles no.
+This will generate a coverage report indicating which parts of the code are tested and which are not.
 
-<!-- ## Contribución
+<!-- ## Contribution
 
-1. Realiza un fork de este repositorio.
-2. Crea una nueva rama para tus cambios:
+1. Fork this repository.
+2. Create a new branch for your changes:
    ```bash
-   git checkout -b feature/nueva-funcionalidad
+   git checkout -b feature/new-feature
    ```
-3. Envía tus cambios en un pull request.
+3. Submit your changes in a pull request.
 
-## Licencia
+## License
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más información. -->
+This project is licensed under the MIT License. See the `LICENSE` file for more information. -->
