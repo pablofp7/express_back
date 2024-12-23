@@ -17,18 +17,20 @@ const { userDbType, movieDbType } = yargs(hideBin(process.argv))
     choices: ['local', 'freesql', 'turso'],
     demandOption: true,
   })
+  .help().argv; // Este punto y coma es necesario para que el linter eneitnda que lo siguiente es una función autoinvocada
 
-  .help().argv // Hace falta ';' porque si no no sabe como inferir esta forma, podria ser un argumento siendo argv una funcion por ejemplo
-
-;(async () => {
+(async () => {
   try {
-    // Instanciar y inicializar modelos
     const movieModel = new MovieModel({ movieDbType })
     const userModel = new UserModel({ userDbType })
 
+    /*
+    Se podría pensar que se puede hacer la inicialización ya en el constructor de los modelos, pero hay un problema:
+    La inicialización de la conexión a la base de datos es asíncrona (la parte que usan los clientes de librerias como mysql2.
+    Por lo tanto, no se puede hacer en el constructor de la clase (los constructores no pueden ser asíncronos).
+    */
     await Promise.all([movieModel.init(), userModel.init()])
 
-    // Crear y lanzar la aplicación
     createApp({ movieModel, userModel })
   }
   catch (error) {

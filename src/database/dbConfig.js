@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { CustomError } from '../utils/customError'
 
 process.loadEnvFile('.env', 'utf-8')
 

@@ -12,11 +12,6 @@ export class UserModel {
     this.databaseConnection = null
   }
 
-  /*  Este se podría hacer en el constructor, pero lo he creado para poder hacerlo asíncrono
-  Aunque tengo que revisarlo, al ser de inicalizacion no aporta nada la asincronía
-  Ahora el init se hace desde el server_sql.js.
-  */
-
   init = async () => {
     this.databaseConnection = new DbConn()
     await this.databaseConnection.init({ userDbType: this.userDbType })
