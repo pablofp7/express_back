@@ -2,7 +2,7 @@ import { validateUser, validatePartialUser } from '../utils/userValidation.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
-import { CustomError, ERROR_TYPES } from '../utils/customError.js'
+import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import bcrypt from 'bcrypt'
 
 export class UserController {

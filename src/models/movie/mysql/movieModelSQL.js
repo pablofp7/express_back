@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { DbConn } from '../../../database/dbConnection.js'
-import { ERROR_TYPES, CustomError } from '../../../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../../../errors/customError.js'
 
 export class MovieModel {
   constructor({ movieDbType }) {

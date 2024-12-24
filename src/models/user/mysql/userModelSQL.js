@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 import { config } from '../../../config/config.js'
 import { checkUUID } from '../../../utils/uuidValidation.js'
 import dayjs from 'dayjs'
-import { CustomError } from '../../../utils/customError.js'
+import { CustomError } from '../../../errors/customError.js'
 
 export class UserModel {
   constructor({ userDbType }) {

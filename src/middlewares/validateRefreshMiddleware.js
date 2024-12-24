@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
-import { CustomError, ERROR_TYPES } from '../utils/customError.js'
+import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 
 export const validateRefreshMiddleware = ({ userModel }) => {
   if (!userModel) {

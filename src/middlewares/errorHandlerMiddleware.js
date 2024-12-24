@@ -1,4 +1,4 @@
-import { CustomError, ERROR_TYPES } from '../utils/customError.js'
+import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import { config } from '../config/config.js'
 
 export const errorHandlerMiddleware = (error, _req, res, _next) => {

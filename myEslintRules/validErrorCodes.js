@@ -1,4 +1,4 @@
-import { ERROR_TYPES } from '../src/utils/customError.js' // Adjust the path if necessary
+import { ERROR_TYPES } from '../src/errors/customError.js' // Adjust the path if necessary
 
 const flattenErrorPaths = (errorTypes) => {
   const paths = []

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
-import { ERROR_TYPES, CustomError } from '../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) => {
   if (!userModel) {

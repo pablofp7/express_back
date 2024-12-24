@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit'
 import { blacklist } from '../utils/blacklist.js'
-import { CustomError, ERROR_TYPES } from '../utils/error.js'
+import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

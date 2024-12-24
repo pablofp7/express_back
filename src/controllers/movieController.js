@@ -1,6 +1,6 @@
 import { validateMovie, validatePartialMovie } from '../utils/movieValidation.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { ERROR_TYPES, CustomError } from '../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 import { checkUUID } from '../utils/uuidValidation.js'
 
 export class MovieController {

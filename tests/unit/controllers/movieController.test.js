@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import sinon from 'sinon'
 import { MovieController } from '../../../src/controllers/movieController.js'
 import { validateMovie, validatePartialMovie } from '../../../src/utils/movieValidation.js'
-import { CustomError } from '../../../src/utils/customError.js'
+import { CustomError } from '../../../src/errors/customError.js'
 
 describe('MovieController', () => {
   let movieController

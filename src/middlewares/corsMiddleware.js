@@ -1,5 +1,5 @@
 import cors from 'cors'
-import { ERROR_TYPES, CustomError } from '../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 const ACCEPTED_ORIGINS = [
   // 'http://example.com', // Añade dominios específicos

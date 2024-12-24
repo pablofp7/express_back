@@ -1,5 +1,5 @@
 import { blacklist } from '../utils/blacklist.js'
-import { ERROR_TYPES, CustomError } from '../utils/customError.js'
+import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 export const blacklistMiddleware = (req, res, next) => {
   if (blacklist.has(req.ip)) {

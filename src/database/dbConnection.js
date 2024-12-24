@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 import { createClient } from '@libsql/client'
-import { CustomError, ERROR_TYPES } from '../utils/customError.js'
+import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import { getDatabaseConfigs } from './dbConfig.js'
 
 export class DbConn {
