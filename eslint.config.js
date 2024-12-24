@@ -4,7 +4,9 @@ import unusedImports from 'eslint-plugin-unused-imports' // Importa el plugin co
 
 export default [
   {
+    // Configuración general para archivos de código fuente
     files: ['**/*.js'], // Aplica esta configuración a archivos .js
+    ignores: ['node_modules', 'dist', 'tests/**'], // Ignora los archivos en node_modules y dist y tests
     languageOptions: {
       ecmaVersion: 'latest', // Habilita ES2021+
       sourceType: 'module', // Indica que usas módulos ES6 (import/export)
@@ -56,6 +58,68 @@ export default [
       'prefer-template': 'error',
 
       'valid-error-structure/valid-error-structure': 'error',
+    },
+  },
+
+  // Configuración para archivos de pruebas
+  {
+    files: ['tests/**/*.js'], // Archivos de pruebas
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        before: 'readonly',
+        beforeEach: 'readonly',
+        after: 'readonly',
+        afterEach: 'readonly',
+        console: 'readonly', // Se suele permitir en tests
+        process: 'readonly',
+        __dirname: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        Buffer: 'readonly',
+        setImmediate: 'readonly',
+      },
+    },
+    plugins: {
+      '@stylistic': stylistic,
+      'valid-error-structure': validErrorCodesPlugin,
+      'unused-imports': unusedImports,
+    },
+    rules: {
+      ...stylistic.configs['recommended-flat'].rules,
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'object-shorthand': ['error', 'always'],
+      'arrow-parens': ['error', 'always'],
+      '@stylistic/arrow-parens': 'off',
+      'eqeqeq': ['error', 'always'],
+      'no-undef': 'error',
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-vars': ['error', {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      'no-duplicate-imports': 'error',
+      'no-shadow': 'error',
+      'max-len': ['error', {
+        code: 300,
+        ignoreComments: true,
+        ignoreUrls: true,
+        ignoreStrings: false,
+        ignoreTemplateLiterals: false,
+        ignoreRegExpLiterals: true,
+      }],
+      'prefer-template': 'error',
+      'valid-error-structure/valid-error-structure': 'error',
+      // Desactivar reglas problemáticas para Mocha
+      'no-unused-expressions': 'off', // Para Chai
     },
   },
 ]
