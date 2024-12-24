@@ -1,5 +1,4 @@
 import { validateUser, validatePartialUser } from '../utils/userValidation.js'
-import { asyncHandler } from '../utils/asyncHandler.js'
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 import { CustomError, ERROR_TYPES } from '../errors/customError.js'
@@ -11,7 +10,7 @@ export class UserController {
     // this.userModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
-  register = asyncHandler(async (req, res) => {
+  register = async (req, res) => {
     const input = req.body
 
     if (!await validateUser(input)) {
@@ -25,9 +24,9 @@ export class UserController {
     const newUser = await this.userModel.createUser({ input })
     console.log('Usuario registrado:', newUser)
     res.status(201).json(newUser)
-  })
+  }
 
-  login = asyncHandler(async (req, res) => {
+  login = async (req, res) => {
     const { username, password } = req.body
 
     if (!await validatePartialUser({ username, password })) {
@@ -94,9 +93,9 @@ export class UserController {
         `Refresh Token (Set-Cookie Header): ${setCookieHeader}`,
       )
     }
-  })
+  }
 
-  deleteUser = asyncHandler(async (req, res) => {
+  deleteUser = async (req, res) => {
     const { id } = req.params
 
     if (!id) {
@@ -119,9 +118,9 @@ export class UserController {
     }
 
     res.status(200).json({ message: 'User deleted successfully' })
-  })
+  }
 
-  logout = asyncHandler(async (req, res) => {
+  logout = async (req, res) => {
     const refreshToken = req.cookies?.refreshToken
     const accessToken = req.headers.authorization?.split(' ')[1]
 
@@ -179,10 +178,10 @@ export class UserController {
     })
 
     res.status(200).json({ message: 'Logout successful.' })
-  })
+  }
 
   // Refresh Token
-  refreshToken = asyncHandler(async (req, res) => {
+  refreshToken = async (req, res) => {
     const { username, role, userId } = req.refreshTokenData
 
     if (!username || !role || !userId) {
@@ -214,9 +213,9 @@ export class UserController {
     if (config.node_env !== 'production') {
       console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)
     }
-  })
+  }
 
-  updateUser = asyncHandler(async (req, res) => {
+  updateUser = async (req, res) => {
     const { id } = req.params
 
     if (!id) {
@@ -272,9 +271,9 @@ export class UserController {
     }
 
     res.status(200).json({ message: 'User updated successfully.', id })
-  })
+  }
 
-  getIdByUsername = asyncHandler(async (req, res) => {
+  getIdByUsername = async (req, res) => {
     const { username } = req.params
 
     if (!username) {
@@ -294,9 +293,9 @@ export class UserController {
     }
 
     res.status(200).json({ id: user.id })
-  })
+  }
 
-  getUser = asyncHandler(async (req, res) => {
+  getUser = async (req, res) => {
     const { username } = req.params
 
     if (!username) {
@@ -317,5 +316,5 @@ export class UserController {
 
     const { password: _hidden, ...safeUser } = user
     res.status(200).json(safeUser)
-  })
+  }
 }

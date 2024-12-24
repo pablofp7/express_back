@@ -1,5 +1,4 @@
 import { validateMovie, validatePartialMovie } from '../utils/movieValidation.js'
-import { asyncHandler } from '../utils/asyncHandler.js'
 import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 import { checkUUID } from '../utils/uuidValidation.js'
 
@@ -9,16 +8,16 @@ export class MovieController {
     // this.movieModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
-  getAll = asyncHandler(async (req, res) => {
+  getAll = async (req, res) => {
     const { genre } = req.query
     console.log(`Solicitadas todas las películas${genre ? ` filtradas por género: ${genre}` : ''}.`)
     const movies = await this.movieModel.getAll({ genre })
 
     console.log('Devolviendo las películas.')
     res.status(200).json(movies)
-  })
+  }
 
-  getById = asyncHandler(async (req, res) => {
+  getById = async (req, res) => {
     const { id } = req.params
     if (!await checkUUID(id)) {
       throw new CustomError({
@@ -38,9 +37,9 @@ export class MovieController {
         errorType: ERROR_TYPES.movie.NOT_FOUND,
       })
     }
-  })
+  }
 
-  create = asyncHandler(async (req, res) => {
+  create = async (req, res) => {
     const input = req.body
 
     if (!await validateMovie(input)) {
@@ -53,9 +52,9 @@ export class MovieController {
     const newMovie = await this.movieModel.create({ input })
     console.log('Creación de una nueva película: ', newMovie)
     res.status(201).json(newMovie)
-  })
+  }
 
-  delete = asyncHandler(async (req, res) => {
+  delete = async (req, res) => {
     const { id } = req.params
     if (!await checkUUID(id)) {
       throw new CustomError({
@@ -74,9 +73,9 @@ export class MovieController {
 
     console.log('Eliminación de una película: ', id)
     res.status(200).json({ message: 'Movie deleted' })
-  })
+  }
 
-  update = asyncHandler(async (req, res) => {
+  update = async (req, res) => {
     const { id } = req.params
     const input = req.body
 
@@ -131,5 +130,5 @@ export class MovieController {
 
     console.log('Actualización de una película: ', id)
     res.status(200).json({ message: 'Movie updated successfully' })
-  })
+  }
 }

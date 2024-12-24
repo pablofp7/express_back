@@ -49,6 +49,7 @@ const mapError = (error, isDevelopment) => {
 
 // Responder al cliente con el error pero sin información de depuración en la respuesta
 const respondWithError = (res, { status, message }) => {
+  // console.log(`Respondiendo status ${status} con mensaje ${message}`)
   res.status(status).json({ error: message })
 }
 

@@ -3,10 +3,11 @@ import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 export const blacklistMiddleware = (req, res, next) => {
   if (blacklist.has(req.ip)) {
-    throw new CustomError({
+    const error = new CustomError({
       origError: new Error(`Blocked IP: ${req.ip}`),
       errorType: ERROR_TYPES.auth.ACCESS_DENIED,
     })
+    return next(error) // Pasar el error al siguiente middleware
   }
-  next()
+  next() // Continuar el flujo si no hay error
 }

@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 import { ERROR_TYPES, CustomError } from '../errors/customError.js'
+import { asyncHandler } from '../utils/asyncHandler.js'
 
 export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) => {
   if (!userModel) {
@@ -10,7 +11,7 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
     })
   }
 
-  return async (req, res, next) => {
+  return asyncHandler(async (req, res, next) => {
     let token
 
     if (req.headers.authorization) {
@@ -61,5 +62,5 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
     }
 
     next()
-  }
+  })
 }

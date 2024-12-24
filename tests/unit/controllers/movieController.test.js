@@ -1,15 +1,24 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import { MovieController } from '../../../src/controllers/movieController.js'
+import esmock from 'esmock'
+import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
 import { validateMovie, validatePartialMovie } from '../../../src/utils/movieValidation.js'
-import { CustomError } from '../../../src/errors/customError.js'
 
 describe('MovieController', () => {
   let movieController
   let movieModelMock
   let req, res, next
+  let checkUUIDStub
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Stub for `checkUUID`
+    checkUUIDStub = sinon.stub()
+
+    // Dynamically mock the module using esmock
+    const { MovieController } = await esmock('../../../src/controllers/movieController.js', {
+      '../../../src/utils/uuidValidation.js': { checkUUID: checkUUIDStub },
+    })
+
     // Mock del modelo
     movieModelMock = {
       getAll: sinon.stub(),
@@ -19,10 +28,10 @@ describe('MovieController', () => {
       update: sinon.stub(),
     }
 
-    // Inicializar el controlador con el modelo mockeado
+    // Initialize the controller with the mocked model
     movieController = new MovieController({ movieModel: movieModelMock })
 
-    // Simulación de req, res y next
+    // Mock req, res, and next
     req = { params: {}, body: {}, query: {} }
     res = {
       status: sinon.stub().returnsThis(),
@@ -32,10 +41,9 @@ describe('MovieController', () => {
   })
 
   afterEach(() => {
-    sinon.restore()
+    sinon.restore() // Restore all stubs/mocks
   })
 
-  // Pruebas para getAll
   describe('getAll', () => {
     it('debería devolver todas las películas', async () => {
       const mockMovies = [{ id: 1, title: 'Movie A' }]
@@ -47,19 +55,27 @@ describe('MovieController', () => {
       expect(res.json.calledWith(mockMovies)).to.be.true
     })
 
-    it('debería pasar un CustomError a next si falla la obtención de películas', (done) => {
-      movieModelMock.getAll.rejects(new Error('DB Error'))
+    it('debería devolver un array vacío si no hay películas', async () => {
+      movieModelMock.getAll.resolves([]) // Simula que no hay películas
+
+      await movieController.getAll(req, res, next)
+
+      expect(movieModelMock.getAll.calledOnce).to.be.true
+      expect(res.json.calledWith([])).to.be.true // Comprueba que devuelve un array vacío
+    })
+
+    it('debería propagar errores de la capa de base de datos', (done) => {
+      const dbError = new Error('DB Query Failed') // Puede ser cualquier error
+      movieModelMock.getAll.rejects(dbError) // Simula un rechazo
 
       // Llama al controlador
       movieController.getAll(req, res, next)
 
-      // Usa setImmediate para dejar que asyncHandler procese el error
+      // Usa setImmediate para dejar que asyncHandler maneje el error
       setImmediate(() => {
         try {
           expect(next.calledOnce).to.be.true
-          const error = next.args[0][0]
-          expect(error).to.be.instanceOf(CustomError)
-          expect(error.message).to.equal('Error fetching movie data.')
+          expect(next.calledWith(dbError)).to.be.true // Verifica que el mismo error se propaga
           done()
         }
         catch (err) {
@@ -69,49 +85,69 @@ describe('MovieController', () => {
     })
   })
 
-  // Pruebas para getById
   describe('getById', () => {
     it('debería devolver una película por ID', async () => {
       req.params.id = '1'
       const mockMovie = { id: 1, title: 'Movie A' }
-      movieModelMock.getById.resolves(mockMovie)
+
+      checkUUIDStub.resolves(true) // Simula que el UUID es válido
+      movieModelMock.getById.resolves(mockMovie) // Configura el mock para devolver una película
 
       await movieController.getById(req, res, next)
 
+      // Verifica que checkUUID fue llamado con el ID correcto
+      expect(checkUUIDStub.calledOnceWith('1')).to.be.true
+      // Verifica que getById fue llamado con los argumentos correctos
       expect(movieModelMock.getById.calledWith({ id: '1' })).to.be.true
+      // Verifica que la respuesta contiene la película esperada
       expect(res.json.calledWith(mockMovie)).to.be.true
     })
 
-    it('Using setImmediate. debería pasar un CustomError a next si la película no existe', (done) => {
+    it('debería pasar un CustomError a next si la película no existe', (done) => {
       req.params.id = '1'
-      movieModelMock.getById.resolves(null)
+
+      checkUUIDStub.resolves(true) // Simula que el UUID es válido
+      movieModelMock.getById.resolves(null) // Simula que no se encuentra la película
 
       movieController.getById(req, res, next)
 
       setImmediate(() => {
         try {
+          // Verifica que next fue llamado
           expect(next.calledOnce).to.be.true
+          // Verifica que el error pasado es un CustomError
           const error = next.args[0][0]
           expect(error).to.be.instanceOf(CustomError)
-          expect(error.message).to.equal('Movie with id 1 not found')
+          expect(error.errorType).to.equal(ERROR_TYPES.movie.NOT_FOUND) // Verifica el tipo de error
           done()
         }
         catch (err) {
-          done(err)
+          done(err) // Finaliza el test con error si algo falla
         }
       })
     })
 
-    it('Using async await.debería pasar un CustomError a next si la película no existe', async () => {
-      req.params.id = '1'
-      movieModelMock.getById.resolves(null)
+    it('debería pasar un CustomError a next si el UUID es inválido', (done) => {
+      req.params.id = 'invalid-uuid'
 
-      await movieController.getById(req, res, next)
+      checkUUIDStub.resolves(false) // Simula que el UUID no es válido
 
-      expect(next.calledOnce).to.be.true // Verify `next` was called once
-      const error = next.args[0][0] // Access the error passed to `next`
-      expect(error).to.be.instanceOf(CustomError) // Ensure it's a `CustomError`
-      expect(error.message).to.equal('Movie with id 1 not found') // Check the error message
+      movieController.getById(req, res, next)
+
+      setImmediate(() => {
+        try {
+          // Verifica que next fue llamado
+          expect(next.calledOnce).to.be.true
+          // Verifica que el error pasado es un CustomError
+          const error = next.args[0][0]
+          expect(error).to.be.instanceOf(CustomError)
+          expect(error.errorType).to.equal(ERROR_TYPES.general.INVALID_UUID) // Verifica el tipo de error
+          done()
+        }
+        catch (err) {
+          done(err) // Finaliza el test con error si algo falla
+        }
+      })
     })
   })
 
