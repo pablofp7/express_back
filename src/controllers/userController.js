@@ -3,11 +3,11 @@ import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import bcrypt from 'bcrypt'
+import { checkUUID } from '../utils/uuidValidation.js'
 
 export class UserController {
   constructor({ userModel }) {
     this.userModel = userModel
-    // this.userModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
   register = async (req, res) => {
@@ -54,6 +54,7 @@ export class UserController {
       config.jwtSecret,
       { expiresIn: config.accessTokenLifetime },
     )
+
     const refreshToken = jwt.sign(
       { username, role: user.role, userId: user.id },
       config.refreshTokenSecret,
@@ -98,22 +99,19 @@ export class UserController {
   deleteUser = async (req, res) => {
     const { id } = req.params
 
-    if (!id) {
-      throw new CustomError('USER_MISSING_ID', {
-        message: 'Missing user ID',
-        resource: 'User',
-        operation: 'DELETE',
+    if (!await checkUUID(id)) {
+      throw new CustomError({
+        origError: new Error('Invalid UUID'),
+        errorType: ERROR_TYPES.general.INVALID_UUID,
       })
     }
 
     const result = await this.userModel.deleteUser({ userId: id })
 
     if (!result || result.affectedRows === 0) {
-      throw new CustomError('GENERAL_NOT_FOUND', {
-        message: `User with ID ${id} not found`,
-        resource: 'User',
-        operation: 'DELETE',
-        resourceValue: id,
+      throw new CustomError({
+        origError: new Error(`User with ID ${id} not found`),
+        errorType: ERROR_TYPES.general.NOT_FOUND,
       })
     }
 
@@ -138,7 +136,8 @@ export class UserController {
       })
     }
 
-    if (accessToken && (typeof accessToken !== 'string' || accessToken.trim() === '')) {
+    if (accessToken !== undefined && (typeof accessToken !== 'string' || accessToken.trim() === '')) {
+      console.log('Access token inválido o vacío, lanzando error')
       throw new CustomError({
         origError: new Error('Invalid access token format'),
         errorType: ERROR_TYPES.auth.INVALID_TOKEN,
@@ -167,13 +166,7 @@ export class UserController {
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: config.node_env === 'production',
-      sameSite: 'Strict',
-    })
-
-    res.clearCookie('authToken', {
-      httpOnly: true,
-      secure: config.node_env === 'production',
+      secure: config.nodeEnv === 'production',
       sameSite: 'Strict',
     })
 
@@ -210,7 +203,7 @@ export class UserController {
         accessToken,
       })
 
-    if (config.node_env !== 'production') {
+    if (config.nodeEnv !== 'production') {
       console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)
     }
   }
@@ -218,16 +211,14 @@ export class UserController {
   updateUser = async (req, res) => {
     const { id } = req.params
 
-    if (!id) {
+    if (!await checkUUID(id)) {
       throw new CustomError({
-        origError: new Error('Missing user ID'),
-        errorType: ERROR_TYPES.user.MISSING_ID,
+        origError: new Error('Invalid UUID'),
+        errorType: ERROR_TYPES.general.INVALID_UUID,
       })
     }
 
-    const validationResult = await validatePartialUser(req.body)
-
-    if (!validationResult) {
+    if (!await validatePartialUser(req.body)) {
       throw new CustomError({
         origError: new Error('Validation failed during update'),
         errorType: ERROR_TYPES.user.VALIDATION_ERROR,
