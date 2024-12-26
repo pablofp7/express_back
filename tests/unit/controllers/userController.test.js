@@ -291,5 +291,117 @@ describe('UserController', () => {
     })
   })
 
-  // Falta getIDByUsername y getUser
+  describe('getIdByUsername', () => {
+    it('debería devolver el ID del usuario para un nombre de usuario válido', async () => {
+      // Simula parámetros de entrada
+      req.params.username = 'validUser'
+
+      // Simula la respuesta del modelo
+      const mockUser = { id: 1 }
+      userModelMock.getUserByUsername.resolves(mockUser)
+
+      // Llama al controlador
+      await userController.getIdByUsername(req, res, next)
+
+      // Verifica que se llamó al modelo con los argumentos correctos
+      expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'validUser' })).to.be.true
+
+      // Verifica la respuesta del controlador
+      expect(res.status.calledOnceWith(200)).to.be.true
+      expect(res.json.calledOnceWith({ id: mockUser.id })).to.be.true
+    })
+
+    it('debería lanzar un CustomError si falta el parámetro username', async () => {
+      req.params.username = undefined // Falta el username
+
+      // Llama al controlador y captura el error
+      const getIdPromise = userController.getIdByUsername(req, res, next)
+
+      // Verifica que se lanza un CustomError
+      await expect(getIdPromise).to.be.rejectedWith(CustomError)
+      await expect(getIdPromise).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
+
+      // Verifica que no se llamó al modelo
+      expect(userModelMock.getUserByUsername.called).to.be.false
+    })
+
+    it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
+      req.params.username = 'nonExistentUser' // Usuario no existente
+
+      // Simula que el modelo no encuentra al usuario
+      userModelMock.getUserByUsername.resolves(null)
+
+      // Llama al controlador y captura el error
+      const getIdPromise = userController.getIdByUsername(req, res, next)
+
+      // Verifica que se lanza un CustomError
+      await expect(getIdPromise).to.be.rejectedWith(CustomError)
+      await expect(getIdPromise).to.be.rejectedWith(ERROR_TYPES.general.NOT_FOUND)
+
+      // Verifica que el modelo fue llamado correctamente
+      expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'nonExistentUser' })).to.be.true
+    })
+  })
+
+  describe('getUser', () => {
+    it('debería devolver los datos del usuario para un nombre de usuario válido', async () => {
+      // Simula parámetros de entrada
+      req.params.username = 'validUser'
+
+      // Simula la respuesta del modelo
+      const mockUser = {
+        id: 1,
+        username: 'validUser',
+        email: 'user@example.com',
+        password: 'hiddenPassword',
+      }
+      userModelMock.getUserByUsername.resolves(mockUser)
+
+      // Llama al controlador
+      await userController.getUser(req, res, next)
+
+      // Verifica que se llamó al modelo con los argumentos correctos
+      expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'validUser' })).to.be.true
+
+      // Verifica que la contraseña no está en la respuesta
+      const expectedResponse = {
+        id: mockUser.id,
+        username: mockUser.username,
+        email: mockUser.email,
+      }
+      expect(res.status.calledOnceWith(200)).to.be.true
+      expect(res.json.calledOnceWith(expectedResponse)).to.be.true
+    })
+
+    it('debería lanzar un CustomError si falta el parámetro username', async () => {
+      req.params.username = undefined // Falta el username
+
+      // Llama al controlador y captura el error
+      const getUserPromise = userController.getUser(req, res, next)
+
+      // Verifica que se lanza un CustomError
+      await expect(getUserPromise).to.be.rejectedWith(CustomError)
+      await expect(getUserPromise).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
+
+      // Verifica que no se llamó al modelo
+      expect(userModelMock.getUserByUsername.called).to.be.false
+    })
+
+    it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
+      req.params.username = 'nonExistentUser' // Usuario no existente
+
+      // Simula que el modelo no encuentra al usuario
+      userModelMock.getUserByUsername.resolves(null)
+
+      // Llama al controlador y captura el error
+      const getUserPromise = userController.getUser(req, res, next)
+
+      // Verifica que se lanza un CustomError
+      await expect(getUserPromise).to.be.rejectedWith(CustomError)
+      await expect(getUserPromise).to.be.rejectedWith(ERROR_TYPES.general.NOT_FOUND)
+
+      // Verifica que el modelo fue llamado correctamente
+      expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'nonExistentUser' })).to.be.true
+    })
+  })
 })

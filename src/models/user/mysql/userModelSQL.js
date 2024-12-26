@@ -2,7 +2,6 @@ import { DbConn } from '../../../database/dbConnection.js'
 import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcrypt'
 import { config } from '../../../config/config.js'
-import { checkUUID } from '../../../utils/uuidValidation.js'
 import dayjs from 'dayjs'
 import { CustomError } from '../../../errors/customError.js'
 
