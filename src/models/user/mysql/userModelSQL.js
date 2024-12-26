@@ -34,7 +34,7 @@ export class UserModel {
 
     let idRole
 
-    const insertUser = () => this.databaseConnection.query({
+    const insertUser = async () => await this.databaseConnection.query({
       query: `INSERT INTO user (${fields.join(',')}) VALUES (${values.map(() => '?').join(',')})`,
       queryParams: values,
     })
@@ -265,6 +265,6 @@ export class UserModel {
       queryParams: [token],
     })
 
-    return result?.[0] || null
+    return result || null
   }
 }
