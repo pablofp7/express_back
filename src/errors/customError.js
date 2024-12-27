@@ -8,27 +8,28 @@ export class CustomError extends Error {
       throw new Error('The "origError" parameter is required to create a CustomError.')
     }
 
-    // Validar si el errorType es válido; si no, asignar el error genérico
     const { code, message, status } = errorType || ERROR_TYPES.general.SERVER_ERROR
 
     if (!code || !message || !status) {
       throw new Error('The "errorType" parameter must be well-formed or will default to a generic error.')
     }
 
-    // Usar el mensaje del errorType
     super(message)
 
-    // Asignar propiedades principales
     this.code = code
     this.status = status
 
-    // Asignar campos adicionales
+    this.origError = origError
+    this.errorType = errorType
     Object.assign(this, additionalFields)
 
-    // Preservar la pila del error original
     if (origError.stack) {
       this.stack = origError.stack
     }
+  }
+
+  toString() {
+    return `CustomError: ${this.code} (Status: ${this.status}) - ${this.message}`
   }
 }
 
@@ -39,7 +40,7 @@ const createError = (category, segmentCode, status, message) => ({
 })
 
 export const ERROR_TYPES = {
-  // 1. Errores generales (core system errors)
+
   general: {
     INVALID_INPUT: createError('GENERAL', 'INVALID_INPUT', 400, 'Invalid input provided.'),
     INVALID_UUID: createError('GENERAL', 'INVALID_UUID', 400, 'Invalid UUID format.'),
@@ -48,7 +49,6 @@ export const ERROR_TYPES = {
     TOO_MANY_REQUESTS: createError('GENERAL', 'TOO_MANY_REQUESTS', 429, 'Too many requests.'),
   },
 
-  // 2. Autenticación (security related)
   auth: {
     ACCESS_DENIED: createError('AUTH', 'ACCESS_DENIED', 403, 'Access denied.'),
     ADMIN_ONLY: createError('AUTH', 'ADMIN_ONLY', 403, 'Access restricted to administrators only.'),
@@ -60,7 +60,6 @@ export const ERROR_TYPES = {
     TOKEN_REVOKED: createError('AUTH', 'TOKEN_REVOKED', 401, 'Access token has been revoked.'),
   },
 
-  // 3. Base de datos (infrastructure layer)
   database: {
     CONNECTION_CLOSED: createError('DB', 'CONNECTION_CLOSED', 500, 'The database connection is closed.'),
     CONNECTION_ERROR: createError('DB', 'CONNECTION_ERROR', 500, 'Database connection error.'),
@@ -76,7 +75,6 @@ export const ERROR_TYPES = {
     VALIDATION_ERROR: createError('DB', 'VALIDATION_ERROR', 400, 'Database validation failed.'),
   },
 
-  // 4. Películas (business domain specific)
   movie: {
     CREATE_ERROR: createError('MOVIE', 'CREATE_ERROR', 500, 'Error creating movie.'),
     DELETE_ERROR: createError('MOVIE', 'DELETE_ERROR', 500, 'Error deleting movie.'),
@@ -86,7 +84,6 @@ export const ERROR_TYPES = {
     VALIDATION_ERROR: createError('MOVIE', 'VALIDATION_ERROR', 400, 'Movie validation failed.'),
   },
 
-  // 5. Usuario (business domain specific)
   user: {
     DUPLICATE: createError('USER', 'DUPLICATE', 409, 'Duplicate user entry.'),
     INVALID_CREDENTIALS: createError('USER', 'INVALID_CREDENTIALS', 401, 'Invalid username or password.'),

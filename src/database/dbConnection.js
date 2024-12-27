@@ -67,7 +67,7 @@ export class DbConn {
     catch (error) {
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.CONNECTION_ERROR, // Este error existe y es adecuado para problemas de conexión
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR,
       })
     }
   }
@@ -82,7 +82,7 @@ export class DbConn {
     catch (error) {
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.CONNECTION_ERROR, // Error existente y apropiado
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR,
       })
     }
   }
@@ -125,7 +125,7 @@ export class DbConn {
     catch (error) {
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Este error existe y es adecuado
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
       })
     }
   }
@@ -143,7 +143,7 @@ export class DbConn {
     catch (error) {
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Error existente y apropiado
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
       })
     }
     finally {
@@ -169,7 +169,7 @@ export class DbConn {
     catch (error) {
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.TRANSACTION_ERROR, // Error existente y adecuado
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
       })
     }
     finally {
@@ -185,12 +185,11 @@ export class DbConn {
     await this.beginTransaction()
 
     try {
-      // Ejecutar cada función en secuencia
       for (const fn of functionsToExecute) {
         if (typeof fn !== 'function') {
           throw new TypeError('Each item in functionsToExecute must be a function.')
         }
-        await fn() // Ejecuta la función, que retorna una promesa
+        await fn()
       }
 
       await this.commitTransaction()

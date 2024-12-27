@@ -260,7 +260,6 @@ export class MovieModel {
             query: 'INSERT INTO genre (name) VALUES (?)',
             queryParams: [genre],
           })
-          // console.log(`El género "${genre}" fue insertado.`)
         }),
       )
     }
@@ -275,16 +274,17 @@ export class MovieModel {
       })
 
       if (!rows || rows.length === 0 || !rows[0]?.id) {
-        throw new CustomError({
+        const errorToLaunch = new CustomError({
           origError: new Error(`No ID found for genre: "${trimmedGenre}"`),
           errorType: ERROR_TYPES.general.NOT_FOUND,
         })
+
+        throw errorToLaunch
       }
 
       genreIds.push({ genre: trimmedGenre, genreId: rows[0].id })
     }
 
-    // console.log('IDs de géneros procesados:', genreIds)
     return genreIds
   }
 

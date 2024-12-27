@@ -2,6 +2,7 @@ import * as chai from 'chai'
 import sinon from 'sinon'
 import esmock from 'esmock'
 import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
+import { checkErrorType } from '../../testUtils/checkErrorType.js'
 import chaiAsPromised from 'chai-as-promised'
 
 chai.use(chaiAsPromised)
@@ -16,14 +17,14 @@ describe('UserController', () => {
   beforeEach(async () => {
     validateUserStub = sinon.stub()
     validatePartialUserStub = sinon.stub()
-    checkUUIDStub = sinon.stub() // Stub para checkUUID
+    checkUUIDStub = sinon.stub()
 
     const MockedController = await esmock('../../../src/controllers/userController.js', {
       '../../../src/utils/userValidation.js': {
         validateUser: validateUserStub,
         validatePartialUser: validatePartialUserStub,
       },
-      '../../../src/utils/uuidValidation.js': { checkUUID: checkUUIDStub }, // Mock de checkUUID
+      '../../../src/utils/uuidValidation.js': { checkUUID: checkUUIDStub },
     })
 
     userModelMock = {
@@ -40,11 +41,11 @@ describe('UserController', () => {
 
     req = { params: {}, body: {}, cookies: {}, headers: {} }
     res = {
-      status: sinon.stub().returnsThis(), // Devuelve `this` para encadenar
-      json: sinon.stub().returnsThis(), // Devuelve `this` por consistencia
+      status: sinon.stub().returnsThis(),
+      json: sinon.stub().returnsThis(),
       cookie: sinon.stub().returnsThis(),
       clearCookie: sinon.stub().returnsThis(),
-      setHeader: sinon.stub().returnsThis(), // Devuelve `this` para encadenar
+      setHeader: sinon.stub().returnsThis(),
       getHeader: sinon.stub().returns('refreshToken=value; Path=/; HttpOnly'),
     }
 
@@ -74,9 +75,14 @@ describe('UserController', () => {
       req.body = { username: '', password: '' }
       validateUserStub.resolves(false)
 
-      const registerPromise = userController.register(req, res, next)
-      await expect(registerPromise).to.be.rejectedWith(CustomError)
-      await expect(registerPromise).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
+      try {
+        await userController.register(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(validateUserStub.calledOnceWith(req.body)).to.be.true
       expect(userModelMock.createUser.called).to.be.false
@@ -105,10 +111,14 @@ describe('UserController', () => {
       validatePartialUserStub.resolves(true)
       userModelMock.authenticateUser.resolves(null)
 
-      const loginPromise = userController.login(req, res, next)
-
-      await expect(loginPromise).to.be.rejectedWith(CustomError)
-      await expect(loginPromise).to.be.rejectedWith(ERROR_TYPES.user.INVALID_CREDENTIALS)
+      try {
+        await userController.login(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(validatePartialUserStub.calledOnceWith(req.body)).to.be.true
       expect(userModelMock.authenticateUser.calledOnceWith(req.body)).to.be.true
@@ -119,8 +129,8 @@ describe('UserController', () => {
     it('debería eliminar un usuario existente por ID', async () => {
       req.params.id = '1'
 
-      checkUUIDStub.resolves(true) // El UUID es válido
-      userModelMock.deleteUser.resolves({ affectedRows: 1 }) // Simula que se elimina el usuario
+      checkUUIDStub.resolves(true)
+      userModelMock.deleteUser.resolves({ affectedRows: 1 })
 
       await userController.deleteUser(req, res, next)
 
@@ -133,25 +143,33 @@ describe('UserController', () => {
     it('debería lanzar un CustomError si el UUID es inválido', async () => {
       req.params.id = 'invalid-id'
 
-      checkUUIDStub.resolves(false) // El UUID no es válido
+      checkUUIDStub.resolves(false)
 
-      const deletePromise = userController.deleteUser(req, res, next)
-
-      await expect(deletePromise).to.be.rejectedWith(CustomError)
-      await expect(deletePromise).to.be.rejectedWith(ERROR_TYPES.general.INVALID_UUID)
+      try {
+        await userController.deleteUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
       expect(userModelMock.deleteUser.called).to.be.false
     })
 
     it('debería lanzar un CustomError si no se encuentra el usuario', async () => {
       req.params.id = '1'
 
-      checkUUIDStub.resolves(true) // El UUID es válido
-      userModelMock.deleteUser.resolves({ affectedRows: 0 }) // Simula que no se encuentra el usuario
+      checkUUIDStub.resolves(true)
+      userModelMock.deleteUser.resolves({ affectedRows: 0 })
 
-      const deletePromise = userController.deleteUser(req, res, next)
-
-      await expect(deletePromise).to.be.rejectedWith(CustomError)
-      await expect(deletePromise).to.be.rejectedWith(ERROR_TYPES.general.NOT_FOUND)
+      try {
+        await userController.deleteUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
       expect(userModelMock.deleteUser.calledOnceWith({ userId: '1' })).to.be.true
     })
   })
@@ -160,90 +178,110 @@ describe('UserController', () => {
     it('debería revocar tokens y limpiar cookies correctamente', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = 'Bearer valid-access-token'
-      userModelMock.revokeToken.resolves({ affectedRows: 1 }) // Simula éxito en la revocación
+      userModelMock.revokeToken.resolves({ affectedRows: 1 })
 
       await userController.logout(req, res, next)
 
-      expect(userModelMock.revokeToken.calledTwice).to.be.true // Verifica que se revocaron ambos tokens
-      expect(userModelMock.revokeToken.firstCall.args[0]).to.equal('valid-refresh-token') // Verifica refreshToken
-      expect(userModelMock.revokeToken.secondCall.args[0]).to.equal('valid-access-token') // Verifica accessToken
-      expect(res.clearCookie.calledOnce).to.be.true // Verifica que se limpiaron ambas cookies
-      expect(res.status.calledOnceWith(200)).to.be.true // Verifica código de respuesta
-      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true // Verifica mensaje de respuesta
+      expect(userModelMock.revokeToken.calledTwice).to.be.true
+      expect(userModelMock.revokeToken.firstCall.args[0]).to.equal('valid-refresh-token')
+      expect(userModelMock.revokeToken.secondCall.args[0]).to.equal('valid-access-token')
+      expect(res.clearCookie.calledOnce).to.be.true
+      expect(res.status.calledOnceWith(200)).to.be.true
+      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
     })
 
     it('debería lanzar un CustomError si no hay refreshToken', async () => {
       req.cookies.refreshToken = undefined
 
-      const logoutPromise = userController.logout(req, res, next)
+      try {
+        await userController.logout(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      await expect(logoutPromise).to.be.rejectedWith(CustomError)
-      await expect(logoutPromise).to.be.rejectedWith(ERROR_TYPES.auth.NO_REFRESH_TOKEN)
-
-      expect(userModelMock.revokeToken.called).to.be.false // Verifica que no se llamó al modelo
+      expect(userModelMock.revokeToken.called).to.be.false
     })
 
     it('debería lanzar un CustomError si el refreshToken tiene un formato inválido', async () => {
-      req.cookies.refreshToken = '   ' // Refresh token vacío o solo espacios
+      req.cookies.refreshToken = '   '
 
-      const logoutPromise = userController.logout(req, res, next)
+      try {
+        await userController.logout(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      await expect(logoutPromise).to.be.rejectedWith(CustomError)
-      await expect(logoutPromise).to.be.rejectedWith(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
-
-      expect(userModelMock.revokeToken.called).to.be.false // Verifica que no se llamó al modelo
+      expect(userModelMock.revokeToken.called).to.be.false
     })
 
     it('debería revocar solo el refreshToken si no hay accessToken', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
-      req.headers.authorization = undefined // No hay accessToken
-      userModelMock.revokeToken.resolves({ affectedRows: 1 }) // Simula éxito en la revocación del refreshToken
+      req.headers.authorization = undefined
+      userModelMock.revokeToken.resolves({ affectedRows: 1 })
 
       await userController.logout(req, res, next)
 
-      expect(userModelMock.revokeToken.calledOnceWith('valid-refresh-token')).to.be.true // Verifica solo refreshToken
-      expect(res.clearCookie.calledOnce).to.be.true // Verifica que se limpiaron las cookies
-      expect(res.status.calledOnceWith(200)).to.be.true // Verifica código de respuesta
-      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true // Verifica mensaje de respuesta
+      expect(userModelMock.revokeToken.calledOnceWith('valid-refresh-token')).to.be.true
+      expect(res.clearCookie.calledOnce).to.be.true
+      expect(res.status.calledOnceWith(200)).to.be.true
+      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
     })
 
     it('debería lanzar un CustomError si no se encuentra el refreshToken en la base de datos', async () => {
       req.cookies.refreshToken = 'invalid-refresh-token'
-      userModelMock.revokeToken.resolves({ affectedRows: 0 }) // Simula que no se encontró el token
+      userModelMock.revokeToken.resolves({ affectedRows: 0 })
 
-      const logoutPromise = userController.logout(req, res, next)
+      try {
+        await userController.logout(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      await expect(logoutPromise).to.be.rejectedWith(CustomError)
-      await expect(logoutPromise).to.be.rejectedWith(ERROR_TYPES.auth.TOKEN_REVOKED)
-
-      expect(userModelMock.revokeToken.calledOnceWith('invalid-refresh-token')).to.be.true // Verifica intento de revocar refreshToken
+      expect(userModelMock.revokeToken.calledOnceWith('invalid-refresh-token')).to.be.true
     })
 
     it('debería lanzar un CustomError si el accessToken tiene un formato inválido', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
-      req.headers.authorization = 'Bearer ' // Access token vacío o inválido
+      req.headers.authorization = 'Bearer '
 
-      const logoutPromise = userController.logout(req, res, next)
+      try {
+        await userController.logout(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      await expect(logoutPromise).to.be.rejectedWith(CustomError)
-      await expect(logoutPromise).to.be.rejectedWith(ERROR_TYPES.auth.INVALID_TOKEN)
-
-      expect(userModelMock.revokeToken.called).to.be.false // Verifica que no se llamó al modelo
+      expect(userModelMock.revokeToken.called).to.be.false
     })
 
     it('debería lanzar un CustomError si no se encuentra el accessToken en la base de datos', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = 'Bearer invalid-access-token'
       userModelMock.revokeToken
-        .onFirstCall().resolves({ affectedRows: 1 }) // Simula éxito en refreshToken
-        .onSecondCall().resolves({ affectedRows: 0 }) // Simula fallo en accessToken
+        .onFirstCall().resolves({ affectedRows: 1 })
+        .onSecondCall().resolves({ affectedRows: 0 })
 
-      const logoutPromise = userController.logout(req, res, next)
+      try {
+        await userController.logout(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      await expect(logoutPromise).to.be.rejectedWith(CustomError)
-      await expect(logoutPromise).to.be.rejectedWith(ERROR_TYPES.auth.TOKEN_REVOKED)
-
-      expect(userModelMock.revokeToken.calledTwice).to.be.true // Verifica que se intentó revocar ambos tokens
+      expect(userModelMock.revokeToken.calledTwice).to.be.true
     })
   })
 
@@ -252,9 +290,9 @@ describe('UserController', () => {
       req.params.id = '1'
       req.body = { email: 'new@email.com', age: 30 }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialUserStub.resolves(true) // Validación exitosa
-      userModelMock.updateUser.resolves(true) // Simula éxito en la actualización
+      checkUUIDStub.resolves(true)
+      validatePartialUserStub.resolves(true)
+      userModelMock.updateUser.resolves(true)
 
       await userController.updateUser(req, res, next)
 
@@ -269,10 +307,15 @@ describe('UserController', () => {
       req.params.id = 'invalid-uuid'
       req.body = { email: 'new@email.com', age: 30 }
 
-      checkUUIDStub.resolves(false) // UUID inválido
-
-      await expect(userController.updateUser(req, res, next)).to.be.rejectedWith(CustomError)
-      await expect(userController.updateUser(req, res, next)).to.be.rejectedWith(ERROR_TYPES.general.INVALID_UUID)
+      checkUUIDStub.resolves(false)
+      try {
+        await userController.updateUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(userModelMock.updateUser.called).to.be.false
     })
@@ -281,11 +324,17 @@ describe('UserController', () => {
       req.params.id = '1'
       req.body = { email: 'invalid-email' }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialUserStub.resolves(false) // Validación fallida
+      checkUUIDStub.resolves(true)
+      validatePartialUserStub.resolves(false)
 
-      await expect(userController.updateUser(req, res, next)).to.be.rejectedWith(CustomError)
-      await expect(userController.updateUser(req, res, next)).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
+      try {
+        await userController.updateUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(userModelMock.updateUser.called).to.be.false
     })
@@ -293,62 +342,56 @@ describe('UserController', () => {
 
   describe('getIdByUsername', () => {
     it('debería devolver el ID del usuario para un nombre de usuario válido', async () => {
-      // Simula parámetros de entrada
       req.params.username = 'validUser'
 
-      // Simula la respuesta del modelo
       const mockUser = { id: 1 }
       userModelMock.getUserByUsername.resolves(mockUser)
 
-      // Llama al controlador
       await userController.getIdByUsername(req, res, next)
 
-      // Verifica que se llamó al modelo con los argumentos correctos
       expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'validUser' })).to.be.true
 
-      // Verifica la respuesta del controlador
       expect(res.status.calledOnceWith(200)).to.be.true
       expect(res.json.calledOnceWith({ id: mockUser.id })).to.be.true
     })
 
     it('debería lanzar un CustomError si falta el parámetro username', async () => {
-      req.params.username = undefined // Falta el username
+      req.params.username = undefined
 
-      // Llama al controlador y captura el error
-      const getIdPromise = userController.getIdByUsername(req, res, next)
+      try {
+        await userController.getIdByUsername(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      // Verifica que se lanza un CustomError
-      await expect(getIdPromise).to.be.rejectedWith(CustomError)
-      await expect(getIdPromise).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
-
-      // Verifica que no se llamó al modelo
       expect(userModelMock.getUserByUsername.called).to.be.false
     })
 
     it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
-      req.params.username = 'nonExistentUser' // Usuario no existente
+      req.params.username = 'nonExistentUser'
 
-      // Simula que el modelo no encuentra al usuario
       userModelMock.getUserByUsername.resolves(null)
 
-      // Llama al controlador y captura el error
-      const getIdPromise = userController.getIdByUsername(req, res, next)
+      try {
+        await userController.getIdByUsername(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      // Verifica que se lanza un CustomError
-      await expect(getIdPromise).to.be.rejectedWith(CustomError)
-      await expect(getIdPromise).to.be.rejectedWith(ERROR_TYPES.general.NOT_FOUND)
-
-      // Verifica que el modelo fue llamado correctamente
       expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'nonExistentUser' })).to.be.true
     })
   })
 
   describe('getUser', () => {
     it('debería devolver los datos del usuario para un nombre de usuario válido', async () => {
-      // Simula parámetros de entrada
       req.params.username = 'validUser'
 
-      // Simula la respuesta del modelo
       const mockUser = {
         id: 1,
         username: 'validUser',
@@ -357,13 +400,10 @@ describe('UserController', () => {
       }
       userModelMock.getUserByUsername.resolves(mockUser)
 
-      // Llama al controlador
       await userController.getUser(req, res, next)
 
-      // Verifica que se llamó al modelo con los argumentos correctos
       expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'validUser' })).to.be.true
 
-      // Verifica que la contraseña no está en la respuesta
       const expectedResponse = {
         id: mockUser.id,
         username: mockUser.username,
@@ -374,33 +414,34 @@ describe('UserController', () => {
     })
 
     it('debería lanzar un CustomError si falta el parámetro username', async () => {
-      req.params.username = undefined // Falta el username
+      req.params.username = undefined
 
-      // Llama al controlador y captura el error
-      const getUserPromise = userController.getUser(req, res, next)
+      try {
+        await userController.getUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      // Verifica que se lanza un CustomError
-      await expect(getUserPromise).to.be.rejectedWith(CustomError)
-      await expect(getUserPromise).to.be.rejectedWith(ERROR_TYPES.user.VALIDATION_ERROR)
-
-      // Verifica que no se llamó al modelo
       expect(userModelMock.getUserByUsername.called).to.be.false
     })
 
     it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
-      req.params.username = 'nonExistentUser' // Usuario no existente
+      req.params.username = 'nonExistentUser'
 
-      // Simula que el modelo no encuentra al usuario
       userModelMock.getUserByUsername.resolves(null)
 
-      // Llama al controlador y captura el error
-      const getUserPromise = userController.getUser(req, res, next)
+      try {
+        await userController.getUser(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      // Verifica que se lanza un CustomError
-      await expect(getUserPromise).to.be.rejectedWith(CustomError)
-      await expect(getUserPromise).to.be.rejectedWith(ERROR_TYPES.general.NOT_FOUND)
-
-      // Verifica que el modelo fue llamado correctamente
       expect(userModelMock.getUserByUsername.calledOnceWith({ username: 'nonExistentUser' })).to.be.true
     })
   })

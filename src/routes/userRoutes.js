@@ -8,7 +8,6 @@ export const createUserRouter = ({ userModel }) => {
   const userRouter = Router()
   const userController = new UserController({ userModel })
 
-  // Rutas para logear o registrar (para usuarios no autenticados)
   userRouter.post('/login', sensitiveLimiter, userController.login)
   userRouter.post('/register', sensitiveLimiter, userController.register)
   userRouter.get('/refresh-token', validateRefreshMiddleware({ userModel }), userController.refreshToken)
@@ -18,7 +17,6 @@ export const createUserRouter = ({ userModel }) => {
   userRouter.patch('/:id', authMiddleware({ userModel, requireAdmin: true }), userController.updateUser)
 
   userRouter.get('/:username', userController.getUser)
-  // userRouter.get('/:username', authMiddleware, adminMiddleware, userController.getIdByUsername)
 
   return userRouter
 }

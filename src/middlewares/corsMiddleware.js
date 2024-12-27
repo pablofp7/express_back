@@ -2,8 +2,9 @@ import cors from 'cors'
 import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 const ACCEPTED_ORIGINS = [
-  // 'http://example.com', // Añade dominios específicos
-  // 'http://anotherdomain.com' // Añade otros dominios según sea necesario
+  /* 'http://example.com',
+  'http://anotherdomain.com',
+  */
 ]
 
 export const corsMiddleware = cors({

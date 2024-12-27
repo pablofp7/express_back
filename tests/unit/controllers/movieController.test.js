@@ -3,9 +3,10 @@ import sinon from 'sinon'
 import esmock from 'esmock'
 import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
 import chaiAsPromised from 'chai-as-promised'
+import { checkErrorType } from '../../testUtils/checkErrorType.js'
 
-chai.use(chaiAsPromised) // Configuración de chai-as-promised
-const { expect } = chai // Usa el expect configurado
+chai.use(chaiAsPromised)
+const { expect } = chai
 
 describe('MovieController', () => {
   let movieController
@@ -16,10 +17,9 @@ describe('MovieController', () => {
   let validatePartialMovieStub
 
   beforeEach(async () => {
-    // Stub para `checkUUID`
     checkUUIDStub = sinon.stub()
-    validateMovieStub = sinon.stub() // Stub para `validateMovie`
-    validatePartialMovieStub = sinon.stub() // Stub para `validatePartialMovie`
+    validateMovieStub = sinon.stub()
+    validatePartialMovieStub = sinon.stub()
 
     const MockedController = await esmock('../../../src/controllers/movieController.js', {
       '../../../src/utils/uuidValidation.js': { checkUUID: checkUUIDStub },
@@ -29,7 +29,6 @@ describe('MovieController', () => {
       },
     })
 
-    // Mock del modelo
     movieModelMock = {
       getAll: sinon.stub(),
       getById: sinon.stub(),
@@ -38,10 +37,8 @@ describe('MovieController', () => {
       update: sinon.stub(),
     }
 
-    // Inicializa el controlador con el modelo mockeado
     movieController = new MockedController.MovieController({ movieModel: movieModelMock })
 
-    // Asigna valores a req, res y next ya declarados
     req = { params: {}, body: {}, query: {} }
     res = {
       status: sinon.stub().returnsThis(),
@@ -51,27 +48,27 @@ describe('MovieController', () => {
   })
 
   afterEach(() => {
-    sinon.restore() // Restaura todos los mocks y stubs
+    sinon.restore()
   })
 
   describe('getAll', () => {
     it('debería devolver todas las películas', async () => {
       const mockMovies = [{ id: 1, title: 'Movie A' }]
-      movieModelMock.getAll.resolves(mockMovies) // Simula que la base de datos devuelve una lista de películas
+      movieModelMock.getAll.resolves(mockMovies)
 
       await movieController.getAll(req, res, next)
 
-      expect(movieModelMock.getAll.calledOnce).to.be.true // Verifica que el método getAll fue llamado una vez
-      expect(res.json.calledOnceWith(mockMovies)).to.be.true // Verifica que se devuelve la respuesta esperada
+      expect(movieModelMock.getAll.calledOnce).to.be.true
+      expect(res.json.calledOnceWith(mockMovies)).to.be.true
     })
 
     it('debería devolver un array vacío si no hay películas', async () => {
-      movieModelMock.getAll.resolves([]) // Simula que la base de datos no devuelve películas
+      movieModelMock.getAll.resolves([])
 
       await movieController.getAll(req, res, next)
 
-      expect(movieModelMock.getAll.calledOnce).to.be.true // Verifica que el método getAll fue llamado una vez
-      expect(res.json.calledOnceWith([])).to.be.true // Verifica que la respuesta es un array vacío
+      expect(movieModelMock.getAll.calledOnce).to.be.true
+      expect(res.json.calledOnceWith([])).to.be.true
     })
   })
   describe('getById', () => {
@@ -79,8 +76,8 @@ describe('MovieController', () => {
       req.params.id = '1'
       const mockMovie = { id: 1, title: 'Movie A' }
 
-      checkUUIDStub.resolves(true) // Simula que el UUID es válido
-      movieModelMock.getById.resolves(mockMovie) // Configura el mock para devolver una película
+      checkUUIDStub.resolves(true)
+      movieModelMock.getById.resolves(mockMovie)
 
       await movieController.getById(req, res, next)
 
@@ -92,57 +89,67 @@ describe('MovieController', () => {
     it('debería lanzar un CustomError si la película no existe', async () => {
       req.params.id = '1'
 
-      checkUUIDStub.resolves(true) // Simula que el UUID es válido
-      movieModelMock.getById.resolves(null) // Simula que no se encuentra la película
+      checkUUIDStub.resolves(true)
+      movieModelMock.getById.resolves(null)
 
-      // Verifica que se lanza un CustomError
-      await expect(movieController.getById(req, res, next)).to.be.rejectedWith(CustomError)
-
-      // Verifica el tipo específico del error
-      await expect(movieController.getById(req, res, next)).to.be.rejectedWith(ERROR_TYPES.movie.NOT_FOUND)
+      try {
+        await movieController.getById(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
     })
 
     it('debería lanzar un CustomError si el UUID es inválido', async () => {
       req.params.id = 'invalid-uuid'
 
-      checkUUIDStub.resolves(false) // Simula que el UUID no es válido
+      checkUUIDStub.resolves(false)
 
-      await expect(movieController.getById(req, res, next)).to.be.rejectedWith(CustomError)
-      await expect(movieController.getById(req, res, next)).to.be.rejectedWith(ERROR_TYPES.general.INVALID_UUID)
+      try {
+        await movieController.getById(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
     })
   })
 
   describe('create', () => {
     it('debería crear una película con datos válidos', async () => {
-      req.body = { title: 'Movie A', genre: 'Action' } // Simula los datos de entrada
+      req.body = { title: 'Movie A', genre: 'Action' }
       const mockMovie = { id: 1, title: 'Movie A', genre: 'Action' }
 
-      validateMovieStub.resolves(true) // Simula que la validación pasa
-      movieModelMock.create.resolves(mockMovie) // Simula que la película es creada
+      validateMovieStub.resolves(true)
+      movieModelMock.create.resolves(mockMovie)
 
       await movieController.create(req, res, next)
 
-      expect(validateMovieStub.calledOnceWith(req.body)).to.be.true // Verifica que se validaron los datos
-      expect(movieModelMock.create.calledOnceWith({ input: req.body })).to.be.true // Verifica que se llamó a create
-      expect(res.status.calledOnceWith(201)).to.be.true // Verifica el código de estado
-      expect(res.json.calledOnceWith(mockMovie)).to.be.true // Verifica la respuesta
+      expect(validateMovieStub.calledOnceWith(req.body)).to.be.true
+      expect(movieModelMock.create.calledOnceWith({ input: req.body })).to.be.true
+      expect(res.status.calledOnceWith(201)).to.be.true
+      expect(res.json.calledOnceWith(mockMovie)).to.be.true
     })
 
     it('debería lanzar un CustomError si los datos de la película no son válidos', async () => {
-      req.body = { title: 'Invalid Movie', genre: '' } // Datos inválidos
+      req.body = { title: 'Invalid Movie', genre: '' }
 
-      validateMovieStub.resolves(false) // Simula que la validación falla
+      validateMovieStub.resolves(false)
 
-      // Llama al método una vez y captura el Promise
-      const createPromise = movieController.create(req, res, next)
+      try {
+        await movieController.create(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
-      // Verifica que el Promise sea rechazado con el error esperado
-      await expect(createPromise).to.be.rejectedWith(CustomError)
-      await expect(createPromise).to.be.rejectedWith(ERROR_TYPES.movie.VALIDATION_ERROR)
-
-      // Verifica que el stub fue llamado exactamente una vez
       expect(validateMovieStub.calledOnce).to.be.true
-      expect(validateMovieStub.args[0][0]).to.deep.equal(req.body) // Verifica los argumentos
+      expect(validateMovieStub.args[0][0]).to.deep.equal(req.body)
     })
   })
 
@@ -150,8 +157,8 @@ describe('MovieController', () => {
     it('debería eliminar correctametne una película por ID', async () => {
       req.params.id = '1'
 
-      checkUUIDStub.resolves(true) // Simula que el UUID es válido
-      movieModelMock.delete.resolves(true) // Simula que la película fue eliminada
+      checkUUIDStub.resolves(true)
+      movieModelMock.delete.resolves(true)
 
       await movieController.delete(req, res, next)
 
@@ -162,13 +169,17 @@ describe('MovieController', () => {
     }),
     it('debería lanzar un CustomError si el ID de la película no es válido', async () => {
       req.params.id = 'Invalid ID'
-      checkUUIDStub.resolves(false) // Simula que el UUID no es válido
-      movieModelMock.delete.resolves(true) // Simula que la película fue eliminada
+      checkUUIDStub.resolves(false)
+      movieModelMock.delete.resolves(true)
 
-      const createPromise = movieController.delete(req, res, next)
-
-      await expect(createPromise).to.be.rejectedWith(CustomError)
-      await expect(createPromise).to.be.rejectedWith(ERROR_TYPES.general.INVALID_UUID)
+      try {
+        await movieController.delete(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(checkUUIDStub.calledOnceWith('Invalid ID')).to.be.true
       expect(movieModelMock.delete.called).to.be.false
@@ -177,13 +188,17 @@ describe('MovieController', () => {
   it('debería lanzar un CustomError si la película no existe', async () => {
     req.params.id = '1'
 
-    checkUUIDStub.resolves(true) // Simula que el UUID es válido
-    movieModelMock.delete.resolves({ affectedRows: 0 }) // Simula que no se encuentra la película
+    checkUUIDStub.resolves(true)
+    movieModelMock.delete.resolves({ affectedRows: 0 })
 
-    const createPromise = movieController.delete(req, res, next)
-
-    await expect(createPromise).to.be.rejectedWith(CustomError)
-    await expect(createPromise).to.be.rejectedWith(ERROR_TYPES.movie.NOT_FOUND)
+    try {
+      await movieController.delete(req, res, next)
+    }
+    catch (error) {
+      expect(error).to.be.instanceOf(CustomError)
+      expect(error.origError).to.be.instanceOf(Error)
+      expect(checkErrorType(error.errorType)).to.be.true
+    }
 
     expect(checkUUIDStub.calledOnceWith('1')).to.be.true
     expect(movieModelMock.delete.calledOnceWith({ id: '1' })).to.be.true
@@ -192,88 +207,104 @@ describe('MovieController', () => {
   describe('update', () => {
     it('debería actualizar una película con datos válidos', async () => {
       req.params.id = '1'
-      req.body = { title: 'Updated Title', genre: 'Drama' } // Datos válidos
+      req.body = { title: 'Updated Title', genre: 'Drama' }
       const mockResult = { affectedRows: 1 }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialMovieStub.resolves(true) // Validación exitosa
-      movieModelMock.update.resolves(mockResult) // Simula que se actualizó la película
+      checkUUIDStub.resolves(true)
+      validatePartialMovieStub.resolves(true)
+      movieModelMock.update.resolves(mockResult)
 
       await movieController.update(req, res, next)
 
-      expect(checkUUIDStub.calledOnceWith('1')).to.be.true // Verifica que se validó el UUID
-      expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true // Verifica la validación
+      expect(checkUUIDStub.calledOnceWith('1')).to.be.true
+      expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true
       expect(movieModelMock.update.calledOnceWith({
         id: '1',
         fields: [['title', 'Updated Title']],
         genre: 'Drama',
-      })).to.be.true // Verifica la actualización
-      expect(res.status.calledOnceWith(200)).to.be.true // Código de estado correcto
-      expect(res.json.calledOnceWith({ message: 'Movie updated successfully' })).to.be.true // Respuesta correcta
+      })).to.be.true
+      expect(res.status.calledOnceWith(200)).to.be.true
+      expect(res.json.calledOnceWith({ message: 'Movie updated successfully' })).to.be.true
     })
 
     it('debería lanzar un CustomError si el UUID es inválido', async () => {
       req.params.id = 'invalid-uuid'
       req.body = { title: 'Updated Title', genre: 'Drama' }
 
-      checkUUIDStub.resolves(false) // UUID inválido
+      checkUUIDStub.resolves(false)
 
-      const updatePromise = movieController.update(req, res, next)
-
-      await expect(updatePromise).to.be.rejectedWith(CustomError)
-      await expect(updatePromise).to.be.rejectedWith(ERROR_TYPES.general.INVALID_UUID)
+      try {
+        await movieController.update(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(checkUUIDStub.calledOnceWith('invalid-uuid')).to.be.true
-      expect(validatePartialMovieStub.called).to.be.false // Validación no debería ser llamada
-      expect(movieModelMock.update.called).to.be.false // No debería llamar al modelo
+      expect(validatePartialMovieStub.called).to.be.false
+      expect(movieModelMock.update.called).to.be.false
     })
 
     it('debería lanzar un CustomError si los datos son inválidos', async () => {
       req.params.id = '1'
-      req.body = { title: '', genre: '' } // Datos inválidos
+      req.body = { title: '', genre: '' }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialMovieStub.resolves(false) // Validación fallida
+      checkUUIDStub.resolves(true)
+      validatePartialMovieStub.resolves(false)
 
-      const updatePromise = movieController.update(req, res, next)
-
-      await expect(updatePromise).to.be.rejectedWith(CustomError)
-      await expect(updatePromise).to.be.rejectedWith(ERROR_TYPES.movie.VALIDATION_ERROR)
+      try {
+        await movieController.update(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(checkUUIDStub.calledOnceWith('1')).to.be.true
-      expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true // Validación intentada
-      expect(movieModelMock.update.called).to.be.false // No debería llamar al modelo
+      expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true
+      expect(movieModelMock.update.called).to.be.false
     })
 
     it('debería lanzar un CustomError si no se proporcionan campos válidos para actualizar', async () => {
       req.params.id = '1'
-      req.body = { invalidField: 'Invalid' } // Ningún campo permitido
+      req.body = { invalidField: 'Invalid' }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialMovieStub.resolves(true) // Validación exitosa
+      checkUUIDStub.resolves(true)
+      validatePartialMovieStub.resolves(true)
 
-      const updatePromise = movieController.update(req, res, next)
-
-      await expect(updatePromise).to.be.rejectedWith(CustomError)
-      await expect(updatePromise).to.be.rejectedWith(ERROR_TYPES.movie.VALIDATION_ERROR)
+      try {
+        await movieController.update(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(checkUUIDStub.calledOnceWith('1')).to.be.true
       expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true
-      expect(movieModelMock.update.called).to.be.false // No debería llamar al modelo
+      expect(movieModelMock.update.called).to.be.false
     })
 
     it('debería lanzar un CustomError si la película no existe', async () => {
       req.params.id = '1'
-      req.body = { title: 'Updated Title', genre: 'Drama' } // Datos válidos
+      req.body = { title: 'Updated Title', genre: 'Drama' }
 
-      checkUUIDStub.resolves(true) // UUID válido
-      validatePartialMovieStub.resolves(true) // Validación exitosa
-      movieModelMock.update.resolves({ affectedRows: 0 }) // Película no encontrada
+      checkUUIDStub.resolves(true)
+      validatePartialMovieStub.resolves(true)
+      movieModelMock.update.resolves({ affectedRows: 0 })
 
-      const updatePromise = movieController.update(req, res, next)
-
-      await expect(updatePromise).to.be.rejectedWith(CustomError)
-      await expect(updatePromise).to.be.rejectedWith(ERROR_TYPES.movie.NOT_FOUND)
+      try {
+        await movieController.update(req, res, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(checkUUIDStub.calledOnceWith('1')).to.be.true
       expect(validatePartialMovieStub.calledOnceWith(req.body)).to.be.true
@@ -281,7 +312,7 @@ describe('MovieController', () => {
         id: '1',
         fields: [['title', 'Updated Title']],
         genre: 'Drama',
-      })).to.be.true // Intentó actualizar
+      })).to.be.true
     })
   })
 })

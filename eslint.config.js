@@ -1,29 +1,29 @@
 import stylistic from '@stylistic/eslint-plugin'
-import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js' // Path to your custom rule file
-import unusedImports from 'eslint-plugin-unused-imports' // Importa el plugin correctamente
+import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js'
+import unusedImports from 'eslint-plugin-unused-imports'
 
 export default [
   {
-    // Configuración general para archivos de código fuente
-    files: ['**/*.js'], // Aplica esta configuración a archivos .js
-    ignores: ['node_modules', 'dist', 'tests/**'], // Ignora los archivos en node_modules y dist y tests
+
+    files: ['**/*.js'],
+    ignores: ['node_modules', 'dist', 'tests/**'],
     languageOptions: {
-      ecmaVersion: 'latest', // Habilita ES2021+
-      sourceType: 'module', // Indica que usas módulos ES6 (import/export)
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
-        console: 'readonly', // Define las globales estándar de Node.js
+        console: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
         require: 'readonly',
         module: 'readonly',
         Buffer: 'readonly',
-        // Agrega otras globales aquí si las necesitas
+
       },
     },
     plugins: {
       '@stylistic': stylistic,
-      'valid-error-structure': validErrorCodesPlugin, // Register the custom ESLint plugin
-      'unused-imports': unusedImports, // Registra el plugin correctamente
+      'valid-error-structure': validErrorCodesPlugin,
+      'unused-imports': unusedImports,
     },
     rules: {
       ...stylistic.configs['recommended-flat'].rules,
@@ -34,7 +34,7 @@ export default [
       'arrow-parens': ['error', 'always'],
       '@stylistic/arrow-parens': 'off',
       'eqeqeq': ['error', 'always'],
-      'no-undef': 'error', // Detecta variables no definidas
+      'no-undef': 'error',
 
       'no-unused-vars': 'off',
       'unused-imports/no-unused-vars': ['error', {
@@ -61,9 +61,8 @@ export default [
     },
   },
 
-  // Configuración para archivos de pruebas
   {
-    files: ['tests/**/*.js'], // Archivos de pruebas
+    files: ['tests/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -74,7 +73,7 @@ export default [
         beforeEach: 'readonly',
         after: 'readonly',
         afterEach: 'readonly',
-        console: 'readonly', // Se suele permitir en tests
+        console: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
         require: 'readonly',
@@ -118,8 +117,8 @@ export default [
       }],
       'prefer-template': 'error',
       'valid-error-structure/valid-error-structure': 'error',
-      // Desactivar reglas problemáticas para Mocha
-      'no-unused-expressions': 'off', // Para Chai
+
+      'no-unused-expressions': 'off',
     },
   },
 ]

@@ -1,7 +1,7 @@
 class DatabaseConnection {
   async query({ query, queryParams }) {
     console.log(`Executing query: ${query} with params: ${queryParams}`)
-    return { affectedRows: Math.floor(Math.random() * 5) } // Simula un resultado de la consulta
+    return { affectedRows: Math.floor(Math.random() * 5) }
   }
 
   async beginTransaction() {
@@ -28,7 +28,7 @@ class DatabaseConnection {
         if (typeof fn !== 'function') {
           throw new TypeError('Each item in functionsToExecute must be a function.')
         }
-        await fn() // Ejecuta cada función
+        await fn()
       }
 
       await this.commitTransaction()

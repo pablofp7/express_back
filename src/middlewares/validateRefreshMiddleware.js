@@ -4,7 +4,6 @@ import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 
 export const validateRefreshMiddleware = ({ userModel }) => {
   if (!userModel) {
-    // Este error debe lanzarse inmediatamente porque ocurre en la configuración, no en el flujo de solicitud
     throw new CustomError({
       origError: new Error('UserModel instance is required'),
       errorType: ERROR_TYPES.general.SERVER_ERROR,
@@ -39,7 +38,7 @@ export const validateRefreshMiddleware = ({ userModel }) => {
       await userModel.checkToken(refreshToken)
 
       req.refreshTokenData = { username, role, userId }
-      next() // Continuar al siguiente middleware si todo es correcto
+      next()
     }
     catch (err) {
       return next(

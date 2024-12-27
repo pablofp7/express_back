@@ -7,7 +7,7 @@ export const blacklistMiddleware = (req, res, next) => {
       origError: new Error(`Blocked IP: ${req.ip}`),
       errorType: ERROR_TYPES.auth.ACCESS_DENIED,
     })
-    return next(error) // Pasar el error al siguiente middleware
+    return next(error)
   }
-  next() // Continuar el flujo si no hay error
+  next()
 }

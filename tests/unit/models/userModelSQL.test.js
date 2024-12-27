@@ -2,7 +2,6 @@ import esmock from 'esmock'
 import sinon from 'sinon'
 import { DbConn } from '../../../src/database/dbConnection.js'
 import bcrypt from 'bcrypt'
-import { CustomError } from '../../../src/errors/customError.js'
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 chai.use(chaiAsPromised)
@@ -69,7 +68,7 @@ describe('UserModel', () => {
       const result = await userModel.createUser({ input })
 
       expect(result).to.include({
-        id: 'mocked-uuid', // Ensures the ID matches the mocked UUID
+        id: 'mocked-uuid',
         username: input.username,
         email: input.email,
         age: input.age,
@@ -390,18 +389,17 @@ describe('UserModel', () => {
         userId: '123',
         token: 'sampleToken',
         type: 'access',
-        expiresIn: 3600, // 1 hora
+        expiresIn: 3600,
       }
 
       const expiresAt = dayjs()
         .add(tokenData.expiresIn, 'second')
         .format('YYYY-MM-DD HH:mm:ss')
 
-      dbConnMock.query.resolves() // Simulate a successful query
+      dbConnMock.query.resolves()
 
       await userModel.saveToken(tokenData)
 
-      // Verify that the query was called with the correct arguments
       expect(dbConnMock.query.calledOnce).to.be.true
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: `INSERT INTO tokens (id,user_id,token,type,expires_at) VALUES (?,?,?,?,?)`,
@@ -414,14 +412,12 @@ describe('UserModel', () => {
     it('debería revocar un token existente', async () => {
       const token = 'sampleToken'
 
-      dbConnMock.query.resolves({ affectedRows: 1 }) // Simula que se revocó el token
+      dbConnMock.query.resolves({ affectedRows: 1 })
 
       const result = await userModel.revokeToken(token)
 
-      // Verificar que el resultado sea el esperado
       expect(result).to.deep.equal({ affectedRows: 1 })
 
-      // Verificar que query fue llamado con los argumentos correctos
       expect(dbConnMock.query.calledOnce).to.be.true
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: `
@@ -436,14 +432,12 @@ describe('UserModel', () => {
     it('debería devolver un resultado vacío si no se encuentra el token', async () => {
       const token = 'nonexistentToken'
 
-      dbConnMock.query.resolves({ affectedRows: 0 }) // Simula que no se encontró el token
+      dbConnMock.query.resolves({ affectedRows: 0 })
 
       const result = await userModel.revokeToken(token)
 
-      // Verificar que el resultado sea vacío
       expect(result).to.deep.equal({ affectedRows: 0 })
 
-      // Verificar que query fue llamado con los argumentos correctos
       expect(dbConnMock.query.calledOnce).to.be.true
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: `
@@ -478,14 +472,12 @@ describe('UserModel', () => {
     it('debería devolver null si el token no es válido o está revocado', async () => {
       const token = 'revokedToken'
 
-      dbConnMock.query.resolves([]) // Simula que el token no es válido
+      dbConnMock.query.resolves([])
 
       const result = await userModel.checkToken(token)
 
-      // Verificar que el resultado sea null
       expect(result).to.be.null
 
-      // Verificar que query fue llamado con los argumentos correctos
       expect(dbConnMock.query.calledOnce).to.be.true
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: `

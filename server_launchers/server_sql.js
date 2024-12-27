@@ -17,7 +17,10 @@ const { userDbType, movieDbType } = yargs(hideBin(process.argv))
     choices: ['local', 'freesql', 'turso'],
     demandOption: true,
   })
-  .help().argv; // Este punto y coma es necesario para que el linter eneitnda que lo siguiente es una función autoinvocada
+  .help().argv;
+  /*
+   Este punto y coma es necesario para que el linter entienda que lo siguiente es una función autoinvocada
+  */
 
 (async () => {
   try {
@@ -35,6 +38,6 @@ const { userDbType, movieDbType } = yargs(hideBin(process.argv))
   }
   catch (error) {
     console.error('Error during initialization:', error)
-    process.exit(1) // Terminar el proceso si ocurre un error
+    process.exit(1)
   }
 })()

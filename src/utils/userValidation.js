@@ -1,6 +1,5 @@
 import z from 'zod'
 
-// Esquema completo del usuario
 const userSchema = z.object({
   username: z
     .string({

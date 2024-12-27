@@ -2,9 +2,6 @@ import movies from '../../../stored_data/movies.json' with { type: 'json' }
 import { randomUUID } from 'node:crypto'
 
 export class MovieModel {
-  // getAll y getById son equivalentes las declaraciones, con arrow function y con funcion normal
-
-  // Funcion para obtener peliculas por género
   static async getAll({ genre }) {
     if (genre) {
       return movies.filter((movie) =>
@@ -19,7 +16,6 @@ export class MovieModel {
     return movies.find((movie) => movie.id === id)
   }
 
-  // Funcion para crear objeto en bbdd
   static async create({ input }) {
     const newMovie = {
       id: randomUUID(),
@@ -30,7 +26,6 @@ export class MovieModel {
     return newMovie
   }
 
-  // Funcion para borrar en bbdd
   static delete = async ({ id }) => {
     const movieIndex = movies.findIndex((movie) => movie.id === id)
 
@@ -44,7 +39,7 @@ export class MovieModel {
     const movieIndex = movies.findIndex((movie) => movie.id === id)
 
     if (movieIndex === -1) {
-      return null // Indica que no se encontró la película
+      return null
     }
 
     const updateMovie = {
@@ -53,6 +48,6 @@ export class MovieModel {
     }
 
     movies[movieIndex] = updateMovie
-    return updateMovie // Devuelve la película actualizada
+    return updateMovie
   }
 }

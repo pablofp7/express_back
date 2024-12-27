@@ -1,11 +1,9 @@
-import { ERROR_TYPES } from '../src/errors/customError.js' // Adjust the path if necessary
+import { ERROR_TYPES } from '../src/errors/customError.js'
 
 const flattenErrorPaths = (errorTypes) => {
   const paths = []
 
-  // Recorre cada categoría principal (auth, user, etc.)
   Object.entries(errorTypes).forEach(([category, errors]) => {
-    // Recorre cada error dentro de la categoría
     Object.keys(errors).forEach((errorKey) => {
       paths.push(`ERROR_TYPES.${category}.${errorKey}`)
     })
@@ -31,10 +29,7 @@ export default {
       },
 
       create(context) {
-        // Flatten ERROR_TYPES to retrieve all valid error type references
         const errorPaths = flattenErrorPaths(ERROR_TYPES)
-
-        // Add debugging output for valid error types
 
         return {
           'NewExpression[callee.name="CustomError"]'(node) {
@@ -46,28 +41,23 @@ export default {
 
               arg.properties.forEach((property) => {
                 if (property.key.name === 'origError') {
-                  hasOrigError = true // Solo valida que la propiedad exista
+                  hasOrigError = true
                 }
 
-                // Check for `errorType` property and validate it
                 if (property.key.name === 'errorType' && property.value.type === 'MemberExpression') {
                   let currentNode = property.value
                   const parts = []
 
-                  // Reconstruir el path completo
                   while (currentNode.type === 'MemberExpression') {
                     parts.unshift(currentNode.property.name)
                     currentNode = currentNode.object
                   }
 
                   if (currentNode.type === 'Identifier' && currentNode.name === 'ERROR_TYPES') {
-                    // Añadir ERROR_TYPES al inicio
                     parts.unshift('ERROR_TYPES')
 
-                    // Construir el path completo
                     const fullPath = parts.join('.')
 
-                    // console.log(`Checking path: ${fullPath}`)
                     if (errorPaths.includes(fullPath)) {
                       hasValidErrorType = true
                     }
@@ -75,7 +65,6 @@ export default {
                 }
               })
 
-              // Report if `origError` is missing
               if (!hasOrigError) {
                 context.report({
                   node,
@@ -83,7 +72,6 @@ export default {
                 })
               }
 
-              // Report if `errorType` is invalid
               if (!hasValidErrorType) {
                 context.report({
                   node,

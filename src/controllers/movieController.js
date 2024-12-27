@@ -5,7 +5,6 @@ import { checkUUID } from '../utils/uuidValidation.js'
 export class MovieController {
   constructor({ movieModel }) {
     this.movieModel = movieModel
-    // this.movieModel.init() // No es necesario porque ya se inicializa en server_sql.js
   }
 
   getAll = async (req, res) => {
@@ -79,7 +78,6 @@ export class MovieController {
     const { id } = req.params
     const input = req.body
 
-    // Validar si el UUID es válido
     if (!await checkUUID(id)) {
       throw new CustomError({
         origError: new Error('Invalid UUID'),
@@ -87,7 +85,6 @@ export class MovieController {
       })
     }
 
-    // Validar los datos de entrada
     if (!await validatePartialMovie(input)) {
       throw new CustomError({
         origError: new Error('Invalid movie data'),
@@ -95,7 +92,6 @@ export class MovieController {
       })
     }
 
-    // Validar que haya campos válidos o géneros para actualizar
     const allowedFields = [
       'title',
       'year',
@@ -117,10 +113,8 @@ export class MovieController {
       })
     }
 
-    // Llamar al modelo para actualizar la película
     const result = await this.movieModel.update({ id, fields, genre })
 
-    // Validar si no se encontró la película
     if (!result || result.affectedRows === 0) {
       throw new CustomError({
         origError: new Error(`Movie with id ${id} not found`),

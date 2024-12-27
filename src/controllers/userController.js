@@ -173,7 +173,6 @@ export class UserController {
     res.status(200).json({ message: 'Logout successful.' })
   }
 
-  // Refresh Token
   refreshToken = async (req, res) => {
     const { username, role, userId } = req.refreshTokenData
 

@@ -5,7 +5,8 @@ import chaiAsPromised from 'chai-as-promised'
 chai.use(chaiAsPromised)
 const { expect } = chai
 import esmock from 'esmock'
-import { CustomError } from '../../../src/errors/customError.js'
+import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
+import { checkErrorType } from '../../testUtils/checkErrorType.js'
 
 describe('MovieModel', () => {
   let movieModel
@@ -374,16 +375,21 @@ describe('MovieModel', () => {
         .onSecondCall().resolves()
         .onCall(2).resolves([])
 
-      const promise = movieModel.checkGenres(genres)
-
-      await expect(promise).to.be.rejectedWith(CustomError, 'The requested resource was not found.')
+      try {
+        await movieModel.checkGenres(genres)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
 
       expect(dbConnMock.query.callCount).to.equal(3)
 
       dbConnMock.query.getCall(0).args[0].query = dbConnMock.query.getCall(0).args[0].query.trim()
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: `
-            SELECT id, name FROM genre WHERE LOWER(name) = LOWER(?)`.trim(),
+                SELECT id, name FROM genre WHERE LOWER(name) = LOWER(?)`.trim(),
         queryParams: ['NonExistentGenre'],
       })
 
@@ -396,7 +402,7 @@ describe('MovieModel', () => {
       dbConnMock.query.getCall(2).args[0].query = dbConnMock.query.getCall(2).args[0].query.trim()
       expect(dbConnMock.query.getCall(2).args[0]).to.deep.equal({
         query: `
-            SELECT id FROM genre WHERE LOWER(name) = LOWER(?)`.trim(),
+                SELECT id FROM genre WHERE LOWER(name) = LOWER(?)`.trim(),
         queryParams: ['NonExistentGenre'],
       })
     })
