@@ -1,9 +1,8 @@
 import esmock from 'esmock'
 import sinon from 'sinon'
-import { UserModel } from '../../../../src/models/user/mysql/userModelSQL.js'
-import { DbConn } from '../../../../src/database/dbConnection.js'
+import { DbConn } from '../../../src/database/dbConnection.js'
 import bcrypt from 'bcrypt'
-import { CustomError } from '../../../../src/errors/customError.js'
+import { CustomError } from '../../../src/errors/customError.js'
 import * as chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 chai.use(chaiAsPromised)
@@ -35,9 +34,9 @@ describe('UserModel', () => {
     sinon.stub(dayjs.prototype, 'add').returns(dayjs('2024-01-01 00:00:00'))
 
     const MockedUserModel = await esmock(
-      '../../../../src/models/user/mysql/userModelSQL.js',
+      '../../../src/models/user/mysql/userModelSQL.js',
       {
-        uuid: { v4: sinon.stub().returns('mocked-uuid') }, // Mock `uuid.v4`
+        uuid: { v4: sinon.stub().returns('mocked-uuid') },
       },
     )
     userModel = new MockedUserModel.UserModel({ userDbType: 'sql' })
@@ -70,12 +69,12 @@ describe('UserModel', () => {
       const result = await userModel.createUser({ input })
 
       expect(result).to.include({
+        id: 'mocked-uuid', // Ensures the ID matches the mocked UUID
         username: input.username,
         email: input.email,
         age: input.age,
         role: 'User',
       })
-      expect(result.id).to.be.a('string')
 
       expect(dbConnMock.query.calledThrice).to.be.true
       expect(dbConnMock.query.getCall(0).args[0].query).to.include('INSERT INTO user')
@@ -467,7 +466,6 @@ describe('UserModel', () => {
 
       const result = await userModel.checkToken(mockToken)
 
-      console.log(`Resultado en test: ${result}`)
       expect(result).to.deep.equal({
         id: 'token-id-123',
         token: mockToken,

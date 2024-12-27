@@ -70,7 +70,7 @@ export class MovieModel {
             .split(',')
             .map((g) => g.trim())
             .join(', ')
-        : null, // Si no hay géneros, usa null
+        : null,
     }))
   }
 
@@ -103,14 +103,13 @@ export class MovieModel {
       queryParams,
     })
 
-    // Formatear y retornar los resultados
     return movies.map((movie) => ({
       ...movie,
       genres: movie.genres
         ? movie.genres
             .split(',')
             .map((genre) => genre.trim())
-            .join(', ') // Formateo consistente
+            .join(', ')
         : null,
     }))
   }
@@ -118,10 +117,9 @@ export class MovieModel {
   async create({ input }) {
     const { title, year, director, duration, poster, rate, genre } = input
 
-    const uuid = uuidv4() // Generar un UUID válido para la nueva película
+    const uuid = uuidv4()
 
-    // Define las funciones que se ejecutarán en la transacción
-    const insertMovie = () => this.databaseConnection.query({
+    const insertMovie = async () => await this.databaseConnection.query({
       query: `INSERT INTO movie (id, title, year, director, duration, poster, rate) 
               VALUES (?, ?, ?, ?, ?, ?, ?);`,
       queryParams: [uuid, title, year, director, duration, poster, rate],
@@ -129,7 +127,7 @@ export class MovieModel {
 
     let genresIDs = []
     const verifyAndInsertGenres = async () => {
-      genresIDs = await this.checkGenres(genre) // Reasignamos directamente
+      genresIDs = await this.checkGenres(genre)
       await Promise.all(
         genresIDs.map(({ genreId }) =>
           this.databaseConnection.query({
@@ -183,16 +181,15 @@ export class MovieModel {
   }
 
   async update({ id, fields, genre }) {
-    let result
+    let result, query, queryParams
 
-    // Función para actualizar los campos generales
     const updateFields = async () => {
       if (fields.length > 0) {
         const setClause = fields.map(([key]) => `${key} = ?`).join(', ')
         const values = fields.map(([_, value]) => value)
-        const queryParams = [...values, id]
+        queryParams = [...values, id]
 
-        const query = `
+        query = `
           UPDATE movie
           SET ${setClause}
           WHERE id = ?;
@@ -205,34 +202,33 @@ export class MovieModel {
       }
     }
 
-    // Función para actualizar los géneros
     const updateGenres = async () => {
       if (genre) {
-        // Elimina los géneros existentes
+        query = 'DELETE FROM movie_genres WHERE movie_id = ?'
+        queryParams = [id]
+
         await this.databaseConnection.query({
-          query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-          queryParams: [id],
+          query,
+          queryParams,
         })
 
-        // Verifica o crea géneros y obtiene sus IDs
         const genresIDs = await this.checkGenres(genre)
 
-        // Inserta los nuevos géneros
         await Promise.all(
-          genresIDs.map(({ genreId }) =>
-            this.databaseConnection.query({
-              query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
-              queryParams: [id, genreId],
-            }),
-          ),
+          genresIDs.map(({ genreId }) => {
+            query = 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)'
+            queryParams = [id, genreId]
+            return this.databaseConnection.query({
+              query,
+              queryParams,
+            })
+          }),
         )
       }
     }
 
-    // Ejecutar las funciones dentro de la transacción
     await this.databaseConnection.executeTransaction([updateFields, updateGenres])
 
-    // Retornar el resultado al controlador
     return result
   }
 
@@ -240,10 +236,8 @@ export class MovieModel {
     const genreIds = []
     const nonExistingGenres = []
 
-    // Paso 1: Verificar qué géneros ya existen en la base de datos
     for (const genre of genres) {
       const trimmedGenre = genre.trim()
-
       const rows = await this.databaseConnection.query({
         query: `
           SELECT id, name FROM genre WHERE LOWER(name) = LOWER(?)`,
@@ -255,24 +249,22 @@ export class MovieModel {
       }
       else {
         console.log(`El género "${trimmedGenre}" no existe.`)
-        nonExistingGenres.push(trimmedGenre) // Agregar a los géneros que no existen
+        nonExistingGenres.push(trimmedGenre)
       }
     }
 
-    // Paso 2: Insertar los géneros que no existen
     if (nonExistingGenres.length > 0) {
       await Promise.all(
-        nonExistingGenres.map(async (genre) => {
-          await this.databaseConnection.query({
+        nonExistingGenres.map((genre) => {
+          return this.databaseConnection.query({
             query: 'INSERT INTO genre (name) VALUES (?)',
             queryParams: [genre],
           })
-          console.log(`El género "${genre}" fue insertado.`)
+          // console.log(`El género "${genre}" fue insertado.`)
         }),
       )
     }
 
-    // Paso 3: Obtener los IDs de todos los géneros
     for (const genre of genres) {
       const trimmedGenre = genre.trim()
 
@@ -292,7 +284,7 @@ export class MovieModel {
       genreIds.push({ genre: trimmedGenre, genreId: rows[0].id })
     }
 
-    console.log('IDs de géneros procesados:', genreIds)
+    // console.log('IDs de géneros procesados:', genreIds)
     return genreIds
   }
 

@@ -56,7 +56,7 @@ export class UserModel {
       }
     }
 
-    const insertUserRole = () => this.databaseConnection.query({
+    const insertUserRole = async () => await this.databaseConnection.query({
       query: 'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)',
       queryParams: [newId, idRole],
     })
