@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised'
 chai.use(chaiAsPromised)
 const { expect } = chai
 import esmock from 'esmock'
-import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
+import { CustomError } from '../../../src/errors/customError.js'
 
 describe('MovieModel', () => {
   let movieModel
@@ -151,13 +151,11 @@ describe('MovieModel', () => {
         genre: ['Action', 'Comedy'],
       }
 
-      // Stub the checkGenres method
       sinon.stub(movieModel, 'checkGenres').resolves([
         { genreId: '1', genre: 'Action' },
         { genreId: '2', genre: 'Comedy' },
       ])
 
-      // No need to re-stub uuid.v4; it is already mocked
       const result = await movieModel.create({ input })
 
       expect(result).to.deep.equal({
@@ -171,7 +169,6 @@ describe('MovieModel', () => {
         genres: ['Action', 'Comedy'],
       })
 
-      // Verify database interactions
       expect(dbConnMock.query.callCount).to.equal(3)
       expect(dbConnMock.query.getCall(0).args[0].query).to.include('INSERT INTO movie')
       expect(dbConnMock.query.getCall(1).args[0].queryParams).to.deep.equal(['mocked-uuid', '1'])
@@ -183,32 +180,26 @@ describe('MovieModel', () => {
     it('debería actualizar los campos y géneros de una película', async () => {
       const movieId = 'mocked-id'
 
-      // Configure dbConnMock.query to resolve specific values
       dbConnMock.query
-        .onFirstCall().resolves() // For deleteRelations
-        .onSecondCall().resolves({ affectedRows: 1 }) // For deleteMovie
+        .onFirstCall().resolves()
+        .onSecondCall().resolves({ affectedRows: 1 })
 
       const result = await movieModel.delete({ id: movieId })
 
-      // Verify that the queries were called with the expected arguments
       expect(dbConnMock.query.callCount).to.equal(2)
 
-      // Check deleteRelations query
       expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
         query: 'DELETE FROM movie_genres WHERE movie_id = ?',
         queryParams: [movieId],
       })
 
-      // Check deleteMovie query
       expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
         query: 'DELETE FROM movie WHERE id = ?',
         queryParams: [movieId],
       })
 
-      // Verify executeTransaction was called
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
 
-      // The result should match the mocked result of deleteMovie
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
   })
@@ -223,10 +214,10 @@ describe('MovieModel', () => {
       const genres = ['Action', 'Comedy']
 
       dbConnMock.query
-        .onFirstCall().resolves({ affectedRows: 1 }) // Update fields
-        .onSecondCall().resolves() // Delete existing genres
-        .onThirdCall().resolves() // Insert Action genre
-        .onCall(3).resolves() // Insert Comedy genre
+        .onFirstCall().resolves({ affectedRows: 1 })
+        .onSecondCall().resolves()
+        .onThirdCall().resolves()
+        .onCall(3).resolves()
 
       sinon.stub(movieModel, 'checkGenres').resolves([
         { genreId: '1', genre: 'Action' },
@@ -295,9 +286,9 @@ describe('MovieModel', () => {
       const genres = ['Drama', 'Thriller']
 
       dbConnMock.query
-        .onFirstCall().resolves() // Delete existing genres
-        .onCall(1).resolves() // Insert Drama genre
-        .onCall(2).resolves() // Insert Thriller genre
+        .onFirstCall().resolves()
+        .onCall(1).resolves()
+        .onCall(2).resolves()
 
       sinon.stub(movieModel, 'checkGenres').resolves([
         { genreId: '3', genre: 'Drama' },
@@ -334,11 +325,11 @@ describe('MovieModel', () => {
       const genres = ['Action', 'New Genre']
 
       dbConnMock.query
-        .onFirstCall().resolves([{ id: '1', name: 'Action' }]) // Existing genre
-        .onSecondCall().resolves([]) // Non-existing genre
-        .onThirdCall().resolves() // Insert new genre
-        .onCall(3).resolves([{ id: '1' }]) // Fetch first received genre ID
-        .onCall(4).resolves([{ id: '2' }]) // Fetch inserted genre ID
+        .onFirstCall().resolves([{ id: '1', name: 'Action' }])
+        .onSecondCall().resolves([])
+        .onThirdCall().resolves()
+        .onCall(3).resolves([{ id: '1' }])
+        .onCall(4).resolves([{ id: '2' }])
 
       const result = await movieModel.checkGenres(genres)
 
@@ -379,16 +370,14 @@ describe('MovieModel', () => {
       const genres = ['NonExistentGenre']
 
       dbConnMock.query
-        .onFirstCall().resolves([]) // No se encuentra el género
-        .onSecondCall().resolves() // Inserción del nuevo género
-        .onCall(2).resolves([]) // Fallo al recuperar el ID del género
+        .onFirstCall().resolves([])
+        .onSecondCall().resolves()
+        .onCall(2).resolves([])
 
       const promise = movieModel.checkGenres(genres)
 
-      // Verifica que se lanza un CustomError con el mensaje esperado
       await expect(promise).to.be.rejectedWith(CustomError, 'The requested resource was not found.')
 
-      // Verifica las consultas realizadas
       expect(dbConnMock.query.callCount).to.equal(3)
 
       dbConnMock.query.getCall(0).args[0].query = dbConnMock.query.getCall(0).args[0].query.trim()
