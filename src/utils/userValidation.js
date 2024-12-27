@@ -18,9 +18,9 @@ const userSchema = z.object({
 })
 
 export async function validateUser(input) {
-  return userSchema.safeParse(input)
+  return userSchema.safeParse(input).success
 }
 
 export async function validatePartialUser(input) {
-  return userSchema.partial().safeParse(input)
+  return userSchema.partial().safeParse(input).success
 }

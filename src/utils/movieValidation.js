@@ -39,9 +39,9 @@ const movieSchema = z.object({
 })
 
 export async function validateMovie(input) {
-  return movieSchema.safeParse(input)
+  return movieSchema.safeParse(input).success
 }
 
 export async function validatePartialMovie(input) {
-  return movieSchema.partial().safeParse(input)
+  return movieSchema.partial().safeParse(input).success
 }
