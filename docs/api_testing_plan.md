@@ -1,176 +1,185 @@
-# Plan de Pruebas para la API Movie and User Management
 
-## Introducción
+# API Testing Plan for Movie and User Management
 
-Este documento detalla el plan de pruebas para la API Movie and User Management basada en el esquema proporcionado (OpenAPI 3.1.1). Las pruebas se dividen en unitarias, de integración y funcionales, y abarcan los endpoints definidos en el archivo `openapi.yaml`. El objetivo es garantizar la calidad y fiabilidad de la API en todos los niveles.
+## Introduction
+
+This document outlines the testing plan for the Movie and User Management API based on the provided schema (OpenAPI 3.1.1). The tests are categorized into unit, integration, and functional tests, covering the endpoints defined in the `openapi.yaml` file. The objective is to ensure the API's quality and reliability across all layers.
 
 ---
 
-## Tipos de Pruebas y Orden de Implementación
+## Types of Tests and Implementation Order
 
-### 1. **Pruebas Unitarias**
+### 1. **Unit Tests**
 
-Probar unidades de código aisladas, como funciones, middlewares o controladores. Estas pruebas aseguran que las piezas individuales de la API funcionan correctamente.
+Testing isolated units of code such as functions, middlewares, or controllers. These tests verify the correct behavior of individual API components.
 
-#### **Componentes a Probar**
+#### **Components to Test**
 
-- **`dbConnection.js` (Abstracción de conexión a bases de datos):**
+- **`dbConnection.js`**** (Database connection abstraction):**
 
-  - Validar la conexión a:
-    - MySQL local.
-    - FreeSQL (MySQL online).
-    - Turso (SQLite online).
-  - Simular consultas simples (éxito y error).
+  - Validate connections to:
+    - Local MySQL.
+    - FreeSQL (online MySQL).
+    - Turso (online SQLite).
+  - Simulate basic queries (success and failure cases).
+
+- **Controllers (****`src/controllers`****):**
+
+  - Test individual controller methods for all endpoints.
+  - Mock dependencies like database models.
+
+- **Models (****`src/models`****):**
+
+  - Validate schema definitions.
+  - Test CRUD operations with in-memory databases or mocks.
 
 - **Middlewares:**
 
   - **`authMiddleware.js`**:
-    - Rechazar solicitudes sin token.
-    - Aceptar solicitudes con tokens válidos.
-    - Detectar permisos insuficientes.
+    - Reject requests without tokens.
+    - Accept requests with valid tokens.
+    - Detect insufficient permissions.
+  - **`blacklistMiddleware.js`**:
+    - Restrict access based on client IP addresses.
+    - Ensure blacklisted IPs cannot access protected routes.
+  - **`corsMiddleware.js`**:
+    - Enable cross-origin requests for allowed origins.
+  - **`errorHandlerMiddleware.js`**:
+    - Handle API errors, specifically `CustomError` instances.
+    - Unrecognized errors are re-thrown for upstream handling.
+    - Logs detailed error information based on environment (development or production).
+    - Maps errors to client-friendly responses with appropriate HTTP status and message.
+  - **`rateLimitMiddleware.js`**:
+    - Enforce request rate limits to prevent abuse.
+    - Test general and sensitive limiters.
   - **`validateRefreshMiddleware.js`**:
-    - Validar cookies con refresh token.
-    - Manejar tokens inválidos o caducados.
+    - Validate cookies with refresh tokens.
+    - Handle invalid or expired tokens.
 
-- **Utilidades (`src/utils`)**:
+- **Utilities (****`src/utils`****):**
 
-  - Validar UUIDs.
-  - Probar errores personalizados y funciones de validación de entrada.
+  - Validate UUIDs.
+  - Validate user schema.
+  - Validate movie schema.
 
----
+- **Custom Errors (****`src/errors`****):**
 
-### 2. **Pruebas de Integración**
-
-Probar la interacción entre módulos y rutas.
-
-#### **Componentes a Probar**
-
-- **Rutas protegidas por middlewares:**
-
-  - Probar `authMiddleware` para verificar tokens y permisos.
-  - Validar que `validateRefreshMiddleware` permite la emisión de nuevos access tokens.
-
-- **Rutas CRUD (Usuarios y Películas):**
-
-  - Verificar la correcta interacción entre las rutas, controladores y modelos.
-  - Simular datos con bases de datos en memoria o mocks.
-
-#### **Casos Clave:**
-
-- Probar interacciones con bases de datos reales y simuladas.
-- Validar respuestas para entradas válidas e inválidas.
+  - Validate that errors are constructed correctly.
+  - Test error-handling scenarios.
 
 ---
 
-### 3. **Pruebas Funcionales**
+### 2. **Functional Tests**
 
-Probar el funcionamiento completo de los endpoints.
+Testing the complete functionality of endpoints.
 
-#### **Endpoints a Probar (Descrito en OpenAPI):**
+#### **Endpoints to Test (Described in OpenAPI):**
 
-### **Usuarios**
+### **Users**
 
-- **POST `/user/login`**:
+- **POST ****`/user/login`**:
 
-  - Probar login con credenciales válidas e inválidas.
-  - Validar la emisión correcta de access tokens y refresh tokens.
+  - Test login with valid and invalid credentials.
+  - Validate correct issuance of access and refresh tokens.
 
-- **POST `/user/register`**:
+- **POST ****`/user/register`**:
 
-  - Crear usuarios con datos válidos.
-  - Manejar errores de validación.
+  - Create users with valid data.
+  - Handle validation errors.
 
-- **GET `/user/refresh-token`**:
+- **GET ****`/user/refresh-token`**:
 
-  - Solicitar un nuevo access token con un refresh token válido.
-  - Manejar errores de tokens inválidos o ausentes.
+  - Request a new access token with a valid refresh token.
+  - Handle errors for missing or invalid tokens.
 
-- **POST `/user/logout`**:
+- **POST ****`/user/logout`**:
 
-  - Validar que un usuario autenticado pueda cerrar sesión correctamente.
-  - Probar errores con tokens ausentes o inválidos.
+  - Validate proper logout for authenticated users.
+  - Test errors with missing or invalid tokens.
 
-- **PATCH `/user/{id}`**:
+- **PATCH ****`/user/{id}`**:
 
-  - Actualizar un usuario con datos válidos (requiere rol admin).
-  - Validar errores por permisos insuficientes, datos inválidos o usuario inexistente.
+  - Update a user with valid data (requires admin role).
+  - Validate errors for insufficient permissions, invalid data, or non-existent users.
 
-- **GET `/user/:username`**:
+- **GET ****`/user/:username`**:
 
-  - Obtener la información de un usuario por su nombre de usuario.
-  - Probar errores cuando el usuario no existe.
+  - Retrieve user information by username.
+  - Test errors when the user does not exist.
 
-- **DELETE `/user/{id}`**:
+- **DELETE ****`/user/{id}`**:
 
-  - Probar eliminación de usuarios con rol admin.
-  - Validar errores como token inválido, permisos insuficientes o usuario no encontrado.
+  - Test user deletion with admin role.
+  - Validate errors such as invalid tokens, insufficient permissions, or non-existent users.
 
-### **Películas**
+### **Movies**
 
-- **GET `/movies`**:
+- **GET ****`/movies`**:
 
-  - Validar que devuelve una lista de películas con un token válido.
+  - Validate it returns a list of movies with a valid token.
 
-- **GET `/movies/{id}`**:
+- **GET ****`/movies/{id}`**:
 
-  - Obtener una película específica por su ID.
-  - Probar errores cuando la película no existe o el ID es inválido.
+  - Retrieve a specific movie by ID.
+  - Test errors when the movie does not exist or the ID is invalid.
 
-- **POST `/movies`**:
+- **POST ****`/movies`**:
 
-  - Crear películas con datos válidos (solo admin).
-  - Manejar errores de validación y permisos.
+  - Create movies with valid data (admin only).
+  - Handle validation and permission errors.
 
-- **PATCH `/movies/{id}`**:
+- **PATCH ****`/movies/{id}`**:
 
-  - Actualizar películas con datos válidos.
-  - Probar errores de permisos, ID inválido o película inexistente.
+  - Update movies with valid data.
+  - Test errors for permissions, invalid IDs, or non-existent movies.
 
-- **DELETE `/movies/{id}`**:
+- **DELETE ****`/movies/{id}`**:
 
-  - Eliminar películas como admin.
-  - Validar errores como película no encontrada o permisos insuficientes.
+  - Delete movies as admin.
+  - Validate errors such as non-existent movies or insufficient permissions.
 
-  ***
+---
 
-### 4. **Pruebas de Extremo a Extremo (E2E)**
+### 3. **End-to-End (E2E) Tests**
 
-Opcional para simular el uso completo de la API desde el punto de vista de un cliente.
+Optional for simulating the complete API usage from a client perspective.
 
-#### **Flujos a Probar:**
+#### **Flows to Test:**
 
-- **Usuario:**
+- **User:**
 
-  1. Registro.
+  1. Registration.
   2. Login.
-  3. Crear recursos (ej. películas).
-  4. Actualizar y eliminar recursos.
+  3. Create resources (e.g., movies).
+  4. Update and delete resources.
   5. Logout.
 
-- **Autenticación y autorización:**
+- **Authentication and Authorization:**
 
-  - Probar el acceso con diferentes roles.
-  - Verificar el manejo de tokens caducados.
-
----
-
-## Herramientas Utilizadas
-
-- **Mocha:** Framework de pruebas.
-- **Chai:** Biblioteca para aserciones.
-- **Supertest:** Simulación de solicitudes HTTP.
-- **Sinon:** Mocks y stubs para pruebas unitarias.
-- **nyc:** Medición de cobertura de código.
+  - Test access with different roles.
+  - Verify handling of expired tokens.
 
 ---
 
-## Configuración Inicial
+## Tools Used
 
-1. Instalar dependencias:
+- **Mocha:** Test framework.
+- **Chai:** Assertion library.
+- **Chai as Promised:** Extended assertions for promises (not yet used in all tests).
+- **Supertest:** HTTP request simulation.
+- **Sinon:** Mocks and stubs for unit tests.
+- **ESMock:** Handles issues with ES module imports.
+- **nyc:** Code coverage measurement.
+
+---
+
+## Initial Setup
+
+1. Install dependencies:
    ```bash
-   npm install --save-dev mocha chai supertest sinon nyc
+   npm install --save-dev mocha chai chai-as-promised supertest sinon nyc esmock
    ```
-2. Crear directorio `tests/` con subdirectorios según los componentes:
+2. Create `tests/` directory with subdirectories for each component:
    ```
    tests/
    ├── controllers/
@@ -179,36 +188,33 @@ Opcional para simular el uso completo de la API desde el punto de vista de un cl
    ├── utils/
    └── models/
    ```
-3. Configurar el script de pruebas en `package.json`:
+3. Configure the test script in `package.json`:
    ```json
    "scripts": {
      "test": "mocha --recursive tests"
    }
    ```
-4. Ejecutar pruebas:
+4. Run tests:
    ```bash
    npm test
    ```
-5. Medir cobertura:
+5. Measure coverage:
    ```bash
    npx nyc npm test
    ```
 
 ---
 
-## Próximos Pasos
+## Next Steps
 
-1. **Implementar Pruebas Unitarias:**
-   Comenzar por los middlewares y utilidades básicas para validar su funcionamiento en aislamiento.
+1. **Implement Unit Tests:**
+  Start with middlewares and basic utilities to validate their isolated behavior.
 
-2. **Configurar Bases de Datos Mock:**
-   Crear un entorno controlado para probar interacciones con `dbConnection.js` y los modelos.
+2. **Design Functional Tests:**
+  Simulate HTTP requests to endpoints, validating the complete request-to-response flow, including middleware, controllers, and database interactions.
+  
+3. **Define E2E Flows:**
+  Simulate real-world scenarios from a client’s perspective to validate the entire API.
 
-3. **Diseñar Pruebas de Integración:**
-   Simular solicitudes HTTP a las rutas principales y verificar la interacción entre módulos.
-
-4. **Definir Flujos E2E:**
-   Simular escenarios reales desde el punto de vista del cliente para validar la API en su totalidad.
-
-5. **Automatizar Pruebas:**
-   Configurar un pipeline de CI/CD (ej., GitHub Actions) para ejecutar las pruebas en cada cambio del código.
+4. **Automate Tests:**
+  Set up a CI/CD pipeline (e.g., GitHub Actions) to execute tests on every code change.
