@@ -1,12 +1,13 @@
 import z from 'zod'
+import validator from 'validator'
 
 const movieSchema = z.object({
   title: z.string({
     invalid_type_error: 'Movie title must be a string',
     required_error: 'Movie title is required.',
-  }),
+  }).trim().transform((val) => validator.escape(val)),
   year: z.number().int().min(1900).max(2024),
-  director: z.string(),
+  director: z.string().trim().transform((val) => validator.escape(val)),
   duration: z.number().int().positive(),
   rate: z.number().min(0).max(10).default(5),
   poster: z.string().url({
@@ -23,7 +24,6 @@ const movieSchema = z.object({
       'Horror',
       'Thriller',
       'Sci-Fi',
-      'Porno',
       'Documentary',
       'Animation',
       'Family',
@@ -38,14 +38,10 @@ const movieSchema = z.object({
   ),
 })
 
-async function validateSchema(input, schema) {
-  return schema.safeParse(input).success
-}
-
 export async function validateMovie(input) {
-  return validateSchema(input, movieSchema)
+  return movieSchema.safeParse(input)
 }
 
 export async function validatePartialMovie(input) {
-  return validateSchema(input, movieSchema.partial())
+  return movieSchema.partial().safeParse(input)
 }
