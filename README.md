@@ -163,12 +163,6 @@ You can run all tests or select a specific type using the following commands:
   npm run test:unit
   ```
 
-- **Integration tests**:
-
-  ```bash
-  npm run test:integration
-  ```
-
 - **Functional tests**:
 
   ```bash
