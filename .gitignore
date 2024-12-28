@@ -1,5 +1,6 @@
 # Archivos y carpetas generales que no se deben versionar
 asd.js
+peticiones_api/
 
 # Archivos de sistema
 .DS_Store
