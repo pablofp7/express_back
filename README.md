@@ -141,9 +141,6 @@ This project includes a detailed testing plan divided into different levels:
 - **Unit Tests**:  
   Validate the correct functionality of individual components, such as middleware, controllers, and utilities.
 
-- **Integration Tests**:  
-  Verify the interaction between routes, middleware, and databases.
-
 - **Functional Tests**:  
   Validate the complete behavior of key endpoints.
 
