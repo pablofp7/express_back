@@ -1,7 +1,6 @@
 # Archivos y carpetas generales que no se deben versionar
 asd.js
 
-
 # Archivos de sistema
 .DS_Store
 Thumbs.db
