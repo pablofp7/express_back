@@ -90,11 +90,11 @@ This project is a backend developed with **Express.js** that follows a **Model-C
 
   ```bash
   sqlScripts
-  ├── movie_turso_sqlite.sql
-  ├── script_movie_no_uuid.sql
-  ├── script_movie_original.sql
-  ├── tokens.sql
-  └── users.sql
+  ├── movie_turso_sqlite.sql       # For Turso DB (online SQLite)
+  ├── script_movie_no_uuid.sql     # For FreeSQL (online SQL database, old version without UUID type support)
+  ├── script_movie_original.sql    # For updated MySQL versions
+  ├── tokens.sql                   # Initializes the tokens table
+  └── users.sql                    # Initializes the users table (ID uses CHAR to ensure compatibility)
   ```
 
   ## Usage

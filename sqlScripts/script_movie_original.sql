@@ -1,4 +1,7 @@
-USE sql7746345;
+-- This script initializes the database for an updated MySQL implementation.
+-- It includes example data for movies.
+
+USE tutorialdb;
 
 CREATE TABLE movie (
     id BINARY(16) PRIMARY KEY, 
@@ -10,13 +13,13 @@ CREATE TABLE movie (
     rate DECIMAL(3, 1) NOT NULL
 );
 
--- Crear la tabla genre
+
 CREATE TABLE genre (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE
 );
 
--- Crear la tabla movie_genres
+
 CREATE TABLE movie_genres (
     movie_id BINARY(16), 
     genre_id INT,
@@ -25,7 +28,7 @@ CREATE TABLE movie_genres (
     FOREIGN KEY (genre_id) REFERENCES genre(id)
 );
 
--- Insertar géneros
+
 INSERT INTO genre (name) VALUES 
 ('Drama'),
 ('Action'),
