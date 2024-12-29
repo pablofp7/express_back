@@ -7,7 +7,6 @@ const ACCEPTED_ORIGINS = [
   */
 ]
 
-// Export the custom origin function separately for testing
 export const originCallback = (origin, callback) => {
   if (!origin) {
     return callback(null, true)
@@ -30,7 +29,6 @@ export const originCallback = (origin, callback) => {
   )
 }
 
-// Use the custom originCallback in the cors middleware
 export const corsMiddleware = cors({
   origin: originCallback,
 })
