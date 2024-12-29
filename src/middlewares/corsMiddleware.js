@@ -2,7 +2,8 @@ import cors from 'cors'
 import { ERROR_TYPES, CustomError } from '../errors/customError.js'
 
 const ACCEPTED_ORIGINS = [
-  /* 'http://example.com',
+  'http://example.com',
+  /*
   'http://anotherdomain.com',
   */
 ]
