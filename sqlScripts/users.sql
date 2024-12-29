@@ -35,8 +35,8 @@ INSERT INTO role (id, name) VALUES
 
 -- -- Insertar usuarios
 -- INSERT INTO user (id, username, email, password, age) VALUES
--- ("550e8400-e29b-41d4-a716-446655440004", "el_muli", "muli@cabra.com", "hashed_password", 30),
--- ("abce8400-e29b-41d4-a716-446655440005", "nando_alonso", "nano@.com", "hashed_password", 25);
+-- ("550e8400-e29b-41d4-a716-446655440004", "hamilton", "muli@hamilton.com", "hashed_password", 30),
+-- ("abce8400-e29b-41d4-a716-446655440005", "nando_alonso", "nano@renault.com", "hashed_password", 25);
 
 -- -- Asignar roles a usuarios
 -- INSERT INTO user_roles (user_id, role_id) VALUES
