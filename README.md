@@ -84,20 +84,34 @@ This project is a backend developed with **Express.js** that follows a **Model-C
 
    **NOTE**: Local and MongoDB functionalities are not fully implemented. Development began with all three options to practice dependency injection with multiple models, but the final implementation focused only on SQL databases (several types are available).
 
-## Usage
+  ### Initialize the Database
 
-### **Key Endpoints**
+  You can populate the database with example data using the provided SQL scripts. Navigate to the `sqlScripts` directory and choose the script that corresponds to your database setup. Execute it in your database management tool or CLI.
 
-Before diving into the key endpoints, you can explore and test all API endpoints interactively using **Swagger UI**.
+  ```bash
+  tree sqlScripts
+  sqlScripts
+  ├── movie_turso_sqlite.sql
+  ├── script_movie_no_uuid.sql
+  ├── script_movie_original.sql
+  ├── tokens.sql
+  └── users.sql
+  ```
 
-- **GET `/api-docs`**:  
-  Access the interactive documentation generated from the `openapi.yaml` file.  
-  To access:  
-  1. Ensure the server is running.  
-  2. Open the following URL in your browser (replace `<api-port>` with the port configured in your environment, default is `3000`):  
-     ```
-     http://localhost:<api-port>/api-docs
-     ```
+  ## Usage
+
+  ### **Key Endpoints**
+
+  Before diving into the key endpoints, you can explore and test all API endpoints interactively using **Swagger UI**.
+
+  - **GET `/api-docs`**:  
+    Access the interactive documentation generated from the `openapi.yaml` file.  
+    To access:  
+    1. Ensure the server is running.  
+    2. Open the following URL in your browser (replace `<api-port>` with the port configured in your environment, default is `3000`):  
+      ```
+      http://localhost:<api-port>/api-docs
+      ```
 
 #### Users
 
