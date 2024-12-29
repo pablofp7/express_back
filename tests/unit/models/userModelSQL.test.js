@@ -47,7 +47,7 @@ describe('UserModel', () => {
   })
 
   describe('createUser', () => {
-    it('debería crear un usuario con datos válidos', async () => {
+    it('should create a user with valid data', async () => {
       const input = {
         username: 'testUser',
         password: 'password123',
@@ -85,7 +85,7 @@ describe('UserModel', () => {
   })
 
   describe('authenticateUser', () => {
-    it('debería autenticar a un usuario con credenciales válidas', async () => {
+    it('should authenticate a user with valid credentials', async () => {
       const mockUsername = 'testUser'
       const mockPassword = 'password123'
       const mockStoredHash = '$2b$10$ABCDEFGHIJKLMNOPQRSTUVWXyZ1234567890abcdefghi'
@@ -105,7 +105,7 @@ describe('UserModel', () => {
       })).to.be.true
     })
 
-    it('debería devolver null si las credenciales son incorrectas', async () => {
+    it('should return null if the credentials are incorrect', async () => {
       const mockUsername = 'testUser'
       const mockPassword = 'password123'
       const mockStoredHash = '$2b$10$ABCDEFGHIJKLMNOPQRSTUVWXyZ1234567890abcdefghi'
@@ -126,7 +126,7 @@ describe('UserModel', () => {
   })
 
   describe('deleteUser', () => {
-    it('debería eliminar un usuario existente', async () => {
+    it('should delete an existing user', async () => {
       const mockUserId = '1'
 
       dbConnMock.query
@@ -158,7 +158,7 @@ describe('UserModel', () => {
   })
 
   describe('updateUser', () => {
-    it('debería actualizar los campos permitidos de un usuario y el rol', async () => {
+    it('should update only the allowed fields of a user and the role', async () => {
       const mockUserId = '1'
       const userData = {
         email: 'newemail@example.com',
@@ -201,7 +201,7 @@ describe('UserModel', () => {
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
 
-    it('debería actualizar solo los campos permitidos de un usuario sin rol', async () => {
+    it('should update only the allowed fields of a user without the role', async () => {
       const mockUserId = '1'
       const userData = {
         email: 'newemail@example.com',
@@ -231,7 +231,7 @@ describe('UserModel', () => {
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
 
-    it('debería actualizar solo el rol cuando no hay otros campos', async () => {
+    it('should update only the role when there are no other fields', async () => {
       const mockUserId = '1'
       const userData = {
         role: 'Admin',
@@ -262,7 +262,7 @@ describe('UserModel', () => {
   })
 
   describe('getUserById', () => {
-    it('debería devolver un usuario por ID', async () => {
+    it('should return a user by ID', async () => {
       const mockUserId = '1'
       const mockUser = {
         id: '1',
@@ -285,7 +285,7 @@ describe('UserModel', () => {
       expect(result).to.deep.equal(mockUser)
     })
 
-    it('debería devolver null si el usuario no existe', async () => {
+    it('should return null if the user does not exist', async () => {
       const mockUserId = '1'
 
       dbConnMock.query.resolves([])
@@ -304,7 +304,7 @@ describe('UserModel', () => {
   })
 
   describe('getUserByEmail', () => {
-    it('debería devolver el usuario correspondiente al email', async () => {
+    it('should return the user corresponding to the email', async () => {
       const email = 'test@example.com'
       const mockUser = {
         id: '1',
@@ -326,7 +326,7 @@ describe('UserModel', () => {
       })
     })
 
-    it('debería devolver null si no se encuentra un usuario con el email', async () => {
+    it('should return null if no user is found with the email', async () => {
       const email = 'nonexistent@example.com'
 
       dbConnMock.query.resolves([])
@@ -344,7 +344,7 @@ describe('UserModel', () => {
   })
 
   describe('getUserByUsername', () => {
-    it('debería devolver el usuario correspondiente al username', async () => {
+    it('should return the user corresponding to the username', async () => {
       const username = 'testUser'
       const mockUser = {
         id: '1',
@@ -366,7 +366,7 @@ describe('UserModel', () => {
       })
     })
 
-    it('debería devolver null si no se encuentra un usuario con el username', async () => {
+    it('should return null if no user is found with the username', async () => {
       const username = 'nonexistentUser'
 
       dbConnMock.query.resolves([])
@@ -384,7 +384,7 @@ describe('UserModel', () => {
   })
 
   describe('saveToken', () => {
-    it('debería guardar un token con los datos correctos', async () => {
+    it('should save a token with the correct data', async () => {
       const tokenData = {
         userId: '123',
         token: 'sampleToken',
@@ -409,7 +409,7 @@ describe('UserModel', () => {
   })
 
   describe('revokeToken', () => {
-    it('debería revocar un token existente', async () => {
+    it('should revoke an existing token', async () => {
       const token = 'sampleToken'
 
       dbConnMock.query.resolves({ affectedRows: 1 })
@@ -429,7 +429,7 @@ describe('UserModel', () => {
       })
     })
 
-    it('debería devolver un resultado vacío si no se encuentra el token', async () => {
+    it('should return an empty result if the token is not found', async () => {
       const token = 'nonexistentToken'
 
       dbConnMock.query.resolves({ affectedRows: 0 })
@@ -451,7 +451,7 @@ describe('UserModel', () => {
   })
 
   describe('checkToken', () => {
-    it('debería devolver el token válido si no está revocado y no ha expirado', async () => {
+    it('should return the valid token if it is not revoked and has not expired', async () => {
       const mockToken = 'sampleToken'
 
       dbConnMock.query.resolves([
@@ -469,7 +469,7 @@ describe('UserModel', () => {
       })
     })
 
-    it('debería devolver null si el token no es válido o está revocado', async () => {
+    it('should return null if the token is invalid or revoked', async () => {
       const token = 'revokedToken'
 
       dbConnMock.query.resolves([])

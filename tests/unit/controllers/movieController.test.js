@@ -52,7 +52,7 @@ describe('MovieController', () => {
   })
 
   describe('getAll', () => {
-    it('debería devolver todas las películas', async () => {
+    it('should return all movies', async () => {
       const mockMovies = [{ id: 1, title: 'Movie A' }]
       movieModelMock.getAll.resolves(mockMovies)
 
@@ -62,7 +62,7 @@ describe('MovieController', () => {
       expect(res.json.calledOnceWith(mockMovies)).to.be.true
     })
 
-    it('debería devolver un array vacío si no hay películas', async () => {
+    it('should return an empty array if no movies exist', async () => {
       movieModelMock.getAll.resolves([])
 
       await movieController.getAll(req, res, next)
@@ -72,7 +72,7 @@ describe('MovieController', () => {
     })
   })
   describe('getById', () => {
-    it('debería devolver una película por ID', async () => {
+    it('should return a movie by ID', async () => {
       req.params.id = '1'
       const mockMovie = { id: 1, title: 'Movie A' }
 
@@ -86,7 +86,7 @@ describe('MovieController', () => {
       expect(res.json.calledOnceWith(mockMovie)).to.be.true
     })
 
-    it('debería lanzar un CustomError si la película no existe', async () => {
+    it('should throw a CustomError if the movie does not exist', async () => {
       req.params.id = '1'
 
       checkUUIDStub.resolves(true)
@@ -102,7 +102,7 @@ describe('MovieController', () => {
       }
     })
 
-    it('debería lanzar un CustomError si el UUID es inválido', async () => {
+    it('should throw a CustomError if the UUID is invalid', async () => {
       req.params.id = 'invalid-uuid'
 
       checkUUIDStub.resolves(false)
@@ -119,7 +119,7 @@ describe('MovieController', () => {
   })
 
   describe('create', () => {
-    it('debería crear una película con datos válidos', async () => {
+    it('should create a movie with valid data', async () => {
       req.body = { title: 'Movie A', genre: 'Action' }
       const mockMovie = { id: 1, title: 'Movie A', genre: 'Action' }
 
@@ -134,7 +134,7 @@ describe('MovieController', () => {
       expect(res.json.calledOnceWith(mockMovie)).to.be.true
     })
 
-    it('debería lanzar un CustomError si los datos de la película no son válidos', async () => {
+    it('should throw a CustomError if the movie data is invalid', async () => {
       req.body = { title: 'Invalid Movie', genre: '' }
 
       validateMovieStub.resolves(false)
@@ -154,7 +154,7 @@ describe('MovieController', () => {
   })
 
   describe('delete', () => {
-    it('debería eliminar correctametne una película por ID', async () => {
+    it('should successfully delete a movie by ID', async () => {
       req.params.id = '1'
 
       checkUUIDStub.resolves(true)
@@ -167,7 +167,7 @@ describe('MovieController', () => {
       expect(res.status.calledOnceWith(200)).to.be.true
       expect(res.json.calledOnceWith({ message: 'Movie deleted' })).to.be.true
     }),
-    it('debería lanzar un CustomError si el ID de la película no es válido', async () => {
+    it('should throw a CustomError if the movie ID is invalid', async () => {
       req.params.id = 'Invalid ID'
       checkUUIDStub.resolves(false)
       movieModelMock.delete.resolves(true)
@@ -185,7 +185,7 @@ describe('MovieController', () => {
       expect(movieModelMock.delete.called).to.be.false
     })
   }),
-  it('debería lanzar un CustomError si la película no existe', async () => {
+  it('should throw a CustomError if the movie does not exist', async () => {
     req.params.id = '1'
 
     checkUUIDStub.resolves(true)
@@ -205,7 +205,7 @@ describe('MovieController', () => {
   }),
 
   describe('update', () => {
-    it('debería actualizar una película con datos válidos', async () => {
+    it('should update a movie with valid data', async () => {
       req.params.id = '1'
       req.body = { title: 'Updated Title', genre: 'Drama' }
       const mockResult = { affectedRows: 1 }
@@ -227,7 +227,7 @@ describe('MovieController', () => {
       expect(res.json.calledOnceWith({ message: 'Movie updated successfully' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si el UUID es inválido', async () => {
+    it('should throw a CustomError if the UUID is invalid', async () => {
       req.params.id = 'invalid-uuid'
       req.body = { title: 'Updated Title', genre: 'Drama' }
 
@@ -247,7 +247,7 @@ describe('MovieController', () => {
       expect(movieModelMock.update.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si los datos son inválidos', async () => {
+    it('should throw a CustomError if the data is invalid', async () => {
       req.params.id = '1'
       req.body = { title: '', genre: '' }
 
@@ -268,7 +268,7 @@ describe('MovieController', () => {
       expect(movieModelMock.update.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si no se proporcionan campos válidos para actualizar', async () => {
+    it('should throw a CustomError if no valid fields are provided for update', async () => {
       req.params.id = '1'
       req.body = { invalidField: 'Invalid' }
 
@@ -289,7 +289,7 @@ describe('MovieController', () => {
       expect(movieModelMock.update.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si la película no existe', async () => {
+    it('should throw a CustomError if the movie does not exist', async () => {
       req.params.id = '1'
       req.body = { title: 'Updated Title', genre: 'Drama' }
 

@@ -1,6 +1,5 @@
 import sinon from 'sinon'
 import chaiAsPromised from 'chai-as-promised'
-import jwt from 'jsonwebtoken'
 import esmock from 'esmock'
 import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
 import { checkErrorType } from '../../testUtils/checkErrorType.js'
@@ -12,17 +11,20 @@ describe('authMiddleware', () => {
   let authMiddleware
   let userModelMock
   let req, res, next
+  let jwtVerifyStub
 
   beforeEach(async () => {
-    userModelMock = {
-      checkToken: sinon.stub(),
-    }
+    jwtVerifyStub = sinon.stub()
 
-    const MockedMiddleware = await esmock('../../src/middleware/authMiddleware.js', {
-      jsonwebtoken: jwt,
+    const MockedMiddleware = await esmock('../../../src/middlewares/authMiddleware.js', {
+      jsonwebtoken: { verify: jwtVerifyStub },
     })
 
     authMiddleware = MockedMiddleware.authMiddleware
+
+    userModelMock = {
+      checkToken: sinon.stub(),
+    }
 
     req = { headers: {}, user: null }
     res = {}
@@ -41,8 +43,9 @@ describe('authMiddleware', () => {
         await middleware(req, res, next)
       }
       catch (error) {
-        expect(error).to.be.instanceOf(Error)
-        expect(error.message).to.equal('No token provided')
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
       }
 
       expect(next.called).to.be.false
@@ -57,8 +60,9 @@ describe('authMiddleware', () => {
         await middleware(req, res, next)
       }
       catch (error) {
-        expect(error).to.be.instanceOf(Error)
-        expect(error.message).to.equal('Invalid token format')
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
       }
 
       expect(next.called).to.be.false
@@ -66,7 +70,7 @@ describe('authMiddleware', () => {
 
     it('should throw INVALID_TOKEN for invalid token', async () => {
       req.headers.authorization = 'Bearer invalidToken'
-      sinon.stub(jwt, 'verify').throws(new Error('Invalid token'))
+      jwtVerifyStub.throws(new Error('Invalid token'))
 
       const middleware = authMiddleware({ userModel: userModelMock })
 
@@ -74,8 +78,9 @@ describe('authMiddleware', () => {
         await middleware(req, res, next)
       }
       catch (error) {
-        expect(error).to.be.instanceOf(Error)
-        expect(error.message).to.equal('Invalid token')
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
       }
 
       expect(next.called).to.be.false
@@ -83,7 +88,7 @@ describe('authMiddleware', () => {
 
     it('should throw EXPIRED_TOKEN if the token is expired', async () => {
       req.headers.authorization = 'Bearer expiredToken'
-      sinon.stub(jwt, 'verify').throws({ name: 'TokenExpiredError' })
+      jwtVerifyStub.throws({ name: 'TokenExpiredError' })
 
       const middleware = authMiddleware({ userModel: userModelMock })
 
@@ -91,8 +96,9 @@ describe('authMiddleware', () => {
         await middleware(req, res, next)
       }
       catch (error) {
-        expect(error).to.be.instanceOf(Error)
-        expect(error.message).to.equal('Token has expired')
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
       }
 
       expect(next.called).to.be.false
@@ -101,7 +107,7 @@ describe('authMiddleware', () => {
     it('should call next if the token is valid', async () => {
       const decodedToken = { id: '123', role: 'user' }
       req.headers.authorization = 'Bearer validToken'
-      sinon.stub(jwt, 'verify').returns(decodedToken)
+      jwtVerifyStub.returns(decodedToken)
       userModelMock.checkToken.resolves()
 
       const middleware = authMiddleware({ userModel: userModelMock })
@@ -115,7 +121,7 @@ describe('authMiddleware', () => {
     it('should throw ADMIN_ONLY if requireAdmin is true and user is not admin', async () => {
       const decodedToken = { id: '123', role: 'user' }
       req.headers.authorization = 'Bearer validToken'
-      sinon.stub(jwt, 'verify').returns(decodedToken)
+      jwtVerifyStub.returns(decodedToken)
       userModelMock.checkToken.resolves()
 
       const middleware = authMiddleware({ requireAdmin: true, userModel: userModelMock })
@@ -124,8 +130,9 @@ describe('authMiddleware', () => {
         await middleware(req, res, next)
       }
       catch (error) {
-        expect(error).to.be.instanceOf(Error)
-        expect(error.message).to.equal('Access denied. Admins only.')
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError).to.be.instanceOf(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
       }
 
       expect(next.called).to.be.false

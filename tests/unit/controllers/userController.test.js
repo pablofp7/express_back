@@ -57,7 +57,7 @@ describe('UserController', () => {
   })
 
   describe('register', () => {
-    it('debería registrar un usuario con datos válidos', async () => {
+    it('should register a user with valid data', async () => {
       req.body = { username: 'user', password: 'password' }
       validateUserStub.resolves(true)
       const mockUser = { id: 1, username: 'user' }
@@ -71,7 +71,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith(mockUser)).to.be.true
     })
 
-    it('debería lanzar un CustomError si los datos no son válidos', async () => {
+    it('should throw a CustomError when the data is invalid', async () => {
       req.body = { username: '', password: '' }
       validateUserStub.resolves(false)
 
@@ -90,7 +90,7 @@ describe('UserController', () => {
   })
 
   describe('login', () => {
-    it('debería autenticar un usuario con credenciales válidas', async () => {
+    it('should authenticate an user when the credentials are valid', async () => {
       req.body = { username: 'user', password: 'password' }
       validatePartialUserStub.resolves(true)
       const mockUser = { id: 1, username: 'user', role: 'User' }
@@ -106,7 +106,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ message: 'Login successful' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si las credenciales son inválidas', async () => {
+    it('should throw a CustomError when the credentials are invalid', async () => {
       req.body = { username: 'user', password: 'wrong-password' }
       validatePartialUserStub.resolves(true)
       userModelMock.authenticateUser.resolves(null)
@@ -126,7 +126,7 @@ describe('UserController', () => {
   })
 
   describe('deleteUser', () => {
-    it('debería eliminar un usuario existente por ID', async () => {
+    it('should remove an existing user by ID', async () => {
       req.params.id = '1'
 
       checkUUIDStub.resolves(true)
@@ -140,7 +140,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ message: 'User deleted successfully' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si el UUID es inválido', async () => {
+    it('should throw a CustomError when the UUID (format) is not valid', async () => {
       req.params.id = 'invalid-id'
 
       checkUUIDStub.resolves(false)
@@ -156,7 +156,7 @@ describe('UserController', () => {
       expect(userModelMock.deleteUser.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si no se encuentra el usuario', async () => {
+    it('should throw a CustomError when the ID is not found', async () => {
       req.params.id = '1'
 
       checkUUIDStub.resolves(true)
@@ -175,7 +175,7 @@ describe('UserController', () => {
   })
 
   describe('logout', () => {
-    it('debería revocar tokens y limpiar cookies correctamente', async () => {
+    it('should revoke tokens and clean cookies correctly', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = 'Bearer valid-access-token'
       userModelMock.revokeToken.resolves({ affectedRows: 1 })
@@ -190,7 +190,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si no hay refreshToken', async () => {
+    it('should throw a CustomError when there is not a refreshToken', async () => {
       req.cookies.refreshToken = undefined
 
       try {
@@ -205,7 +205,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si el refreshToken tiene un formato inválido', async () => {
+    it('should throw a CustomError if the refreshToken has an invalid format', async () => {
       req.cookies.refreshToken = '   '
 
       try {
@@ -220,7 +220,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.called).to.be.false
     })
 
-    it('debería revocar solo el refreshToken si no hay accessToken', async () => {
+    it('should only revoke the refreshToken if there is not an accessToken', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = undefined
       userModelMock.revokeToken.resolves({ affectedRows: 1 })
@@ -233,7 +233,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si no se encuentra el refreshToken en la base de datos', async () => {
+    it('should throw a CustomError if the refreshToken is not found on the db', async () => {
       req.cookies.refreshToken = 'invalid-refresh-token'
       userModelMock.revokeToken.resolves({ affectedRows: 0 })
 
@@ -249,7 +249,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.calledOnceWith('invalid-refresh-token')).to.be.true
     })
 
-    it('debería lanzar un CustomError si el accessToken tiene un formato inválido', async () => {
+    it('should throw a CustomError if the accessToken has an invalid format', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = 'Bearer '
 
@@ -265,7 +265,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si no se encuentra el accessToken en la base de datos', async () => {
+    it('should throw a CustomError if the accessToken is not found on the db', async () => {
       req.cookies.refreshToken = 'valid-refresh-token'
       req.headers.authorization = 'Bearer invalid-access-token'
       userModelMock.revokeToken
@@ -286,7 +286,7 @@ describe('UserController', () => {
   })
 
   describe('updateUser', () => {
-    it('debería actualizar un usuario con datos válidos', async () => {
+    it('should update an user if data is valid', async () => {
       req.params.id = '1'
       req.body = { email: 'new@email.com', age: 30 }
 
@@ -303,7 +303,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ message: 'User updated successfully.', id: '1' })).to.be.true
     })
 
-    it('debería lanzar un CustomError si el UUID no es válido', async () => {
+    it('should throw a CustomError when the UUID (format) is not valid', async () => {
       req.params.id = 'invalid-uuid'
       req.body = { email: 'new@email.com', age: 30 }
 
@@ -320,7 +320,7 @@ describe('UserController', () => {
       expect(userModelMock.updateUser.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si los datos no son válidos', async () => {
+    it('should throw a CustomError if the user\'s data is not valid', async () => {
       req.params.id = '1'
       req.body = { email: 'invalid-email' }
 
@@ -341,7 +341,7 @@ describe('UserController', () => {
   })
 
   describe('getIdByUsername', () => {
-    it('debería devolver el ID del usuario para un nombre de usuario válido', async () => {
+    it('should return the ID for a valid username', async () => {
       req.params.username = 'validUser'
 
       const mockUser = { id: 1 }
@@ -355,7 +355,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith({ id: mockUser.id })).to.be.true
     })
 
-    it('debería lanzar un CustomError si falta el parámetro username', async () => {
+    it('should throw a CustomError if the id param is missing', async () => {
       req.params.username = undefined
 
       try {
@@ -370,7 +370,7 @@ describe('UserController', () => {
       expect(userModelMock.getUserByUsername.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
+    it('should throw a CustomError if the user is not found', async () => {
       req.params.username = 'nonExistentUser'
 
       userModelMock.getUserByUsername.resolves(null)
@@ -389,7 +389,7 @@ describe('UserController', () => {
   })
 
   describe('getUser', () => {
-    it('debería devolver los datos del usuario para un nombre de usuario válido', async () => {
+    it('should return user\'s data if the usernama is found', async () => {
       req.params.username = 'validUser'
 
       const mockUser = {
@@ -413,7 +413,7 @@ describe('UserController', () => {
       expect(res.json.calledOnceWith(expectedResponse)).to.be.true
     })
 
-    it('debería lanzar un CustomError si falta el parámetro username', async () => {
+    it('should throw a CustomError if the username param is missing', async () => {
       req.params.username = undefined
 
       try {
@@ -428,7 +428,7 @@ describe('UserController', () => {
       expect(userModelMock.getUserByUsername.called).to.be.false
     })
 
-    it('debería lanzar un CustomError si el usuario no se encuentra', async () => {
+    it('should throw a CustomError if the user is not found', async () => {
       req.params.username = 'nonExistentUser'
 
       userModelMock.getUserByUsername.resolves(null)

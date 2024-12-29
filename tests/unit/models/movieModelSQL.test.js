@@ -41,7 +41,7 @@ describe('MovieModel', () => {
   })
 
   describe('getAll', () => {
-    it('debería devolver todas las películas cuando no se proporciona género', async () => {
+    it('should return all the movies when the genre is not provided', async () => {
       const mockMovies = [
         { id: '1', title: 'Movie A', rate: 4.5, genres: 'Action, Comedy' },
         { id: '2', title: 'Movie B', rate: null, genres: null },
@@ -61,7 +61,7 @@ describe('MovieModel', () => {
       ])
     })
 
-    it('debería devolver películas filtradas por género', async () => {
+    it('should return movies filtered by genre', async () => {
       const mockMovies = [
         { id: '1', title: 'Movie A', rate: 4.5, genres: 'Action' },
       ]
@@ -81,7 +81,7 @@ describe('MovieModel', () => {
   })
 
   describe('getById', () => {
-    it('debería devolver una película con sus géneros', async () => {
+    it('shoud return a movie with its genres', async () => {
       const mockMovie = [
         {
           id: 'mocked-id',
@@ -141,7 +141,7 @@ describe('MovieModel', () => {
   })
 
   describe('create', () => {
-    it('debería crear una película con sus géneros', async () => {
+    it('should create a movie with its genres', async () => {
       const input = {
         title: 'Mocked Movie',
         year: 2023,
@@ -178,7 +178,7 @@ describe('MovieModel', () => {
   })
 
   describe('delete', () => {
-    it('debería actualizar los campos y géneros de una película', async () => {
+    it('should remove a movie and its associated genres', async () => {
       const movieId = 'mocked-id'
 
       dbConnMock.query
@@ -206,7 +206,7 @@ describe('MovieModel', () => {
   })
 
   describe('update', () => {
-    it('debería actualizar los campos y géneros de una película', async () => {
+    it('should update a movie\'s fields and genres', async () => {
       const movieId = 'mocked-id'
       const fields = [
         ['title', 'Updated Movie Title'],
@@ -258,7 +258,7 @@ describe('MovieModel', () => {
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
 
-    it('debería actualizar solo los campos de la película cuando no se proporcionan géneros', async () => {
+    it('should update only the movie fields when no genres are provided', async () => {
       const movieId = 'mocked-id'
       const fields = [['title', 'Updated Movie Title']]
 
@@ -282,7 +282,7 @@ describe('MovieModel', () => {
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
 
-    it('debería actualizar solo los géneros cuando no se proporcionan campos', async () => {
+    it('should only update the genres when no fields are provided', async () => {
       const movieId = 'mocked-id'
       const genres = ['Drama', 'Thriller']
 
@@ -322,7 +322,7 @@ describe('MovieModel', () => {
   })
 
   describe('checkGenres', () => {
-    it('debería manejar géneros existentes y no existentes', async () => {
+    it('should handle existing and non-existing genres', async () => {
       const genres = ['Action', 'New Genre']
 
       dbConnMock.query
@@ -367,7 +367,7 @@ describe('MovieModel', () => {
       ])
     })
 
-    it('debería lanzar un error si no se encuentra el ID de un género', async () => {
+    it('should throw an error if a genre ID is not found', async () => {
       const genres = ['NonExistentGenre']
 
       dbConnMock.query

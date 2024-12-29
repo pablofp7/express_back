@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 import { ERROR_TYPES, CustomError } from '../errors/customError.js'
-import { asyncHandler } from '../utils/asyncHandler.js'
 
 export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) => {
   if (!userModel) {
@@ -11,7 +10,7 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
     })
   }
 
-  return asyncHandler(async (req, res, next) => {
+  return async (req, _res, next) => {
     let token
 
     if (req.headers.authorization) {
@@ -43,7 +42,6 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
           errorType: ERROR_TYPES.auth.EXPIRED_TOKEN,
         })
       }
-
       throw new CustomError({
         origError: new Error('Invalid token'),
         errorType: ERROR_TYPES.auth.INVALID_TOKEN,
@@ -62,5 +60,5 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
     }
 
     next()
-  })
+  }
 }
