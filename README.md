@@ -89,7 +89,6 @@ This project is a backend developed with **Express.js** that follows a **Model-C
   You can populate the database with example data using the provided SQL scripts. Navigate to the `sqlScripts` directory and choose the script that corresponds to your database setup. Execute it in your database management tool or CLI.
 
   ```bash
-  tree sqlScripts
   sqlScripts
   ├── movie_turso_sqlite.sql
   ├── script_movie_no_uuid.sql
