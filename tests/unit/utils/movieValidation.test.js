@@ -41,7 +41,7 @@ describe('MovieValidation', () => {
       const result = await validateMovie(input)
 
       expect(result).to.be.true
-      expect(validatorEscapeStub.calledTwice).to.be.true // For title and director
+      expect(validatorEscapeStub.calledTwice).to.be.true
     })
 
     it('should return an error for missing required fields', async () => {
@@ -94,8 +94,8 @@ describe('MovieValidation', () => {
 
     it('should return errors for invalid fields in partial input', async () => {
       const input = {
-        title: 123, // Invalid type
-        rate: 15, // Out of range
+        title: 123,
+        rate: 15,
       }
 
       const result = await validatePartialMovie(input)

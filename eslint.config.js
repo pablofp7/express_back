@@ -3,7 +3,7 @@ import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 const baseConfig = {
-  ignores: ['node_modules', 'dist'], // No ignores para tests
+  ignores: ['node_modules', 'dist'],
   languageOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
@@ -56,7 +56,7 @@ const baseConfig = {
 
 const testConfig = {
   ...baseConfig,
-  files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'], // Ajusta el patrón si es necesario
+  files: ['tests/**/*.js', '**/*.test.js', '**/*.spec.js'],
   languageOptions: {
     ...baseConfig.languageOptions,
     globals: {
@@ -75,7 +75,7 @@ const testConfig = {
 export default [
   {
     ...baseConfig,
-    files: ['**/*.js'], // Archivos generales
+    files: ['**/*.js'],
   },
-  testConfig, // Configuración específica para los tests
+  testConfig,
 ]

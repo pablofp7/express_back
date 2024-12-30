@@ -52,7 +52,7 @@ describe('UUID Validation', () => {
     })
 
     it('should invalidate a malformed UUID', async () => {
-      const malformedUUID = '123e4567-e89b-12d3-a456-42661417400' // Missing one digit
+      const malformedUUID = '123e4567-e89b-12d3-a456-42661417400'
 
       const result = await checkUUID(malformedUUID)
 
