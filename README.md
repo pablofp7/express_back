@@ -36,6 +36,7 @@ This project is a backend developed with **Express.js** that follows a **Model-C
   - `sensitiveLimiter.js`: Adds stricter rate limiting for sensitive endpoints.
   - `corsMiddleware.js`: Handles Cross-Origin Resource Sharing (CORS) validation.
   - `ipBlacklistMiddleware.js`: Blocks requests from blacklisted IP addresses.
+- **zod** for input and field validations.
 - **OpenAPI 3.1.1** for API documentation.
 
 ## Installation

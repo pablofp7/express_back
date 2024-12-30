@@ -10,6 +10,7 @@ import { errorHandlerMiddleware } from './middlewares/errorHandlerMiddleware.js'
 import { config } from './config/config.js'
 import { createMovieRouter } from './routes/movieRoutes.js'
 import { createUserRouter } from './routes/userRoutes.js'
+import { createTestRouter } from './routes/testRoutes.js'
 import { blacklistMiddleware } from './middlewares/blacklistMiddleware.js'
 import { generalLimiter } from './middlewares/rateLimitMiddleware.js'
 

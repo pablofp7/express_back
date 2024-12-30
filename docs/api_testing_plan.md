@@ -61,6 +61,7 @@ Testing isolated units of code such as functions, middlewares, or controllers. T
   - Validate UUIDs.
   - Validate user schema.
   - Validate movie schema.
+  - Validate received IPs (not well formed ones could crash the rate limiter).
 
 - **Custom Errors (****`src/errors`****):**
 

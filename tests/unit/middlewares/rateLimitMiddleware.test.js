@@ -1,81 +1,114 @@
-import * as chai from 'chai'
+import { expect } from 'chai'
 import sinon from 'sinon'
-import { generalLimiter, sensitiveLimiter } from '../../../src/middlewares/rateLimitMiddleware.js'
-import { blacklist } from '../../../src/utils/blacklist.js'
+import esmock from 'esmock'
 import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
+import { checkErrorType } from '../../testUtils/checkErrorType.js'
 
-const { expect } = chai
+describe('Rate Limiter Tests', () => {
+  let sandbox
+  let rateLimitStub
+  let blacklistStub
+  let checkIPStub
+  let rateLimitMiddleware
+  let res
+  let next
 
-describe('Rate Limit Middlewares', () => {
-  let req, res, next
+  beforeEach(async () => {
+    sandbox = sinon.createSandbox()
+    rateLimitStub = sandbox.stub().returns({})
+    blacklistStub = { add: sandbox.stub() }
+    checkIPStub = sandbox.stub()
+    res = {}
+    next = sandbox.stub()
 
-  beforeEach(() => {
-    req = { ip: '123.456.789.000' }
-    res = {
-      status: sinon.stub().returnsThis(),
-      json: sinon.stub(),
-    }
-    next = sinon.stub()
-    sinon.stub(blacklist, 'add') // Stub blacklist.add
+    rateLimitMiddleware = await esmock('../../../src/middlewares/rateLimitMiddleware.js', {
+      'express-rate-limit': rateLimitStub,
+      '../../../src/utils/blacklist.js': { blacklist: blacklistStub },
+      '../../../src/utils/ipValidator.js': { checkIP: checkIPStub },
+    })
   })
 
   afterEach(() => {
-    sinon.restore() // Restore all stubs after each test
+    sandbox.restore()
   })
 
-  describe('generalLimiter', () => {
-    it('should forward the request if the rate limit is not exceeded', async () => {
-      // Simulate that the rate limit is not exceeded
-      res.headersSent = false // Required by express-rate-limit to determine if the response is sent
+  describe('Limiter Handlers', () => {
+    it('generalLimiterHandler should add IP to blacklist and throw error', async () => {
+      const req = { ip: '192.168.1.1' }
 
-      await generalLimiter(req, res, next)
-
-      // Verify that the request was forwarded
-      expect(next.calledOnce).to.be.true
-      expect(blacklist.add.notCalled).to.be.true // IP should not be added to the blacklist
+      try {
+        await rateLimitMiddleware.generalLimiterHandler(req, res, next)
+        expect.fail('Should have thrown an error')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.constructor).to.be.equal(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+        expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
+      }
     })
 
-    it('should add the IP to the blacklist and throw a CustomError when the rate limit is exceeded', async () => {
-      // Simulate that the rate limit is exceeded
-      res.headersSent = false // Required by express-rate-limit to invoke the handler
-      generalLimiter.options.handler(req, res, next)
+    it('sensitiveLimiterHandler should add IP to blacklist and throw error', async () => {
+      const req = { ip: '192.168.1.1' }
 
-      // Verify the behavior when the rate limit is exceeded
-      expect(blacklist.add.calledOnceWith(req.ip)).to.be.true
-      expect(next.calledOnce).to.be.true
-
-      const error = next.getCall(0).args[0]
-      expect(error).to.be.instanceOf(CustomError)
-      expect(error.errorType).to.equal(ERROR_TYPES.general.TOO_MANY_REQUESTS)
-      expect(error.origError.message).to.equal('Too many requests')
+      try {
+        await rateLimitMiddleware.sensitiveLimiterHandler(req, res, next)
+        expect.fail('Should have thrown an error')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.constructor).to.be.equal(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+        expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
+      }
     })
   })
 
-  describe('sensitiveLimiter', () => {
-    it('should forward the request if the rate limit is not exceeded', async () => {
-      // Simulate that the rate limit is not exceeded
-      res.headersSent = false // Required by express-rate-limit to determine if the response is sent
+  describe('Rate Limiters Configuration', () => {
+    it('should configure generalLimiter correctly', () => {
+      const generalConfig = rateLimitStub.getCall(0).args[0]
 
-      await sensitiveLimiter(req, res, next)
-
-      // Verify that the request was forwarded
-      expect(next.calledOnce).to.be.true
-      expect(blacklist.add.notCalled).to.be.true // IP should not be added to the blacklist
+      expect(generalConfig.windowMs).to.equal(15 * 60 * 1000)
+      expect(generalConfig.max).to.equal(100)
+      expect(generalConfig.handler).to.equal(rateLimitMiddleware.generalLimiterHandler)
     })
 
-    it('should add the IP to the blacklist and throw a CustomError when the rate limit is exceeded', async () => {
-      // Simulate that the rate limit is exceeded
-      res.headersSent = false // Required by express-rate-limit to invoke the handler
-      sensitiveLimiter.options.handler(req, res, next)
+    it('should configure sensitiveLimiter correctly', () => {
+      const sensitiveConfig = rateLimitStub.getCall(1).args[0]
 
-      // Verify the behavior when the rate limit is exceeded
-      expect(blacklist.add.calledOnceWith(req.ip)).to.be.true
-      expect(next.calledOnce).to.be.true
+      expect(sensitiveConfig.windowMs).to.equal(15 * 60 * 1000)
+      expect(sensitiveConfig.max).to.equal(10)
+      expect(sensitiveConfig.handler).to.equal(rateLimitMiddleware.sensitiveLimiterHandler)
+    })
+  })
 
-      const error = next.getCall(0).args[0]
-      expect(error).to.be.instanceOf(CustomError)
-      expect(error.errorType).to.equal(ERROR_TYPES.general.TOO_MANY_REQUESTS)
-      expect(error.origError.message).to.equal('Too many requests on sensitive route')
+  describe('KeyGenerator Tests', () => {
+    it('should validate IP and return it when valid', () => {
+      const req = { ip: '192.168.1.1' }
+      checkIPStub.returns(true)
+
+      const generalConfig = rateLimitStub.getCall(0).args[0]
+      const result = generalConfig.keyGenerator(req)
+
+      expect(checkIPStub.calledOnceWith(req.ip)).to.be.true
+      expect(result).to.equal(req.ip)
+    })
+
+    it('should throw error when IP is invalid', () => {
+      const req = { ip: 'invalid-ip' }
+      checkIPStub.returns(false)
+
+      const generalConfig = rateLimitStub.getCall(0).args[0]
+
+      try {
+        generalConfig.keyGenerator(req)
+        expect.fail('Should have thrown an error')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.constructor).to.be.equal(Error)
+        expect(checkErrorType(error.errorType)).to.be.true
+      }
     })
   })
 })

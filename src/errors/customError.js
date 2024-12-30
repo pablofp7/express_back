@@ -47,6 +47,7 @@ export const ERROR_TYPES = {
     NOT_FOUND: createError('GENERAL', 'NOT_FOUND', 404, 'The requested resource was not found.'),
     SERVER_ERROR: createError('GENERAL', 'SERVER_ERROR', 500, 'An unexpected server error occurred.'),
     TOO_MANY_REQUESTS: createError('GENERAL', 'TOO_MANY_REQUESTS', 429, 'Too many requests.'),
+    INVALID_IP: createError('GENERAL', 'INVALID_IP', 400, 'Invalid IP address.'),
   },
 
   auth: {
