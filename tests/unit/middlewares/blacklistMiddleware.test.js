@@ -21,28 +21,31 @@ describe('blacklistMiddleware', () => {
     sinon.restore()
   })
 
-  it('should call next without arguments if IP is not blacklisted', () => {
-    blacklist.has.returns(false)
+  describe('Blacklist Middleware', () => {
+    it('should call next without arguments if IP is not blacklisted', () => {
+      blacklist.has.returns(false)
 
-    blacklistMiddleware(req, res, next)
+      blacklistMiddleware(req, res, next)
 
-    expect(blacklist.has.calledOnceWith(req.ip)).to.be.true
-    expect(next.calledOnce).to.be.true
-    expect(next.firstCall.args).to.have.lengthOf(0)
-  })
+      expect(blacklist.has.calledOnceWith(req.ip)).to.be.true
+      expect(next.calledOnce).to.be.true
+      expect(next.firstCall.args).to.have.lengthOf(0)
+    })
 
-  it('should call next with a CustomError if IP is blacklisted', () => {
-    blacklist.has.returns(true)
+    it('should throw a CustomError for blacklisted IPs', () => {
+      blacklist.has.returns(true)
 
-    blacklistMiddleware(req, res, next)
+      try {
+        blacklistMiddleware(req, {}, next)
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.errorType).to.equal(ERROR_TYPES.auth.ACCESS_DENIED)
+        expect(error.origError.constructor).to.equal(Error)
+        expect(error.origError.message).to.equal(`Blocked IP: ${req.ip}`)
+      }
 
-    expect(blacklist.has.calledOnceWith(req.ip)).to.be.true
-    expect(next.calledOnce).to.be.true
-
-    const error = next.firstCall.args[0]
-    expect(error).to.be.instanceOf(CustomError)
-    expect(error.origError).to.be.instanceOf(Error)
-    expect(error.origError.message).to.equal(`Blocked IP: ${req.ip}`)
-    expect(error.errorType).to.equal(ERROR_TYPES.auth.ACCESS_DENIED)
+      expect(next.called).to.be.false
+    })
   })
 })

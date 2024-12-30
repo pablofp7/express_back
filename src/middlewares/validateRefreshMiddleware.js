@@ -10,7 +10,7 @@ export const validateRefreshMiddleware = ({ userModel }) => {
     })
   }
 
-  return async (req, res, next) => {
+  return async (req, _res, next) => {
     const refreshToken = req.cookies?.refreshToken
 
     if (!refreshToken) {

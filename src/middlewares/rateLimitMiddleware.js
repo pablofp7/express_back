@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit'
 import { blacklist } from '../utils/blacklist.js'
 import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 
-export const generalLimiterHandler = (req, res) => {
+export const generalLimiterHandler = (req, _res) => {
   blacklist.add(req.ip)
   throw new CustomError({
     origError: new Error('Too many requests'),
