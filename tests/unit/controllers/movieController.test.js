@@ -97,7 +97,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
     })
@@ -112,7 +112,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
     })
@@ -144,7 +144,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -177,7 +177,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -238,7 +238,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -259,7 +259,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -280,7 +280,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -302,7 +302,7 @@ describe('MovieController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 

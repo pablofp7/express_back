@@ -80,7 +80,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -116,7 +116,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -150,7 +150,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
       expect(userModelMock.deleteUser.called).to.be.false
@@ -167,7 +167,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
       expect(userModelMock.deleteUser.calledOnceWith({ userId: '1' })).to.be.true
@@ -198,7 +198,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -213,7 +213,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -242,7 +242,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -258,7 +258,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -277,7 +277,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -313,7 +313,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -332,7 +332,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -363,7 +363,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -380,7 +380,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -421,7 +421,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 
@@ -438,7 +438,7 @@ describe('UserController', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(checkErrorType(error.errorType)).to.be.true
       }
 

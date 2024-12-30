@@ -47,7 +47,7 @@ describe('validateRefreshMiddleware', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.NO_REFRESH_TOKEN)
         expect(error.origError.message).to.equal('No refresh token provided')
       }
@@ -65,7 +65,7 @@ describe('validateRefreshMiddleware', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
         expect(error.origError.message).to.equal('Invalid token')
       }
@@ -84,7 +84,7 @@ describe('validateRefreshMiddleware', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
         expect(error.origError.message).to.equal('Decoded token is missing required fields')
       }
@@ -104,7 +104,7 @@ describe('validateRefreshMiddleware', () => {
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError).to.be.instanceOf(Error)
+        expect(error.origError.constructor).to.be.equal(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
         expect(error.origError.message).to.equal('Token invalid')
       }
