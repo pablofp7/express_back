@@ -42,7 +42,6 @@ describe('validateRefreshMiddleware', () => {
     it('should throw NO_REFRESH_TOKEN if no refresh token is provided', async () => {
       const middleware = validateRefreshMiddleware({ userModel: userModelMock })
 
-      console.log(`request data ${JSON.stringify(req)}`)
       try {
         await middleware(req, res, next)
       }
@@ -50,10 +49,8 @@ describe('validateRefreshMiddleware', () => {
         expect(error).to.be.instanceOf(CustomError)
         expect(error.origError).to.be.instanceOf(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.NO_REFRESH_TOKEN)
-        expect(error.message).to.equal('No refresh token provided.')
+        expect(error.origError.message).to.equal('No refresh token provided')
       }
-
-      console.log(next.called)
       expect(next.called).to.be.false
     })
 
@@ -70,7 +67,7 @@ describe('validateRefreshMiddleware', () => {
         expect(error).to.be.instanceOf(CustomError)
         expect(error.origError).to.be.instanceOf(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
-        expect(error.message).to.equal('Invalid token')
+        expect(error.origError.message).to.equal('Invalid token')
       }
 
       expect(next.called).to.be.false
@@ -89,7 +86,7 @@ describe('validateRefreshMiddleware', () => {
         expect(error).to.be.instanceOf(CustomError)
         expect(error.origError).to.be.instanceOf(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
-        expect(error.message).to.equal('Decoded token is missing required fields')
+        expect(error.origError.message).to.equal('Decoded token is missing required fields')
       }
 
       expect(next.called).to.be.false
@@ -109,7 +106,7 @@ describe('validateRefreshMiddleware', () => {
         expect(error).to.be.instanceOf(CustomError)
         expect(error.origError).to.be.instanceOf(Error)
         expect(error.errorType).to.equal(ERROR_TYPES.auth.INVALID_REFRESH_TOKEN)
-        expect(error.message).to.equal('Token invalid')
+        expect(error.origError.message).to.equal('Token invalid')
       }
 
       expect(next.called).to.be.false

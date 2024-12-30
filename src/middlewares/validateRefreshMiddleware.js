@@ -10,7 +10,7 @@ export const validateRefreshMiddleware = ({ userModel }) => {
     })
   }
 
-  return async (req, _res, next) => {
+  return async (req, res, next) => {
     const refreshToken = req.cookies?.refreshToken
 
     if (!refreshToken) {
@@ -37,6 +37,10 @@ export const validateRefreshMiddleware = ({ userModel }) => {
       next()
     }
     catch (err) {
+      if (err instanceof CustomError) {
+        throw err
+      }
+
       throw new CustomError({
         origError: err,
         errorType: ERROR_TYPES.auth.INVALID_REFRESH_TOKEN,
