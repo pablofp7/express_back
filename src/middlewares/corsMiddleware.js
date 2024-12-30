@@ -21,7 +21,7 @@ export const originCallback = (origin, callback) => {
     return callback(null, true)
   }
 
-  console.error(`Blocked by CORS: origin not allowed - ${origin}`)
+  console.log(`Blocked by CORS: origin not allowed - ${origin}`)
   return callback(
     new CustomError({
       origError: new Error(`Blocked by CORS: ${origin}`),
