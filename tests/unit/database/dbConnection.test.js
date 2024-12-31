@@ -341,4 +341,207 @@ describe('DbConn', () => {
       }
     })
   })
+
+  describe('commitTransaction', () => {
+    it('should commit a transaction using the Turso client', async () => {
+      dbConn.type = 'turso'
+      const mockTransaction = { commit: sinon.stub() }
+      dbConn.transactionConnection = mockTransaction
+
+      await dbConn.commitTransaction()
+
+      expect(mockTransaction.commit.calledOnce).to.be.true
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should commit and release a transaction using the MySQL client', async () => {
+      dbConn.type = 'mysql'
+      const mockConnection = { commit: sinon.stub(), release: sinon.stub() }
+      dbConn.transactionConnection = mockConnection
+
+      await dbConn.commitTransaction()
+
+      expect(mockConnection.commit.calledOnce).to.be.true
+      expect(mockConnection.release.calledOnce).to.be.true
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should throw CustomError if Turso client fails to commit a transaction', async () => {
+      dbConn.type = 'turso'
+      const mockTransaction = { commit: sinon.stub().rejects(new Error('Turso commit failed')) }
+      dbConn.transactionConnection = mockTransaction
+
+      try {
+        await dbConn.commitTransaction()
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('Turso commit failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should throw CustomError if MySQL client fails to commit a transaction', async () => {
+      dbConn.type = 'mysql'
+      const mockConnection = { commit: sinon.stub().rejects(new Error('MySQL commit failed')), release: sinon.stub() }
+      dbConn.transactionConnection = mockConnection
+
+      try {
+        await dbConn.commitTransaction()
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('MySQL commit failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+
+      expect(dbConn.transactionConnection).to.be.null
+    })
+  })
+
+  describe('rollbackTransaction', () => {
+    it('should rollback a transaction using the Turso client', async () => {
+      dbConn.type = 'turso'
+      const mockTransaction = { rollback: sinon.stub() }
+      dbConn.transactionConnection = mockTransaction
+
+      await dbConn.rollbackTransaction()
+
+      expect(mockTransaction.rollback.calledOnce).to.be.true
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should rollback and release a transaction using the MySQL client', async () => {
+      dbConn.type = 'mysql'
+      const mockConnection = { rollback: sinon.stub(), release: sinon.stub() }
+      dbConn.transactionConnection = mockConnection
+
+      await dbConn.rollbackTransaction()
+
+      expect(mockConnection.rollback.calledOnce).to.be.true
+      expect(mockConnection.release.calledOnce).to.be.true
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should warn and exit gracefully if there is no active transaction', async () => {
+      dbConn.transactionConnection = null
+
+      const consoleWarnStub = sinon.stub(console, 'warn')
+      await dbConn.rollbackTransaction()
+
+      expect(consoleWarnStub.calledOnceWith('No active transaction to rollback.')).to.be.true
+      expect(dbConn.transactionConnection).to.be.null
+
+      consoleWarnStub.restore()
+    })
+
+    it('should throw CustomError if Turso client fails to rollback a transaction', async () => {
+      dbConn.type = 'turso'
+      const mockTransaction = { rollback: sinon.stub().rejects(new Error('Turso rollback failed')) }
+      dbConn.transactionConnection = mockTransaction
+
+      try {
+        await dbConn.rollbackTransaction()
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('Turso rollback failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+
+      expect(dbConn.transactionConnection).to.be.null
+    })
+
+    it('should throw CustomError if MySQL client fails to rollback a transaction', async () => {
+      dbConn.type = 'mysql'
+      const mockConnection = { rollback: sinon.stub().rejects(new Error('MySQL rollback failed')), release: sinon.stub() }
+      dbConn.transactionConnection = mockConnection
+
+      try {
+        await dbConn.rollbackTransaction()
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('MySQL rollback failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+
+      expect(dbConn.transactionConnection).to.be.null
+    })
+  })
+  describe('executeTransaction', () => {
+    beforeEach(() => {
+      sinon.stub(dbConn, 'beginTransaction').resolves()
+      sinon.stub(dbConn, 'commitTransaction').resolves()
+      sinon.stub(dbConn, 'rollbackTransaction').resolves()
+    })
+
+    afterEach(() => {
+      sinon.restore()
+    })
+
+    it('should execute all functions and commit the transaction', async () => {
+      const mockFn1 = sinon.stub().resolves()
+      const mockFn2 = sinon.stub().resolves()
+
+      await dbConn.executeTransaction([mockFn1, mockFn2])
+
+      expect(dbConn.beginTransaction.calledOnce).to.be.true
+      expect(mockFn1.calledOnce).to.be.true
+      expect(mockFn2.calledOnce).to.be.true
+      expect(dbConn.commitTransaction.calledOnce).to.be.true
+      expect(dbConn.rollbackTransaction.called).to.be.false
+    })
+
+    it('should rollback the transaction if a function throws an error', async () => {
+      const mockFn1 = sinon.stub().resolves()
+      const mockFn2 = sinon.stub().rejects(new Error('Execution failed'))
+
+      try {
+        await dbConn.executeTransaction([mockFn1, mockFn2])
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('Execution failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+
+      expect(dbConn.beginTransaction.calledOnce).to.be.true
+      expect(mockFn1.calledOnce).to.be.true
+      expect(mockFn2.calledOnce).to.be.true
+      expect(dbConn.commitTransaction.called).to.be.false
+      expect(dbConn.rollbackTransaction.calledOnce).to.be.true
+    })
+
+    it('should throw CustomError if functionsToExecute is not an array', async () => {
+      try {
+        await dbConn.executeTransaction(null)
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('functionsToExecute must be an array of functions.')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+    })
+
+    it('should throw CustomError if functionsToExecute contains non-function elements', async () => {
+      try {
+        await dbConn.executeTransaction([() => {}, 'not a function'])
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('Each item in functionsToExecute must be a function.')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.TRANSACTION_ERROR)
+      }
+    })
+  })
 })

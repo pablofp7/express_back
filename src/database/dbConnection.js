@@ -185,7 +185,10 @@ export class DbConn {
 
   async executeTransaction(functionsToExecute = []) {
     if (!Array.isArray(functionsToExecute)) {
-      throw new TypeError('functionsToExecute must be an array of functions.')
+      throw new CustomError({
+        origError: new Error('functionsToExecute must be an array of functions.'),
+        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
+      })
     }
 
     await this.beginTransaction()
