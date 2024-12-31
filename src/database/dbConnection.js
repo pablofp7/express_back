@@ -26,6 +26,11 @@ export class DbConn {
       const configResults = await getDatabaseConfigs({
         [userDbType ? 'userDbType' : 'movieDbType']: dbType,
       })
+
+      if (!configResults) {
+        throw new Error('Invalid database type: ${dbType}')
+      }
+
       const dbParams = configResults.movieDbConfig || configResults.userDbConfig
 
       switch (dbType) {
@@ -37,16 +42,17 @@ export class DbConn {
           this.client = await this.createMySQLConnectionPool({ dbParams })
           break
         default:
-          throw new CustomError({
-            origError: new Error(`Invalid database type: ${dbType}`),
-            errorType: ERROR_TYPES.database.INVALID_DB_TYPE,
-          })
+          throw new Error('Unexpected error on invalid database type')
       }
     }
     catch (error) {
+      if (error instanceof CustomError) {
+        throw error
+      }
+
       throw new CustomError({
         origError: error,
-        errorType: ERROR_TYPES.database.CONNECTION_ERROR,
+        errorType: ERROR_TYPES.database.INVALID_DB_TYPE,
       })
     }
   }
