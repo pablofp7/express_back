@@ -259,4 +259,86 @@ describe('DbConn', () => {
       expect(createTursoClientStub.calledOnceWithExactly(clientArgs)).to.be.true
     })
   })
+
+  describe('query', () => {
+    beforeEach(() => {
+      dbConn = new DbConn()
+    })
+
+    afterEach(() => {
+      sinon.restore()
+    })
+
+    it('should execute a query using the Turso client and return rows', async () => {
+      dbConn.type = 'turso'
+      const mockQuery = 'SELECT * FROM users WHERE id = ?'
+      const mockQueryParams = [1]
+      const mockResults = { rows: [{ id: 1, name: 'John Doe' }] }
+
+      dbConn.client = { execute: sinon.stub().resolves(mockResults) }
+
+      const result = await dbConn.query({ query: mockQuery, queryParams: mockQueryParams })
+
+      expect(dbConn.client.execute.calledOnceWithExactly({
+        sql: mockQuery,
+        args: mockQueryParams,
+      })).to.be.true
+
+      expect(result).to.deep.equal(mockResults.rows)
+    })
+
+    it('should execute a query using the MySQL client and return results', async () => {
+      dbConn.type = 'mysql'
+      const mockQuery = 'SELECT * FROM users WHERE id = ?'
+      const mockQueryParams = [1]
+      const mockResults = [{ id: 1, name: 'John Doe' }]
+
+      dbConn.client = { query: sinon.stub().resolves([mockResults]) }
+
+      const result = await dbConn.query({ query: mockQuery, queryParams: mockQueryParams })
+
+      expect(dbConn.client.query.calledOnceWithExactly({
+        sql: mockQuery,
+        values: mockQueryParams,
+      })).to.be.true
+
+      expect(result).to.deep.equal(mockResults)
+    })
+
+    it('should throw CustomError if Turso client throws an error during query', async () => {
+      dbConn.type = 'turso'
+      const mockQuery = 'SELECT * FROM users WHERE id = ?'
+      const mockQueryParams = [1]
+
+      dbConn.client = { execute: sinon.stub().rejects(new Error('Turso query failed')) }
+
+      try {
+        await dbConn.query({ query: mockQuery, queryParams: mockQueryParams })
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('Turso query failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.QUERY_ERROR)
+      }
+    })
+
+    it('should throw CustomError if MySQL client throws an error during query', async () => {
+      dbConn.type = 'mysql'
+      const mockQuery = 'SELECT * FROM users WHERE id = ?'
+      const mockQueryParams = [1]
+
+      dbConn.client = { query: sinon.stub().rejects(new Error('MySQL query failed')) }
+
+      try {
+        await dbConn.query({ query: mockQuery, queryParams: mockQueryParams })
+        throw new Error('Expected a CustomError to be thrown but none was thrown')
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.message).to.equal('MySQL query failed')
+        expect(error.errorType).to.equal(ERROR_TYPES.database.QUERY_ERROR)
+      }
+    })
+  })
 })
