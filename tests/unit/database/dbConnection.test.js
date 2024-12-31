@@ -8,22 +8,22 @@ import { CustomError, ERROR_TYPES } from '../../../src/errors/customError.js'
 const { expect } = chai
 
 describe('DbConn', () => {
-  let DbConn, dbConn, getDatabaseConfigsStub, createTursoClientStub, createMySQLConnectionPoolStub
+  let DbConn, dbConn, getDatabaseConfigsStub, createTursoClientStub
+  let createPoolStub
 
   beforeEach(async () => {
     getDatabaseConfigsStub = sinon.stub()
     createTursoClientStub = sinon.stub()
-    createMySQLConnectionPoolStub = sinon.stub()
+    createPoolStub = sinon.stub()
 
     const mockedModule = await esmock('../../../src/database/dbConnection.js', {
       '../../../src/database/dbConfig.js': { getDatabaseConfigs: getDatabaseConfigsStub },
+      'mysql2/promise': { createPool: createPoolStub },
+      '@libsql/client': { createClient: createTursoClientStub },
     })
 
     DbConn = mockedModule.DbConn
     dbConn = new DbConn()
-
-    dbConn.createTursoClient = createTursoClientStub
-    dbConn.createMySQLConnectionPool = createMySQLConnectionPoolStub
   })
 
   afterEach(() => {
@@ -61,15 +61,26 @@ describe('DbConn', () => {
     })
 
     it('should call createMySQLConnectionPool for local dbType', async () => {
-      const mockConfig = { userDbConfig: { name: 'test_db', host: 'localhost' } }
+      const mockConfig = { userDbConfig: { name: 'test_db', host: 'localhost', user: 'test', password: '123test', port: 3306 } }
+      const poolArgs = {
+        host: mockConfig.userDbConfig.host,
+        user: mockConfig.userDbConfig.user,
+        password: mockConfig.userDbConfig.password,
+        database: mockConfig.userDbConfig.name,
+        port: mockConfig.userDbConfig.port,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      }
+
       getDatabaseConfigsStub.resolves(mockConfig)
       const mockPool = {}
-      createMySQLConnectionPoolStub.resolves(mockPool)
+      createPoolStub.resolves(mockPool)
 
       await dbConn.init({ userDbType: 'local' })
 
       expect(getDatabaseConfigsStub.calledOnceWith({ userDbType: 'local' })).to.be.true
-      expect(createMySQLConnectionPoolStub.calledOnceWith({ dbParams: mockConfig.userDbConfig })).to.be.true
+      expect(createPoolStub.calledOnceWithExactly(poolArgs)).to.be.true
       expect(dbConn.client).to.equal(mockPool)
       expect(dbConn.type).to.equal('local')
     })
@@ -77,7 +88,7 @@ describe('DbConn', () => {
     it('should throw CustomError if createMySQLConnectionPool rejects', async () => {
       const mockConfig = { userDbConfig: { name: 'test_db', host: 'localhost' } }
       getDatabaseConfigsStub.resolves(mockConfig)
-      createMySQLConnectionPoolStub.rejects(new CustomError({
+      createPoolStub.rejects(new CustomError({
         origError: new Error('Error in createPool'),
         errorType: ERROR_TYPES.database.CONNECTION_ERROR,
       }))
@@ -92,25 +103,36 @@ describe('DbConn', () => {
       }
 
       expect(getDatabaseConfigsStub.calledOnceWith({ userDbType: 'local' })).to.be.true
-      expect(createMySQLConnectionPoolStub.calledOnceWith({ dbParams: mockConfig.userDbConfig })).to.be.true
+      expect(createPoolStub.calledOnce).to.be.true
     })
 
     it('should call createTursoClient for turso dbType', async () => {
       const mockConfig = { userDbConfig: { url: 'turso-url', token: 'turso-token' } }
+      const clientArgs = {
+        url: mockConfig.userDbConfig.url,
+        authToken: mockConfig.userDbConfig.token,
+      }
       getDatabaseConfigsStub.resolves(mockConfig)
       const mockClient = {}
       createTursoClientStub.resolves(mockClient)
 
       await dbConn.init({ userDbType: 'turso' })
 
-      expect(getDatabaseConfigsStub.calledOnceWith({ userDbType: 'turso' })).to.be.true
-      expect(createTursoClientStub.calledOnceWith({ dbParams: mockConfig.userDbConfig })).to.be.true
+      const actualArgs = createTursoClientStub.getCall(0)?.args[0]
+
+      expect(actualArgs).to.deep.equal(clientArgs)
+
+      expect(getDatabaseConfigsStub.calledOnceWithExactly({ userDbType: 'turso' })).to.be.true
       expect(dbConn.client).to.equal(mockClient)
       expect(dbConn.type).to.equal('turso')
     })
 
     it('should throw CustomError if createTursoClient rejects', async () => {
       const mockConfig = { userDbConfig: { url: 'turso-url', token: 'turso-token' } }
+      const clientArgs = {
+        url: mockConfig.userDbConfig.url,
+        authToken: mockConfig.userDbConfig.token,
+      }
       getDatabaseConfigsStub.resolves(mockConfig)
       createTursoClientStub.rejects(new CustomError({
         origError: new Error('Error in createPool'),
@@ -126,8 +148,8 @@ describe('DbConn', () => {
         expect(error.errorType).to.equal(ERROR_TYPES.database.CONNECTION_ERROR)
       }
 
-      expect(getDatabaseConfigsStub.calledOnceWith({ userDbType: 'turso' })).to.be.true
-      expect(createTursoClientStub.calledOnceWith({ dbParams: mockConfig.userDbConfig })).to.be.true
+      expect(getDatabaseConfigsStub.calledOnceWithExactly({ userDbType: 'turso' })).to.be.true
+      expect(createTursoClientStub.calledOnceWithExactly(clientArgs)).to.be.true
     })
 
     it('should throw CustomError for invalid dbType', async () => {
@@ -146,8 +168,95 @@ describe('DbConn', () => {
       }
 
       expect(getDatabaseConfigsStub.calledOnce).to.be.true
-      expect(createMySQLConnectionPoolStub.called).to.be.false
+      expect(createPoolStub.called).to.be.false
       expect(createTursoClientStub.called).to.be.false
+    })
+  })
+  describe('createMySQLConnectionPool', () => {
+    it('should return a MySQL connection pool when parameters are valid', async () => {
+      const mockDbParams = {
+        host: 'localhost',
+        user: 'root',
+        password: 'password',
+        name: 'test_db',
+        port: 3306,
+      }
+
+      const mockPool = { dbParams: mockDbParams }
+      createPoolStub.returns(mockPool)
+
+      const result = await dbConn.createMySQLConnectionPool({ dbParams: mockDbParams })
+
+      expect(createPoolStub.calledOnceWithExactly({
+        host: 'localhost',
+        user: 'root',
+        password: 'password',
+        database: 'test_db',
+        port: 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      })).to.be.true
+
+      expect(result).to.equal(mockPool)
+    })
+    it('should throw CustomError for error during createPool', async () => {
+      const mockDbParams = {
+        host: 'localhost',
+        user: 'root',
+        password: 'password',
+        name: 'test_db',
+        port: 3306,
+      }
+      createPoolStub.throws(new Error('Error while creating the pool'))
+
+      try {
+        await dbConn.createMySQLConnectionPool({ dbParams: mockDbParams })
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.constructor).to.be.equal(Error)
+        expect(error.errorType).to.equal(ERROR_TYPES.database.CONNECTION_ERROR)
+      }
+    })
+  })
+
+  describe('createTursoClient', () => {
+    it('should return a Turso client when parameters are valid', async () => {
+      const mockDbParams = { url: 'turso-url', token: 'turso-token' }
+      const clientArgs = {
+        url: mockDbParams.url,
+        authToken: mockDbParams.token,
+      }
+      const mockClient = {}
+
+      createTursoClientStub.resolves(mockClient)
+
+      const result = await dbConn.createTursoClient({ dbParams: mockDbParams })
+
+      expect(createTursoClientStub.calledOnceWithExactly(clientArgs)).to.be.true
+      expect(result).to.equal(mockClient)
+    })
+
+    it('should throw CustomError for error during createClient', async () => {
+      const mockDbParams = { url: 'turso-url', token: 'turso-token' }
+      const clientArgs = {
+        url: mockDbParams.url,
+        authToken: mockDbParams.token,
+      }
+
+      createTursoClientStub.throws(new Error('Turso client creation failed'))
+
+      try {
+        await dbConn.createTursoClient({ dbParams: mockDbParams })
+      }
+      catch (error) {
+        expect(error).to.be.instanceOf(CustomError)
+        expect(error.origError.constructor).to.be.equal(Error)
+        expect(error.errorType).to.equal(ERROR_TYPES.database.CONNECTION_ERROR)
+      }
+
+      expect(createTursoClientStub.calledOnceWithExactly(clientArgs)).to.be.true
     })
   })
 })
