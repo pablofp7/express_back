@@ -25,7 +25,7 @@ const dbConfigSchema = z.object({
   }),
 })
 
-const parsedDbConfig = dbConfigSchema.safeParse({
+const obtainedEnv = {
   freesql: {
     host: process.env.DB_HOST_FREESQL,
     user: process.env.DB_USER_FREESQL,
@@ -46,7 +46,9 @@ const parsedDbConfig = dbConfigSchema.safeParse({
     url: process.env.DB_URL_SQL_TURSO,
     token: process.env.DB_TOKEN_SQL_TURSO,
   },
-})
+}
+
+const parsedDbConfig = dbConfigSchema.safeParse(obtainedEnv)
 
 if (!parsedDbConfig.success) {
   console.error('❌ Invalid database configuration:')
@@ -54,13 +56,11 @@ if (!parsedDbConfig.success) {
   process.exit(1)
 }
 
-const dbConfig = parsedDbConfig.data
+export const dbConfig = parsedDbConfig.data
 
-const getDatabaseConfigs = async ({ userDbType, movieDbType }) => {
+export const getDatabaseConfigs = async ({ userDbType, movieDbType }) => {
   return {
     userDbConfig: dbConfig[userDbType] || undefined,
     movieDbConfig: dbConfig[movieDbType] || undefined,
   }
 }
-
-export { getDatabaseConfigs }
