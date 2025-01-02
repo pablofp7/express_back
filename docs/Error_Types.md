@@ -58,7 +58,6 @@ Each error type includes:
 | Key                     | Status Code | Message                              |
 | ----------------------- | ----------- | ------------------------------------ |
 | `ACCESS_DENIED`         | 403         | Access denied.                       |
-| `ADMIN_ONLY`            | 403         | Access restricted to administrators. |
 | `EXPIRED_TOKEN`         | 401         | The token has expired.               |
 | `INVALID_REFRESH_TOKEN` | 401         | Invalid or expired refresh token.    |
 | `INVALID_TOKEN`         | 401         | Invalid or malformed token.          |

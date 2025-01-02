@@ -137,7 +137,6 @@ export class UserController {
     }
 
     if (accessToken !== undefined && (typeof accessToken !== 'string' || accessToken.trim() === '')) {
-      console.log('Access token inválido o vacío, lanzando error')
       throw new CustomError({
         origError: new Error('Invalid access token format'),
         errorType: ERROR_TYPES.auth.INVALID_TOKEN,
@@ -199,7 +198,6 @@ export class UserController {
       .status(200)
       .json({
         message: 'Token refreshed successfully',
-        accessToken,
       })
 
     if (config.nodeEnv !== 'production') {

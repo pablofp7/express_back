@@ -52,7 +52,6 @@ export const ERROR_TYPES = {
 
   auth: {
     ACCESS_DENIED: createError('AUTH', 'ACCESS_DENIED', 403, 'Access denied.'),
-    ADMIN_ONLY: createError('AUTH', 'ADMIN_ONLY', 403, 'Access restricted to administrators only.'),
     EXPIRED_TOKEN: createError('AUTH', 'EXPIRED_TOKEN', 401, 'The token has expired.'),
     INVALID_REFRESH_TOKEN: createError('AUTH', 'INVALID_REFRESH_TOKEN', 401, 'Invalid or expired refresh token.'),
     INVALID_TOKEN: createError('AUTH', 'INVALID_TOKEN', 401, 'Invalid or malformed token.'),

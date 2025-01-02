@@ -19,7 +19,7 @@ export class UserModel {
   async createUser({ input }) {
     const { username, password, email, age } = input
     const newId = uuidv4()
-    const salt = config.salt
+    const salt = config.saltRounds
     const hashedPassword = await bcrypt.hash(password, salt)
     const defaultRole = 'User'
 
@@ -101,8 +101,6 @@ export class UserModel {
   }
 
   async deleteUser({ userId }) {
-    let result
-
     const deleteRoles = async () => {
       await this.databaseConnection.query({
         query: 'DELETE FROM user_roles WHERE user_id = ?',
@@ -111,13 +109,14 @@ export class UserModel {
     }
 
     const deleteUser = async () => {
-      result = await this.databaseConnection.query({
+      const result = await this.databaseConnection.query({
         query: 'DELETE FROM user WHERE id = ?',
         queryParams: [userId],
       })
+      return result
     }
 
-    await this.databaseConnection.executeTransaction([deleteRoles, deleteUser])
+    const result = await this.databaseConnection.executeTransaction([deleteRoles, deleteUser])
 
     return result
   }

@@ -118,7 +118,7 @@ describe('authMiddleware', () => {
       expect(next.calledOnce).to.be.true
     })
 
-    it('should throw ADMIN_ONLY if requireAdmin is true and user is not admin', async () => {
+    it('should throw ACCESS_DENIED if requireAdmin is true and user is not admin', async () => {
       const decodedToken = { id: '123', role: 'user' }
       req.headers.authorization = 'Bearer validToken'
       jwtVerifyStub.returns(decodedToken)

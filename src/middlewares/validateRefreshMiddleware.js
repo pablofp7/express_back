@@ -31,7 +31,12 @@ export const validateRefreshMiddleware = ({ userModel }) => {
         })
       }
 
-      await userModel.checkToken(refreshToken)
+      if (!await userModel.checkToken(refreshToken)) {
+        throw new CustomError({
+          origError: new Error ('Refresh token not found on the database'),
+          errorType: ERROR_TYPES.auth.INVALID_REFRESH_TOKEN,
+        })
+      }
 
       req.refreshTokenData = { username, role, userId }
       next()

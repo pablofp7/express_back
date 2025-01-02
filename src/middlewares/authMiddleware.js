@@ -48,17 +48,21 @@ export const authMiddleware = ({ requireAdmin = false, userModel = null } = {}) 
       })
     }
 
-    await userModel.checkToken(token)
+    if (!await userModel.checkToken(token)) {
+      throw new CustomError({
+        origError: new Error ('Access token not found on the database'),
+        errorType: ERROR_TYPES.auth.INVALID_TOKEN,
+      })
+    }
 
     req.user = decoded
 
     if (requireAdmin && req.user?.role?.toLowerCase() !== 'admin') {
       throw new CustomError({
         origError: new Error('Access denied. Admins only.'),
-        errorType: ERROR_TYPES.auth.ADMIN_ONLY,
+        errorType: ERROR_TYPES.auth.ACCESS_DENIED,
       })
     }
-
     next()
   }
 }
