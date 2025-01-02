@@ -10,12 +10,10 @@ import { errorHandlerMiddleware } from './middlewares/errorHandlerMiddleware.js'
 import { config } from './config/config.js'
 import { createMovieRouter } from './routes/movieRoutes.js'
 import { createUserRouter } from './routes/userRoutes.js'
-import { createTestRouter } from './routes/testRoutes.js'
 import { blacklistMiddleware } from './middlewares/blacklistMiddleware.js'
 import { generalLimiter } from './middlewares/rateLimitMiddleware.js'
 
 export const createApp = ({ movieModel, userModel }) => {
-  const port = config.port
   const app = express()
   app.use(json())
   app.use(corsMiddleware)
@@ -36,6 +34,11 @@ export const createApp = ({ movieModel, userModel }) => {
 
   app.use(errorHandlerMiddleware)
 
+  return app
+}
+
+export const startServer = ({ app }) => {
+  const port = config.port
   app.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`)
     console.log(`Swagger docs available on http://localhost:${port}/api-docs`)
