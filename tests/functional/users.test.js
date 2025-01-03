@@ -1,7 +1,7 @@
 import supertest from 'supertest'
 import { createApp } from '../../src/app.js'
 import { DbConn } from '../../src/database/dbConnection.js'
-import { expect } from 'chai'
+import { Assertion, expect } from 'chai'
 import sinon from 'sinon'
 import bcrypt from 'bcrypt'
 import esmock from 'esmock'
@@ -398,6 +398,161 @@ describe('User Routes (Functional Tests)', () => {
 
       expect(res.status).to.equal(403)
       expect(res.body).to.have.property('error', 'Access denied.')
+    })
+  })
+
+  describe('PATCH /:id', () => {
+    it('should return 200 and update the user for valid admin token and valid user ID', async () => {
+      const validAdminToken = 'valid-admin-token'
+      const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      jwtVerifyStub.returns({ id: 1, role: 'admin' })
+
+      dbConn.query.onFirstCall().resolves([{ id: validUserId }])
+      dbConn.executeTransaction.onFirstCall().resolves({ rows: [] })
+
+      const res = await request
+        .patch(`/user/${validUserId}`)
+        .set('Authorization', `Bearer ${validAdminToken}`)
+        .send(updateData)
+
+      sinon.assert.calledOnce(dbConn.query)
+      sinon.assert.calledOnce(dbConn.executeTransaction)
+      expect(res.status).to.equal(200)
+      expect(res.body).to.have.property('message', 'User updated successfully.')
+    })
+
+    it('should return 400 for invalid UUID', async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      const validAdminToken = 'valid-admin-token'
+      const invalidUserId = '1234'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      jwtVerifyStub.returns({ id: 1, role: 'admin' })
+      dbConn.query.onFirstCall().resolves([{ id: invalidUserId }])
+
+      const res = await request
+        .patch(`/user/${invalidUserId}`)
+        .set('Authorization', `Bearer ${validAdminToken}`)
+        .send(updateData)
+
+      expect(res.status).to.equal(400)
+      expect(res.body).to.have.property('error', 'Invalid UUID format.')
+    })
+
+    it('should return 404 if the user is not found', async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      const validAdminToken = 'valid-admin-token'
+      const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      jwtVerifyStub.returns({ id: 1, role: 'admin' })
+
+      dbConn.query.onFirstCall().resolves([])
+
+      const res = await request
+        .patch(`/user/${validUserId}`)
+        .set('Authorization', `Bearer ${validAdminToken}`)
+        .send(updateData)
+
+      expect(res.status).to.equal(401)
+      expect(res.body).to.have.property('error', 'Invalid or malformed token.')
+      sinon.assert.calledOnce(dbConn.query)
+    })
+
+    it('should return 401 if no token is provided', async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      const res = await request.patch(`/user/${validUserId}`).send(updateData)
+
+      expect(res.status).to.equal(401)
+      expect(res.body).to.have.property('error', 'No token provided.')
+    })
+
+    it('should return 401 for invalid token', async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      const invalidToken = 'invalid-token'
+      const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      jwtVerifyStub.throws(new Error('Invalid token'))
+
+      const res = await request
+        .patch(`/user/${validUserId}`)
+        .set('Authorization', `Bearer ${invalidToken}`)
+        .send(updateData)
+
+      expect(res.status).to.equal(401)
+      expect(res.body).to.have.property('error', 'Invalid or malformed token.')
+    })
+
+    it('should return 403 for non-admin user', async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      const validNonAdminToken = 'valid-non-admin-token'
+      const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+      const updateData = { email: 'newemail@example.com', age: 30 }
+
+      jwtVerifyStub.returns({ id: 1, role: 'user' })
+      dbConn.query.onFirstCall().resolves([{ id: 1, token: validNonAdminToken }])
+
+      const res = await request
+        .patch(`/user/${validUserId}`)
+        .set('Authorization', `Bearer ${validNonAdminToken}`)
+        .send(updateData)
+
+      expect(res.status).to.equal(403)
+      expect(res.body).to.have.property('error', 'Access denied.')
+    })
+  })
+  describe('GET /:username', () => {
+    it('should return 200 and user details for an existing username', async () => {
+      const username = 'testUser'
+      dbConn.query.resolves([
+        {
+          id: 1,
+          username,
+          email: 'test@example.com',
+          age: 30,
+        },
+      ])
+
+      const res = await request.get(`/user/${username}`)
+
+      expect(res.status).to.equal(200)
+      expect(res.body).to.deep.equal({
+        id: 1,
+        username,
+        email: 'test@example.com',
+        age: 30,
+      })
+
+      sinon.assert.calledOnce(dbConn.query)
+    })
+
+    it('should return 404 if the user does not exist', async () => {
+      const username = 'nonExistentUser'
+
+      dbConn.query.resolves([])
+
+      const res = await request.get(`/user/${username}`)
+
+      expect(res.status).to.equal(404)
+      expect(res.body).to.have.property('error', 'The requested resource was not found.')
+
+      sinon.assert.calledOnce(dbConn.query)
     })
   })
 })
