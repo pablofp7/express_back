@@ -115,26 +115,26 @@ Testing the complete functionality of endpoints.
 
 ### **Movies**
 
-- **GET ****`/movies`**:
+- **GET ****`/movie`**:
 
   - Validate it returns a list of movies with a valid token.
 
-- **GET ****`/movies/{id}`**:
+- **GET ****`/movie/{id}`**:
 
   - Retrieve a specific movie by ID.
   - Test errors when the movie does not exist or the ID is invalid.
 
-- **POST ****`/movies`**:
+- **POST ****`/movie`**:
 
   - Create movies with valid data (admin only).
   - Handle validation and permission errors.
 
-- **PATCH ****`/movies/{id}`**:
+- **PATCH ****`/movie/{id}`**:
 
   - Update movies with valid data.
   - Test errors for permissions, invalid IDs, or non-existent movies.
 
-- **DELETE ****`/movies/{id}`**:
+- **DELETE ****`/movie/{id}`**:
 
   - Delete movies as admin.
   - Validate errors such as non-existent movies or insufficient permissions.

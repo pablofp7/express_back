@@ -29,7 +29,7 @@ export const createApp = ({ movieModel, userModel }) => {
   const swaggerDocument = YAML.load('./openapi.yaml')
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-  app.use('/movies', movieRouter)
+  app.use('/movie', movieRouter)
   app.use('/user', userRouter)
 
   app.use(errorHandlerMiddleware)

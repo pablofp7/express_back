@@ -5,20 +5,20 @@ info:
   description: API for managing movies and users, including authentication and CRUD operations.
   version: 1.0.0
 servers:
-  - url: http://localhost:33333
-    description: Local development server
+- url: http://localhost:33333
+  description: Local development server
 tags:
-  - name: Users
-    description: User management API
-  - name: Movies
-    description: Movie management API
+- name: Users
+  description: User management API
+- name: Movies
+  description: Movie management API
 
 paths:
   /user/login:
     post:
       summary: Log in a user
       tags:
-        - Users
+      - Users
       description: |
         Authenticates the user and provides both an access token and a refresh token.
         The access token is returned in the Authorization header as Bearer <access_token>.
@@ -36,8 +36,8 @@ paths:
                 password:
                   type: string
               required:
-                - username
-                - password
+              - username
+              - password
       responses:
         '200':
           description: User logged in successfully
@@ -57,7 +57,7 @@ paths:
     post:
       summary: Register a new user
       tags:
-        - Users
+      - Users
       description: Registers a new user with the provided credentials.
       requestBody:
         description: User registration data
@@ -84,12 +84,12 @@ paths:
     get:
       summary: Refresh access token
       tags:
-        - Users
+      - Users
       description: |
         Refreshes the access token using the refresh token. The refresh token must be sent as a cookie (`refreshToken`),
         and the new access token will be returned in the `Authorization` header.
       security:
-        - cookieAuth: []
+      - cookieAuth: []
       responses:
         200:
           description: Access token refreshed successfully
@@ -109,18 +109,18 @@ paths:
       delete:
       summary: Delete a user
       tags:
-        - Users
+      - Users
       description: Deletes a user by ID. Requires an admin role in the access token.
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            description: The ID of the user to delete
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The ID of the user to delete
       responses:
         '200':
           description: User deleted successfully
@@ -147,18 +147,18 @@ paths:
     patch:
       summary: Update a user
       tags:
-        - Users
+      - Users
       description: Updates user data. Requires an admin role in the access token.
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            description: The ID of the user to update
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The ID of the user to update
       requestBody:
         description: User data to update
         required: true
@@ -194,15 +194,15 @@ paths:
     get:
       summary: Get user by username
       tags:
-        - Users
+      - Users
       description: Retrieves user information by username.
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-            description: The username of the user
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+          description: The username of the user
       responses:
         '200':
           description: User information retrieved successfully
@@ -217,24 +217,24 @@ paths:
     post:
       summary: Log out a user
       tags:
-        - Users
+      - Users
       description: |
         Logs out the user. Requires an access token in the `Authorization` header.
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       responses:
         200:
           description: User logged out successfully
         401:
           description: Unauthorized, invalid or missing access token
 
-  /movies:
+  /movie:
     get:
       summary: Get all movies
       tags:
-        - Movies
+      - Movies
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       description: Retrieves all movies. Requires an access token in the `Authorization` header.
       responses:
         200:
@@ -248,9 +248,9 @@ paths:
     post:
       summary: Create a new movie
       tags:
-        - Movies
+      - Movies
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       description: |
         Creates a new movie. Requires an access token with the `admin` role in its payload.
       requestBody:
@@ -274,22 +274,22 @@ paths:
         '403':
           description: Forbidden. Requires admin role.
 
-  /movies/{id}:
+  /movie/{id}:
     get:
       summary: Get a movie by ID
       tags:
-        - Movies
+      - Movies
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       description: |
         Retrieves a movie by its ID. Requires an access token in the `Authorization` header.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the movie to retrieve.
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the movie to retrieve.
       responses:
         '200':
           description: A single movie
@@ -305,18 +305,18 @@ paths:
     delete:
       summary: Delete a movie
       tags:
-        - Movies
+      - Movies
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       description: |
         Deletes a movie by its ID. Requires an access token with the `admin` role in its payload.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the movie to delete.
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the movie to delete.
       responses:
         '200':
           description: Movie deleted successfully
@@ -338,18 +338,18 @@ paths:
     patch:
       summary: Update a movie
       tags:
-        - Movies
+      - Movies
       security:
-        - bearerAuth: []
+      - bearerAuth: []
       description: |
         Updates an existing movie by ID. Requires an access token with the `admin` role in its payload.
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The ID of the movie to update.
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the movie to update.
       requestBody:
         description: Movie data to update
         required: true
@@ -380,15 +380,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: >
-        Use an access token obtained during login. Add it to the `Authorization` header as `Bearer {token}`.
-        This token must be included in all requests requiring authentication.
+        Use an access token obtained during login. Add it to the `Authorization` header as `Bearer {token}`. This token must be included in all requests requiring authentication.
     cookieAuth:
       type: apiKey
       in: cookie
       name: refreshToken
       description: >
-        Use a refresh token sent in the `refreshToken` cookie to request a new access token. 
-        The cookie must be marked as `HttpOnly` and `SameSite=Strict` for security purposes.
+        Use a refresh token sent in the `refreshToken` cookie to request a new access token.  The cookie must be marked as `HttpOnly` and `SameSite=Strict` for security purposes.
   schemas:
     Movie:
       type: object
@@ -414,8 +412,8 @@ components:
           type: string
           example: 'A group of explorers embarks on a daring journey to uncover the mysteries of a hidden realm beyond time.'
       required:
-        - title
-        - director
+      - title
+      - director
     User:
       type: object
       properties:
@@ -444,5 +442,5 @@ components:
           example: 25
           description: 'The age of the user. Optional and must be a positive integer.'
       required:
-        - username
-        - password
+      - username
+      - password

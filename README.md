@@ -132,15 +132,15 @@ This project is a backend developed with **Express.js** that follows a **Model-C
 
 #### Movies
 
-- **GET `/movies`**:  
+- **GET `/movie`**:  
   Retrieves all movies.
-- **POST `/movies`**:  
+- **POST `/movie`**:  
   Creates a new movie (requires admin role).
-- **GET `/movies/{id}`**:  
+- **GET `/movie/{id}`**:  
   Retrieves movie information by ID.
-- **PATCH `/movies/{id}`**:  
+- **PATCH `/movie/{id}`**:  
   Updates a movie (requires admin role).
-- **DELETE `/movies/{id}`**:  
+- **DELETE `/movie/{id}`**:  
   Deletes a movie (requires admin role).
 
 ### Authentication
