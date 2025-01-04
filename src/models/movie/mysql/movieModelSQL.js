@@ -62,16 +62,24 @@ export class MovieModel {
       queryParams,
     })
 
-    return movies.map((movie) => ({
-      ...movie,
-      rate: movie.rate ? String(movie.rate) : null,
-      genres: movie.genres
-        ? movie.genres
-            .split(',')
-            .map((g) => g.trim())
-            .join(', ')
-        : null,
-    }))
+    const mappedMovies = movies.map((movie) => {
+      const movieResponse = { ...movie }
+
+      if (movie.rate) {
+        movieResponse.rate = String(movie.rate)
+      }
+
+      if (movie.genres) {
+        movieResponse.genres = movie.genres
+          .split(',')
+          .map((g) => g.trim())
+          .join(', ')
+      }
+
+      return movieResponse
+    })
+
+    return mappedMovies
   }
 
   async getById({ id }) {
@@ -103,15 +111,22 @@ export class MovieModel {
       queryParams,
     })
 
-    return movies.map((movie) => ({
-      ...movie,
-      genres: movie.genres
-        ? movie.genres
-            .split(',')
-            .map((genre) => genre.trim())
-            .join(', ')
-        : null,
-    }))
+    return movies.map((movie) => {
+      const movieResponse = { ...movie }
+
+      if (movie.rate) {
+        movieResponse.rate = String(movie.rate)
+      }
+
+      if (movie.genres) {
+        movieResponse.genres = movie.genres
+          .split(',')
+          .map((genre) => genre.trim())
+          .join(', ')
+      }
+
+      return movieResponse
+    })
   }
 
   async create({ input }) {

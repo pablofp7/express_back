@@ -3,6 +3,11 @@ import { config } from '../config/config.js'
 
 export const errorHandlerMiddleware = (error, _req, res, _next) => {
   if (!(error instanceof CustomError)) {
+    const customError = new CustomError({
+      origError: error,
+      errorType: ERROR_TYPES.general.SERVER_ERROR,
+    })
+    respondWithError(res, { status: customError.status, message: customError.message })
     throw error
   }
 

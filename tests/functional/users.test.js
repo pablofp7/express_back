@@ -1,7 +1,7 @@
 import supertest from 'supertest'
 import { createApp } from '../../src/app.js'
 import { DbConn } from '../../src/database/dbConnection.js'
-import { Assertion, expect } from 'chai'
+import { expect } from 'chai'
 import sinon from 'sinon'
 import bcrypt from 'bcrypt'
 import esmock from 'esmock'

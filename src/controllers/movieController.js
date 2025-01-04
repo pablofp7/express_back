@@ -9,10 +9,10 @@ export class MovieController {
 
   getAll = async (req, res) => {
     const { genre } = req.query
-    console.log(`Solicitadas todas las películas${genre ? ` filtradas por género: ${genre}` : ''}.`)
+    // console.log(`Solicitadas todas las películas${genre ? ` filtradas por género: ${genre}` : ''}.`)
     const movies = await this.movieModel.getAll({ genre })
 
-    console.log('Devolviendo las películas.')
+    // console.log('Devolviendo las películas.')
     res.status(200).json(movies)
   }
 
@@ -25,10 +25,10 @@ export class MovieController {
       })
     }
 
-    console.log('Solicitadas las películas por id: ', id)
-    const movie = await this.movieModel.getById({ id })
-    if (movie) {
-      return res.status(200).json(movie)
+    const movies = await this.movieModel.getById({ id })
+    console.log(movies)
+    if ((Array.isArray(movies) && movies.length > 0) || (!Array.isArray(movies) && movies)) {
+      return res.status(200).json(movies)
     }
     else {
       throw new CustomError({
