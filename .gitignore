@@ -1,6 +1,8 @@
 # Archivos y carpetas generales que no se deben versionar
 asd.js
 peticiones_api/
+.cache_ggshield
+.nyc_output
 
 # Archivos de sistema
 .DS_Store
