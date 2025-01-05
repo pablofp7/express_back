@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt'
 import esmock from 'esmock'
 import jwt from 'jsonwebtoken'
 
-describe('User Routes (Functional Tests)', () => {
+describe('User Routes (Integration Tests)', () => {
   let app, request, dbConn, userModel
   let UserModel, UserModelClass
   let hashedPassword

@@ -155,8 +155,8 @@ This project includes a detailed testing plan divided into different levels:
 - **Unit Tests**:  
   Validate the correct functionality of individual components, such as middleware, controllers, and utilities.
 
-- **Functional Tests**:  
-  Validate the complete behavior of key endpoints.
+- **Integration Tests**:  
+  Validate the behavior of key endpoints.
 
 - **End-to-End (E2E) Tests**:  
   Simulate complete flows from the client perspective.
@@ -177,10 +177,10 @@ You can run all tests or select a specific type using the following commands:
   npm run test:unit
   ```
 
-- **Functional tests**:
+- **Integration tests**:
 
   ```bash
-  npm run test:functional
+  npm run test:integration
   ```
 
 - **E2E tests**:

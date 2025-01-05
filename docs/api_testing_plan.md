@@ -70,9 +70,9 @@ Testing isolated units of code such as functions, middlewares, or controllers. T
 
 ---
 
-### 2. **Functional Tests**
+### 2. **Integration Tests**
 
-Testing the complete functionality of endpoints.
+Ensuring correct endpoint behavior and interaction with other components. These tests cover all routes and middlewares, stubbing the database query methods and the JWT verification functionality. This allows predefined responses for database operations and custom tokens without generating real JWTs.
 
 #### **Endpoints to Test (Described in OpenAPI):**
 
@@ -211,7 +211,7 @@ Optional for simulating the complete API usage from a client perspective.
 1. **Implement Unit Tests:**
   Start with middlewares and basic utilities to validate their isolated behavior.
 
-2. **Design Functional Tests:**
+2. **Design Integration Tests:**
   Simulate HTTP requests to endpoints, validating the complete request-to-response flow, including middleware, controllers, and database interactions.
   
 3. **Define E2E Flows:**

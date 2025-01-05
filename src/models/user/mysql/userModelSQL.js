@@ -101,22 +101,17 @@ export class UserModel {
   }
 
   async deleteUser({ userId }) {
-    const deleteRoles = async () => {
-      await this.databaseConnection.query({
-        query: 'DELETE FROM user_roles WHERE user_id = ?',
-        queryParams: [userId],
-      })
-    }
+    const deleteRoles = async () => await this.databaseConnection.query({
+      query: 'DELETE FROM user_roles WHERE user_id = ?',
+      queryParams: [userId],
+    })
 
-    const deleteUser = async () => {
-      const result = await this.databaseConnection.query({
-        query: 'DELETE FROM user WHERE id = ?',
-        queryParams: [userId],
-      })
-      return result
-    }
+    const deleteUser = async () => await this.databaseConnection.query({
+      query: 'DELETE FROM user WHERE id = ?',
+      queryParams: [userId],
+    })
 
-    const result = await this.databaseConnection.executeTransaction([deleteRoles, deleteUser])
+    const [, result] = await this.databaseConnection.executeTransaction([deleteRoles, deleteUser])
 
     return result
   }

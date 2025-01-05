@@ -5,7 +5,10 @@ const movieSchema = z.object({
   title: z.string({
     invalid_type_error: 'Movie title must be a string',
     required_error: 'Movie title is required.',
-  }).trim().transform((val) => validator.escape(val)),
+  })
+    .trim()
+    .min(1, { message: 'Movie title cannot be empty.' })
+    .transform((val) => validator.escape(val)),
   year: z.number().int().min(1900).max(2024),
   director: z.string().trim().transform((val) => validator.escape(val)),
   duration: z.number().int().positive(),

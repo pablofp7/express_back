@@ -191,6 +191,7 @@ export class DbConn {
       })
     }
 
+    const results = []
     await this.beginTransaction()
 
     try {
@@ -198,7 +199,8 @@ export class DbConn {
         if (typeof fn !== 'function') {
           throw new TypeError('Each item in functionsToExecute must be a function.')
         }
-        await fn()
+        const result = await fn()
+        results.push(result)
       }
 
       await this.commitTransaction()

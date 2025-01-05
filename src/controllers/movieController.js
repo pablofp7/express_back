@@ -9,10 +9,9 @@ export class MovieController {
 
   getAll = async (req, res) => {
     const { genre } = req.query
-    // console.log(`Solicitadas todas las películas${genre ? ` filtradas por género: ${genre}` : ''}.`)
+
     const movies = await this.movieModel.getAll({ genre })
 
-    // console.log('Devolviendo las películas.')
     res.status(200).json(movies)
   }
 
@@ -49,7 +48,6 @@ export class MovieController {
     }
 
     const newMovie = await this.movieModel.create({ input })
-    console.log('Creación de una nueva película: ', newMovie)
     res.status(201).json(newMovie)
   }
 
@@ -122,7 +120,18 @@ export class MovieController {
       })
     }
 
+    const [updatedMovie] = await this.movieModel.getById({ id })
+    if (!updatedMovie) {
+      throw new CustomError({
+        origError: new Error(`Movie with id ${id} not found after update`),
+        errorType: ERROR_TYPES.movie.NOT_FOUND,
+      })
+    }
+
     console.log('Actualización de una película: ', id)
-    res.status(200).json({ message: 'Movie updated successfully' })
+    res.status(200).json({
+      message: 'Movie updated successfully',
+      movie: updatedMovie,
+    })
   }
 }

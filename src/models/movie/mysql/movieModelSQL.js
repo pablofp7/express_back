@@ -114,9 +114,9 @@ export class MovieModel {
     return movies.map((movie) => {
       const movieResponse = { ...movie }
 
-      if (movie.rate) {
-        movieResponse.rate = String(movie.rate)
-      }
+      // if (movie.rate) {
+      //   movieResponse.rate = String(movie.rate)
+      // }
 
       if (movie.genres) {
         movieResponse.genres = movie.genres
@@ -140,9 +140,8 @@ export class MovieModel {
       queryParams: [uuid, title, year, director, duration, poster, rate],
     })
 
-    let genresIDs = []
     const verifyAndInsertGenres = async () => {
-      genresIDs = await this.checkGenres(genre)
+      const genresIDs = await this.checkGenres(genre)
       await Promise.all(
         genresIDs.map(({ genreId }) =>
           this.databaseConnection.query({
@@ -151,9 +150,10 @@ export class MovieModel {
           }),
         ),
       )
+      return genresIDs
     }
 
-    await this.databaseConnection.executeTransaction([
+    const [, genresIDs] = await this.databaseConnection.executeTransaction([
       insertMovie,
       verifyAndInsertGenres,
     ])
@@ -171,23 +171,17 @@ export class MovieModel {
   }
 
   async delete({ id }) {
-    let result
+    const deleteRelations = async () => await this.databaseConnection.query({
+      query: 'DELETE FROM movie_genres WHERE movie_id = ?',
+      queryParams: [id],
+    })
 
-    const deleteRelations = async () => {
-      await this.databaseConnection.query({
-        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-        queryParams: [id],
-      })
-    }
+    const deleteMovie = async () => await this.databaseConnection.query({
+      query: 'DELETE FROM movie WHERE id = ?',
+      queryParams: [id],
+    })
 
-    const deleteMovie = async () => {
-      result = await this.databaseConnection.query({
-        query: 'DELETE FROM movie WHERE id = ?',
-        queryParams: [id],
-      })
-    }
-
-    await this.databaseConnection.executeTransaction([
+    const [, result] = await this.databaseConnection.executeTransaction([
       deleteRelations,
       deleteMovie,
     ])
@@ -196,7 +190,7 @@ export class MovieModel {
   }
 
   async update({ id, fields, genre }) {
-    let result, query, queryParams
+    let query, queryParams
 
     const updateFields = async () => {
       if (fields.length > 0) {
@@ -214,6 +208,10 @@ export class MovieModel {
           query,
           queryParams,
         })
+        return result
+      }
+      else {
+        return null
       }
     }
 
@@ -239,10 +237,14 @@ export class MovieModel {
             })
           }),
         )
+        return genresIDs
+      }
+      else {
+        return null
       }
     }
 
-    await this.databaseConnection.executeTransaction([updateFields, updateGenres])
+    const [result] = await this.databaseConnection.executeTransaction([updateFields, updateGenres])
 
     return result
   }
