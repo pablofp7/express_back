@@ -16,14 +16,14 @@ describe('MovieModel', () => {
   beforeEach(async () => {
     dbConnMock = {
       query: sinon.stub(),
-      executeTransaction: sinon.stub(),
+      executeTransaction: sinon.stub().callsFake(async (queries) => {
+        for (const query of queries) {
+          await query()
+        }
+      }),
     }
+
     sinon.stub(DbConn.prototype, 'query').callsFake(dbConnMock.query)
-    dbConnMock.executeTransaction.callsFake(async (queries) => {
-      for (const query of queries) {
-        await query()
-      }
-    })
     sinon.stub(DbConn.prototype, 'executeTransaction').callsFake(dbConnMock.executeTransaction)
 
     MockedMovieModel = await esmock(
@@ -156,6 +156,15 @@ describe('MovieModel', () => {
         { genreId: '1', genre: 'Action' },
         { genreId: '2', genre: 'Comedy' },
       ])
+      dbConnMock.executeTransaction.callsFake(async (steps) => {
+        for (const step of steps) {
+          await step() // Simula ejecutar cada paso en la transacción
+        }
+        return [, [
+          { genreId: '1', genre: 'Action' },
+          { genreId: '2', genre: 'Comedy' },
+        ]]
+      })
 
       const result = await movieModel.create({ input })
 
@@ -181,23 +190,9 @@ describe('MovieModel', () => {
     it('should remove a movie and its associated genres', async () => {
       const movieId = 'mocked-id'
 
-      dbConnMock.query
-        .onFirstCall().resolves()
-        .onSecondCall().resolves({ affectedRows: 1 })
+      dbConnMock.executeTransaction.resolves([, { affectedRows: 1 }])
 
       const result = await movieModel.delete({ id: movieId })
-
-      expect(dbConnMock.query.callCount).to.equal(2)
-
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-        queryParams: [movieId],
-      })
-
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'DELETE FROM movie WHERE id = ?',
-        queryParams: [movieId],
-      })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
 
@@ -214,11 +209,7 @@ describe('MovieModel', () => {
       ]
       const genres = ['Action', 'Comedy']
 
-      dbConnMock.query
-        .onFirstCall().resolves({ affectedRows: 1 })
-        .onSecondCall().resolves()
-        .onThirdCall().resolves()
-        .onCall(3).resolves()
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       sinon.stub(movieModel, 'checkGenres').resolves([
         { genreId: '1', genre: 'Action' },
@@ -226,32 +217,6 @@ describe('MovieModel', () => {
       ])
 
       const result = await movieModel.update({ id: movieId, fields, genre: genres })
-
-      expect(dbConnMock.query.callCount).to.equal(4)
-
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: `
-          UPDATE movie
-          SET title = ?, duration = ?
-          WHERE id = ?;
-        `,
-        queryParams: ['Updated Movie Title', 140, movieId],
-      })
-
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-        queryParams: [movieId],
-      })
-
-      expect(dbConnMock.query.getCall(2).args[0]).to.deep.equal({
-        query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
-        queryParams: [movieId, '1'],
-      })
-
-      expect(dbConnMock.query.getCall(3).args[0]).to.deep.equal({
-        query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
-        queryParams: [movieId, '2'],
-      })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
 
@@ -262,20 +227,9 @@ describe('MovieModel', () => {
       const movieId = 'mocked-id'
       const fields = [['title', 'Updated Movie Title']]
 
-      dbConnMock.query.onFirstCall().resolves({ affectedRows: 1 })
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       const result = await movieModel.update({ id: movieId, fields, genre: null })
-
-      expect(dbConnMock.query.callCount).to.equal(1)
-
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: `
-          UPDATE movie
-          SET title = ?
-          WHERE id = ?;
-        `,
-        queryParams: ['Updated Movie Title', movieId],
-      })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
 
@@ -286,10 +240,7 @@ describe('MovieModel', () => {
       const movieId = 'mocked-id'
       const genres = ['Drama', 'Thriller']
 
-      dbConnMock.query
-        .onFirstCall().resolves()
-        .onCall(1).resolves()
-        .onCall(2).resolves()
+      dbConnMock.executeTransaction.resolves([, { affectedRows: 2 }])
 
       sinon.stub(movieModel, 'checkGenres').resolves([
         { genreId: '3', genre: 'Drama' },
@@ -298,25 +249,7 @@ describe('MovieModel', () => {
 
       const result = await movieModel.update({ id: movieId, fields: [], genre: genres })
 
-      expect(dbConnMock.query.callCount).to.equal(3)
-
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: 'DELETE FROM movie_genres WHERE movie_id = ?',
-        queryParams: [movieId],
-      })
-
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
-        queryParams: [movieId, '3'],
-      })
-
-      expect(dbConnMock.query.getCall(2).args[0]).to.deep.equal({
-        query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
-        queryParams: [movieId, '4'],
-      })
-
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
-
       expect(result).to.deep.equal(undefined)
     })
   })

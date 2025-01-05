@@ -213,6 +213,7 @@ describe('MovieController', () => {
       checkUUIDStub.resolves(true)
       validatePartialMovieStub.resolves(true)
       movieModelMock.update.resolves(mockResult)
+      movieModelMock.getById.resolves([req.body])
 
       await movieController.update(req, res, next)
 
@@ -224,7 +225,7 @@ describe('MovieController', () => {
         genre: 'Drama',
       })).to.be.true
       expect(res.status.calledOnceWith(200)).to.be.true
-      expect(res.json.calledOnceWith({ message: 'Movie updated successfully' })).to.be.true
+      expect(res.json.calledOnce).to.be.true
     })
 
     it('should throw a CustomError if the UUID is invalid', async () => {

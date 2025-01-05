@@ -116,7 +116,7 @@ describe('validateRefreshMiddleware', () => {
       const decodedToken = { username: 'user', role: 'admin', userId: '123' }
       req.cookies.refreshToken = 'refreshToken'
       jwtVerifyStub.returns(decodedToken)
-      userModelMock.checkToken.resolves()
+      userModelMock.checkToken.resolves([])
 
       const middleware = validateRefreshMiddleware({ userModel: userModelMock })
 

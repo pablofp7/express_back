@@ -121,6 +121,7 @@ export class MovieController {
     }
 
     const [updatedMovie] = await this.movieModel.getById({ id })
+    console.log(`result vale: ${result}. Mientras que updatedmovie: ${updatedMovie}`)
     if (!updatedMovie) {
       throw new CustomError({
         origError: new Error(`Movie with id ${id} not found after update`),

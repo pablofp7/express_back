@@ -75,10 +75,12 @@ describe('User Routes (Integration Tests)', () => {
   })
 
   describe('POST /user/register', () => {
-    it('should return 201 for successful registration', async () => {
+    beforeEach(() => {
       sinon.stub(console, 'log')
       sinon.stub(console, 'warn')
       sinon.stub(console, 'error')
+    })
+    it('should return 201 for successful registration', async () => {
       const input = {
         username: 'newUser',
         password: 'testPassword',
@@ -108,10 +110,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 400 for invalid registration data', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       dbConn.query.rejects(new Error('Invalid data'))
 
       const res = await request.post('/user/register').send({
@@ -126,11 +124,12 @@ describe('User Routes (Integration Tests)', () => {
   })
 
   describe('GET /user/refresh-token', () => {
-    it('should return 200 and a new access token for a valid refresh token', async () => {
+    beforeEach(() => {
       sinon.stub(console, 'log')
       sinon.stub(console, 'warn')
       sinon.stub(console, 'error')
-
+    })
+    it('should return 200 and a new access token for a valid refresh token', async () => {
       const validRefreshToken = 'valid-refresh-token'
       const refreshTokenData = {
         userId: 1,
@@ -153,10 +152,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 for an invalid refresh token', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const invalidRefreshToken = 'invalid-refresh-token'
 
       dbConn.query.resolves([])
@@ -168,10 +163,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if the refresh token is valid but not found in the database', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const refreshTokenData = {
         userId: 1,
         username: 'testUser',
@@ -193,10 +184,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if no refresh token is provided', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const res = await request.get('/user/refresh-token')
 
       expect(res.status).to.equal(401)
@@ -205,6 +192,11 @@ describe('User Routes (Integration Tests)', () => {
   })
 
   describe('POST /user/logout', () => {
+    beforeEach(() => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+    })
     it('should return 200 and revoke tokens on successful logout', async () => {
       const validAccessToken = 'valid-access-token'
       const userId = 1
@@ -233,10 +225,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if no access token is provided', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const res = await request.post('/user/logout')
 
       expect(res.status).to.equal(401)
@@ -244,10 +232,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if access token is invalid', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const invalidAccessToken = 'invalid-access-token'
 
       jwtVerifyStub.throws(new jwt.JsonWebTokenError('Invalid token'))
@@ -259,10 +243,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if the refresh token is missing', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const validAccessToken = 'valid-access-token'
       dbConn.query.onFirstCall().resolves([validAccessToken]).onSecondCall().resolves()
 
@@ -275,22 +255,18 @@ describe('User Routes (Integration Tests)', () => {
   })
 
   describe('DELETE /:id', () => {
+    beforeEach(() => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+    })
     it('should return 200 and delete the user for valid admin token and valid user ID', async () => {
       const validAdminToken = 'valid-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
       jwtVerifyStub.returns({ id: 1, role: 'admin' })
 
-      dbConn.executeTransaction.onFirstCall().callsFake(async (transactionSteps) => {
-        for (const step of transactionSteps) {
-          if (step.name === 'deleteRoles') {
-            await Promise.resolve()
-          }
-          else if (step.name === 'deleteUser') {
-            return Promise.resolve({ affectedRows: 1 })
-          }
-        }
-      })
+      dbConn.executeTransaction.onFirstCall().resolves([,{ affectedRows: 1 }])
 
       dbConn.query.onFirstCall().resolves([{ id: 1, token: validAdminToken }])
 
@@ -303,10 +279,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 400 for invalid UUID', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const validAdminToken = 'valid-admin-token'
       const invalidUserId = '1234'
 
@@ -322,26 +294,13 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 404 if the user is not found', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const validAdminToken = 'valid-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
       jwtVerifyStub.returns({ id: 1, role: 'admin' })
 
       dbConn.query.onFirstCall().resolves([[{ id: 1, token: validAdminToken }]])
-      dbConn.executeTransaction.onFirstCall().callsFake(async (transactionSteps) => {
-        for (const step of transactionSteps) {
-          if (step.name === 'deleteRoles') {
-            await Promise.resolve()
-          }
-          else if (step.name === 'deleteUser') {
-            return Promise.resolve({ affectedRows: 0 })
-          }
-        }
-      })
+      dbConn.executeTransaction.onFirstCall().resolves([,{ affectedRows: 0 }])
 
       const res = await request
         .delete(`/user/${validUserId}`)
@@ -352,9 +311,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if no token is provided', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
       const res = await request.delete(`/user/${validUserId}`)
@@ -364,10 +320,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 for invalid token', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const invalidToken = 'invalid-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
@@ -382,10 +334,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 403 for non-admin user', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
-
       const validNonAdminToken = 'valid-non-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
@@ -402,6 +350,11 @@ describe('User Routes (Integration Tests)', () => {
   })
 
   describe('PATCH /:id', () => {
+    beforeEach(() => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+    })
     it('should return 200 and update the user for valid admin token and valid user ID', async () => {
       const validAdminToken = 'valid-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
@@ -424,9 +377,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 400 for invalid UUID', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const validAdminToken = 'valid-admin-token'
       const invalidUserId = '1234'
       const updateData = { email: 'newemail@example.com', age: 30 }
@@ -444,9 +394,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 404 if the user is not found', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const validAdminToken = 'valid-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
       const updateData = { email: 'newemail@example.com', age: 30 }
@@ -466,9 +413,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 if no token is provided', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
       const updateData = { email: 'newemail@example.com', age: 30 }
 
@@ -479,9 +423,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 401 for invalid token', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const invalidToken = 'invalid-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
       const updateData = { email: 'newemail@example.com', age: 30 }
@@ -498,9 +439,6 @@ describe('User Routes (Integration Tests)', () => {
     })
 
     it('should return 403 for non-admin user', async () => {
-      sinon.stub(console, 'log')
-      sinon.stub(console, 'warn')
-      sinon.stub(console, 'error')
       const validNonAdminToken = 'valid-non-admin-token'
       const validUserId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
       const updateData = { email: 'newemail@example.com', age: 30 }
@@ -518,6 +456,11 @@ describe('User Routes (Integration Tests)', () => {
     })
   })
   describe('GET /:username', () => {
+    beforeEach(() => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+    })
     it('should return 200 and user details for an existing username', async () => {
       const username = 'testUser'
       dbConn.query.resolves([

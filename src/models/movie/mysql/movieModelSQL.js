@@ -204,7 +204,7 @@ export class MovieModel {
           WHERE id = ?;
         `
 
-        result = await this.databaseConnection.query({
+        const result = await this.databaseConnection.query({
           query,
           queryParams,
         })

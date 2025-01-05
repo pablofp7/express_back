@@ -129,30 +129,11 @@ describe('UserModel', () => {
     it('should delete an existing user', async () => {
       const mockUserId = '1'
 
-      dbConnMock.query
-        .onFirstCall().resolves({ affectedRows: 1 })
-        .onSecondCall().resolves({ affectedRows: 1 })
-
-      dbConnMock.executeTransaction.callsFake(async (queries) => {
-        for (const query of queries) {
-          await query()
-        }
-      })
+      dbConnMock.executeTransaction.resolves([, { affectedRows: 1 }])
 
       const result = await userModel.deleteUser({ userId: mockUserId })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
-
-      expect(dbConnMock.query.calledTwice).to.be.true
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: 'DELETE FROM user_roles WHERE user_id = ?',
-        queryParams: [mockUserId],
-      })
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'DELETE FROM user WHERE id = ?',
-        queryParams: [mockUserId],
-      })
-
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
   })

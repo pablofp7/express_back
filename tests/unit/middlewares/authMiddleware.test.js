@@ -108,7 +108,7 @@ describe('authMiddleware', () => {
       const decodedToken = { id: '123', role: 'user' }
       req.headers.authorization = 'Bearer validToken'
       jwtVerifyStub.returns(decodedToken)
-      userModelMock.checkToken.resolves()
+      userModelMock.checkToken.resolves([])
 
       const middleware = authMiddleware({ userModel: userModelMock })
 
