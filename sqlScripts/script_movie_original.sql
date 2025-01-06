@@ -1,7 +1,6 @@
 -- This script initializes the database for an updated MySQL implementation.
 -- It includes example data for movies.
 
-USE tutorialdb;
 
 CREATE TABLE movie (
     id BINARY(16) PRIMARY KEY, 
