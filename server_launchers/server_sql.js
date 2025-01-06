@@ -1,6 +1,6 @@
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { createApp, startServer } from '../src/app.js'
+import { createApp, startServer, stopServer } from '../src/app.js'
 import { MovieModel } from '../src/models/movie/mysql/movieModelSQL.js'
 import { UserModel } from '../src/models/user/mysql/userModelSQL.js'
 import { CustomError, ERROR_TYPES } from '../src/errors/customError.js'
@@ -36,7 +36,11 @@ const generateAppInstance = async () => {
     */
     await Promise.all([movieModel.init(), userModel.init()])
 
-    return createApp({ movieModel, userModel })
+    const appInstance = createApp({ movieModel, userModel })
+    return {
+      appInstance,
+      dbConn: { movieConn: movieModel.databaseConnection, userConn: userModel.databaseConnection },
+    }
   }
   catch (error) {
     if (error instanceof CustomError) {
@@ -54,8 +58,25 @@ const generateAppInstance = async () => {
 /* Función autoinvocada para iniciar el servidor con la app creada anteriormente */
 (async () => {
   try {
-    const appInstance = await generateAppInstance()
+    const { appInstance, dbConnections } = await generateAppInstance()
     startServer({ app: appInstance })
+
+    process.on('SIGINT', async () => {
+      console.log('\nCtrl+C was pressed. Stopping the server and closing database connections...')
+
+      stopServer()
+
+      if (dbConnections.movieConn) {
+        await dbConnections.movieConn.close()
+        console.log('Movie database connection closed.')
+      }
+      if (dbConnections.userConn) {
+        await dbConnections.userConn.close()
+        console.log('User database connection closed.')
+      }
+
+      process.exit(0)
+    })
   }
   catch (error) {
     if (error instanceof CustomError) {

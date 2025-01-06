@@ -13,6 +13,8 @@ import { createUserRouter } from './routes/userRoutes.js'
 import { blacklistMiddleware } from './middlewares/blacklistMiddleware.js'
 import { generalLimiter } from './middlewares/rateLimitMiddleware.js'
 
+let server
+
 export const createApp = ({ movieModel, userModel }) => {
   const app = express()
   app.use(json())
@@ -39,8 +41,17 @@ export const createApp = ({ movieModel, userModel }) => {
 
 export const startServer = ({ app }) => {
   const port = config.port
-  app.listen(port, () => {
+  server = app.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`)
     console.log(`Swagger docs available on http://localhost:${port}/api-docs`)
   })
+  return server
+}
+
+export const stopServer = () => {
+  if (server) {
+    server.close(() => {
+      console.log('Server has been stopped.')
+    })
+  }
 }

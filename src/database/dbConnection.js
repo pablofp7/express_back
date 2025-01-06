@@ -214,4 +214,24 @@ export class DbConn {
       })
     }
   }
+
+  async close() {
+    try {
+      if (this.client) {
+        if (this.type === 'turso') {
+          this.client = null
+        }
+        else {
+          await this.client.end()
+        }
+      }
+      console.log('Database connection closed successfully.')
+    }
+    catch (error) {
+      throw new CustomError({
+        origError: error,
+        errorType: ERROR_TYPES.database.CONNECTION_ERROR,
+      })
+    }
+  }
 }
