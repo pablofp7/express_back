@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-process.loadEnvFile('.env', 'utf-8')
+const envFile = process.env.NODE_ENV === 'test' ? 'tests/e2e/testsEnv' : '.env'
+process.loadEnvFile(envFile, 'utf-8')
 
 const envSchema = z.object({
   PORT: z.string().regex(/^\d+$/, 'PORT must be a number').default('3000'),

@@ -1,0 +1,38 @@
+# Variable de entorno para indicar que estamos en desarollo
+NODE_ENV='development'
+
+# Puerto en el que se lanza la API
+PORT=33333
+
+# Credenciales de la BBDD remota -> FREESQL. En principio no se usan, se usa la URL
+DB_HOST_FREESQL="testing"
+DB_USER_FREESQL="testing"
+DB_PASSWORD_FREESQL="testing"
+DB_NAME_FREESQL="testing"
+DB_PORT_FREESQL=1234
+
+#URL con todos los credenciales
+DB_URL_FREESQL="https://freesql.com"
+
+#Credenciales BBDD Mysql local
+DB_NAME_SQL_LOCAL=testdb
+DB_HOST_SQL_LOCAL='localhost'
+DB_USER_SQL_LOCAL='testUser'
+DB_PASSWORD_SQL_LOCAL='testPassword'
+DB_PORT_SQL_LOCAL=3306
+
+#Credenciales BBDD Turso
+DB_URL_SQL_TURSO="https://turso.com"
+DB_TOKEN_SQL_TURSO="onlymysql"
+
+
+#Palabra secreta para generación de tokens
+JWT_SECRET="testsecret"
+REFRESH_SECRET="testrefresh"
+
+#Vida maxima de cada token en segundos
+ACC_TOKEN_LIFE=60
+REF_TOKEN_LIFE=3*60
+
+#SALT para el Hash
+SALT_ROUNDS=10
