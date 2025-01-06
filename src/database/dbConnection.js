@@ -94,6 +94,7 @@ export class DbConn {
   }
 
   async query({ query, queryParams }) {
+    console.log(`Query a ejecutar: ${query}, parametros: ${queryParams}`)
     try {
       if (this.type === 'turso') {
         const results = await this.client.execute({
