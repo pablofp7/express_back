@@ -57,7 +57,7 @@ export const ERROR_TYPES = {
     INVALID_TOKEN: createError('AUTH', 'INVALID_TOKEN', 401, 'Invalid or malformed token.'),
     NO_REFRESH_TOKEN: createError('AUTH', 'NO_REFRESH_TOKEN', 401, 'No refresh token provided.'),
     NO_TOKEN: createError('AUTH', 'NO_TOKEN', 401, 'No token provided.'),
-    TOKEN_REVOKED: createError('AUTH', 'TOKEN_REVOKED', 401, 'Access token has been revoked.'),
+    TOKEN_REVOKED: createError('AUTH', 'TOKEN_REVOKED', 401, 'Token not found or already revoked.'),
   },
 
   database: {

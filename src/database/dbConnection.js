@@ -207,9 +207,8 @@ export class DbConn {
         if (typeof fn !== 'function') {
           throw new TypeError('Each item in functionsToExecute must be a function.')
         }
-        console.log(`Executing transaction function ${fn}`)
         const result = await fn()
-        results.push(`Resultado: ${JSON.stringify(result)}`)
+        results.push(result)
       }
 
       await this.commitTransaction()

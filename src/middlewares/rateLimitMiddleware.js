@@ -3,25 +3,22 @@ import { blacklist } from '../utils/blacklist.js'
 import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import { checkIP } from '../utils/ipValidator.js'
 
-export const generalLimiterHandler = async (req, _res) => {
+export const generalLimiterHandler = async (req, res) => {
   blacklist.add(req.ip)
-  throw new CustomError({
-    origError: new Error('Too many requests'),
-    errorType: ERROR_TYPES.general.TOO_MANY_REQUESTS,
-  })
+  console.error(`[GENERAL LIMITER] IP added to blacklist: ${req.ip}`)
+  res.status(429).json({ error: 'Too many requests' })
 }
 
-export const sensitiveLimiterHandler = async (req, _res) => {
+export const sensitiveLimiterHandler = (req, res) => {
   blacklist.add(req.ip)
-  throw new CustomError({
-    origError: new Error('Too many requests on sensitive route'),
-    errorType: ERROR_TYPES.general.TOO_MANY_REQUESTS,
-  })
+  console.error(`[SENSITIVE LIMITER] IP added to blacklist: ${req.ip}`)
+  res.status(429).json({ error: 'Too many requests' })
 }
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  skip: (req) => isLocalhost(req.ip),
   keyGenerator: (req) => {
     const isValidIP = checkIP(req.ip)
     if (!isValidIP) {
@@ -38,6 +35,7 @@ export const generalLimiter = rateLimit({
 export const sensitiveLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  skip: (req) => isLocalhost(req.ip),
   keyGenerator: (req) => {
     const isValidIP = checkIP(req.ip)
     if (!isValidIP) {
@@ -50,3 +48,7 @@ export const sensitiveLimiter = rateLimit({
   },
   handler: sensitiveLimiterHandler,
 })
+
+const isLocalhost = (ip) => {
+  return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'
+}

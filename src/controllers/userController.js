@@ -4,7 +4,7 @@ import { config } from '../config/config.js'
 import { CustomError, ERROR_TYPES } from '../errors/customError.js'
 import bcrypt from 'bcrypt'
 import { checkUUID } from '../utils/uuidValidation.js'
-
+import { v4 as uuidv4 } from 'uuid'
 export class UserController {
   constructor({ userModel }) {
     this.userModel = userModel
@@ -51,13 +51,13 @@ export class UserController {
     }
 
     const accessToken = jwt.sign(
-      { username, role: user.role, userId: user.id },
+      { username, role: user.role, userId: user.id, jti: uuidv4() },
       config.jwtSecret,
       { expiresIn: config.accessTokenLifetime },
     )
 
     const refreshToken = jwt.sign(
-      { username, role: user.role, userId: user.id },
+      { username, role: user.role, userId: user.id, jti: uuidv4() },
       config.refreshTokenSecret,
       { expiresIn: config.refreshTokenLifetime },
     )
@@ -170,7 +170,7 @@ export class UserController {
       sameSite: 'Strict',
     })
 
-    res.status(200).json({ message: 'Logout successful.' })
+    res.status(200).json({ message: 'Logout successful' })
   }
 
   refreshToken = async (req, res) => {
@@ -183,7 +183,9 @@ export class UserController {
       })
     }
 
-    const accessToken = jwt.sign({ username, role, userId }, config.jwtSecret, {
+    const refreshToken = req.cookies.refreshToken
+
+    const accessToken = jwt.sign({ username, role, userId, jti: uuidv4() }, config.jwtSecret, {
       expiresIn: config.accessTokenLifetime,
     })
 
@@ -194,6 +196,13 @@ export class UserController {
       expiresIn: config.accessTokenLifetime,
     })
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === 'production',
+      sameSite: 'Strict',
+      maxAge: config.refreshTokenLifetime * 1000,
+    })
+
     res
       .setHeader('Authorization', `Bearer ${accessToken}`)
       .status(200)
@@ -202,7 +211,11 @@ export class UserController {
       })
 
     if (config.nodeEnv !== 'production') {
-      console.log(`Nuevo Access Token (Authorization Header): Bearer ${accessToken}`)
+      console.log(`Re Generated Access Token (Authorization Header): Bearer ${accessToken}`)
+      const setCookieHeader = res.getHeader('Set-Cookie')
+      console.log(
+        `Re-sent Refresh Token (Set-Cookie Header): ${setCookieHeader}`,
+      )
     }
   }
 
