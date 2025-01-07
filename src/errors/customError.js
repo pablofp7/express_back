@@ -85,7 +85,6 @@ export const ERROR_TYPES = {
   },
 
   user: {
-    DUPLICATE: createError('USER', 'DUPLICATE', 409, 'Duplicate user entry.'),
     INVALID_CREDENTIALS: createError('USER', 'INVALID_CREDENTIALS', 401, 'Invalid username or password.'),
     MISSING_ID: createError('USER', 'MISSING_ID', 400, 'User ID is required.'),
     REGISTRATION_ERROR: createError('USER', 'REGISTRATION_ERROR', 400, 'User registration failed.'),

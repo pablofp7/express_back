@@ -3,6 +3,7 @@ import { config } from '../config/config.js'
 
 export const errorHandlerMiddleware = (error, _req, res, _next) => {
   if (!(error instanceof CustomError)) {
+    console.log(`entra aqwui`)
     const customError = new CustomError({
       origError: error,
       errorType: ERROR_TYPES.general.SERVER_ERROR,
@@ -22,13 +23,16 @@ export const errorHandlerMiddleware = (error, _req, res, _next) => {
 
 const logError = (error, isDevelopment) => {
   if (isDevelopment) {
-    console.warn(`[DEV ERROR]:`, error)
+    console.warn(`[DEV ERROR]:`, {
+      code: error.code,
+      status: error.status,
+      message: error.message,
+      origError: error.origError,
+    })
   }
   else {
     console.error(
-      `ERROR:\n\tCode: ${error.code}\n\tStatus: ${error.status}\n\tMessage: ${error.message}\n\tStack: ${
-        error.stack || 'No stack available'
-      }`,
+      `ERROR:\n\tCode: ${error.code}\n\tStatus: ${error.status}\n\tMessage: ${error.message}\n\tOriginal Error: ${error.origError}\n\tStack: ${error.stack || 'No stack available'}`,
     )
   }
 }

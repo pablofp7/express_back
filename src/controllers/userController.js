@@ -17,13 +17,14 @@ export class UserController {
       throw new CustomError({
         origError: new Error('Invalid user data'),
         errorType: ERROR_TYPES.user.VALIDATION_ERROR,
-
       })
     }
 
     const newUser = await this.userModel.createUser({ input })
-    console.log('Usuario registrado:', newUser)
-    res.status(201).json(newUser)
+    if (newUser) {
+      console.log('Usuario registrado:', newUser)
+      res.status(201).json(newUser)
+    }
   }
 
   login = async (req, res) => {
@@ -79,7 +80,7 @@ export class UserController {
       httpOnly: true,
       secure: config.nodeEnv === 'production',
       sameSite: 'Strict',
-      maxAge: config.refreshTokenLifetime,
+      maxAge: config.refreshTokenLifetime * 1000,
     })
 
     res

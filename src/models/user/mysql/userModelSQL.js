@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcrypt'
 import { config } from '../../../config/config.js'
 import dayjs from 'dayjs'
-import { CustomError } from '../../../errors/customError.js'
+import { CustomError, ERROR_TYPES } from '../../../errors/customError.js'
 
 export class UserModel {
   constructor({ userDbType }) {
@@ -54,6 +54,7 @@ export class UserModel {
           operation: 'FETCH_DEFAULT_ROLE',
         })
       }
+      return roleResult
     }
 
     const insertUserRole = async () => await this.databaseConnection.query({

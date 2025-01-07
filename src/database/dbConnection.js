@@ -94,7 +94,6 @@ export class DbConn {
   }
 
   async query({ query, queryParams }) {
-    console.log(`Query a ejecutar: ${query}, parametros: ${queryParams}`)
     try {
       if (this.type === 'turso') {
         const results = await this.client.execute({
@@ -112,10 +111,18 @@ export class DbConn {
       }
     }
     catch (error) {
-      throw new CustomError({
-        origError: error,
-        errorType: ERROR_TYPES.database.QUERY_ERROR,
-      })
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new CustomError({
+          origError: error,
+          errorType: ERROR_TYPES.user.REGISTRATION_ERROR,
+        })
+      }
+      else {
+        throw new CustomError({
+          origError: error,
+          errorType: ERROR_TYPES.database.QUERY_ERROR,
+        })
+      }
     }
   }
 
@@ -200,18 +207,26 @@ export class DbConn {
         if (typeof fn !== 'function') {
           throw new TypeError('Each item in functionsToExecute must be a function.')
         }
+        console.log(`Executing transaction function ${fn}`)
         const result = await fn()
-        results.push(result)
+        results.push(`Resultado: ${JSON.stringify(result)}`)
       }
 
       await this.commitTransaction()
+      return results
     }
     catch (error) {
       await this.rollbackTransaction()
-      throw new CustomError({
-        origError: error,
-        errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
-      })
+
+      if (error instanceof CustomError) {
+        throw error
+      }
+      else {
+        throw new CustomError({
+          origError: error,
+          errorType: ERROR_TYPES.database.TRANSACTION_ERROR,
+        })
+      }
     }
   }
 

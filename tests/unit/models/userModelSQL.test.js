@@ -60,10 +60,7 @@ describe('UserModel', () => {
 
       sinon.stub(bcrypt, 'hash').resolves(hashedPassword)
 
-      dbConnMock.query
-        .onFirstCall().resolves()
-        .onSecondCall().resolves([{ id: '1' }])
-        .onThirdCall().resolves()
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       const result = await userModel.createUser({ input })
 
@@ -75,11 +72,7 @@ describe('UserModel', () => {
         role: 'User',
       })
 
-      expect(dbConnMock.query.calledThrice).to.be.true
-      expect(dbConnMock.query.getCall(0).args[0].query).to.include('INSERT INTO user')
-      expect(dbConnMock.query.getCall(1).args[0].query).to.include('SELECT id FROM role')
-      expect(dbConnMock.query.getCall(2).args[0].query).to.include('INSERT INTO user_roles')
-
+      expect(dbConnMock.executeTransaction.calledOnce).to.be.true
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
   })

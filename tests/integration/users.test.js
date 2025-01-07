@@ -90,10 +90,7 @@ describe('User Routes (Integration Tests)', () => {
 
       const newId = 'mocked-uuid'
 
-      dbConn.query
-        .onFirstCall().resolves()
-        .onSecondCall().resolves([{ id: '1' }])
-        .onThirdCall().resolves()
+      dbConn.executeTransaction.onFirstCall().resolves([{ affectedRows: 1 }])
 
       const res = await request.post('/user/register').send(input)
 
