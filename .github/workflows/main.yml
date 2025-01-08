@@ -1,0 +1,46 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')" /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Build and start services
+        run: docker-compose up -d
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "SHOW DATABASES;" > /dev/null 2>&1; do
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+          echo "MySQL is ready!"
+
+      - name: Verify database initialization
+        run: |
+          docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
+
+      - name: Run ESLint
+        run: docker-compose exec app pnpm eslint .
+
+      - name: Run tests
+        run: docker-compose exec app pnpm test
+
+      - name: Stop services
+        run: docker-compose down
