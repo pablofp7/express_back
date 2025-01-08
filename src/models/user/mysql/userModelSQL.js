@@ -139,7 +139,7 @@ export class UserModel {
       const values = fields.map(([_, value]) => value)
       const queryParams = [...values, userId]
 
-      await this.databaseConnection.query({
+      return await this.databaseConnection.query({
         query: `
           UPDATE user
           SET ${setClause}
@@ -157,7 +157,7 @@ export class UserModel {
 
       const roleId = roleResult[0]?.id
 
-      await this.databaseConnection.query({
+      return await this.databaseConnection.query({
         query: 'UPDATE user_roles SET role_id = ? WHERE user_id = ?',
         queryParams: [roleId, userId],
       })
@@ -167,9 +167,9 @@ export class UserModel {
     if (fields.length > 0) tasks.push(updateFields)
     if (role) tasks.push(updateRole)
 
-    await this.databaseConnection.executeTransaction(tasks)
+    const [results] = await this.databaseConnection.executeTransaction(tasks)
 
-    return true
+    return results
   }
 
   async getUserById({ userId }) {

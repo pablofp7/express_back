@@ -11,15 +11,16 @@ describe('Rate Limiter Tests', () => {
   let checkIPStub
   let rateLimitMiddleware
   let res
-  let next
 
   beforeEach(async () => {
+    sinon.stub(console, 'log')
+    sinon.stub(console, 'warn')
+    sinon.stub(console, 'error')
     sandbox = sinon.createSandbox()
     rateLimitStub = sandbox.stub().returns({})
     blacklistStub = { add: sandbox.stub() }
     checkIPStub = sandbox.stub()
     res = {}
-    next = sandbox.stub()
 
     rateLimitMiddleware = await esmock('../../../src/middlewares/rateLimitMiddleware.js', {
       'express-rate-limit': rateLimitStub,
@@ -30,37 +31,36 @@ describe('Rate Limiter Tests', () => {
 
   afterEach(() => {
     sandbox.restore()
+    sinon.restore()
   })
 
   describe('Limiter Handlers', () => {
-    it('generalLimiterHandler should add IP to blacklist and throw error', async () => {
+    it('generalLimiterHandler should add IP to blacklist and return 429 with error message', async () => {
       const req = { ip: '192.168.1.1' }
+      res = {
+        status: sinon.stub().returnsThis(),
+        json: sinon.stub(),
+      }
 
-      try {
-        await rateLimitMiddleware.generalLimiterHandler(req, res, next)
-        expect.fail('Should have thrown an error')
-      }
-      catch (error) {
-        expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError.constructor).to.be.equal(Error)
-        expect(checkErrorType(error.errorType)).to.be.true
-        expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
-      }
+      await rateLimitMiddleware.generalLimiterHandler(req, res)
+
+      expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
+      expect(res.status.calledOnceWith(429)).to.be.true
+      expect(res.json.calledOnceWith({ error: 'Too many requests' })).to.be.true
     })
 
-    it('sensitiveLimiterHandler should add IP to blacklist and throw error', async () => {
+    it('sensitiveLimiterHandler should add IP to blacklist and return 429 with error message', async () => {
       const req = { ip: '192.168.1.1' }
+      res = {
+        status: sinon.stub().returnsThis(),
+        json: sinon.stub(),
+      }
 
-      try {
-        await rateLimitMiddleware.sensitiveLimiterHandler(req, res, next)
-        expect.fail('Should have thrown an error')
-      }
-      catch (error) {
-        expect(error).to.be.instanceOf(CustomError)
-        expect(error.origError.constructor).to.be.equal(Error)
-        expect(checkErrorType(error.errorType)).to.be.true
-        expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
-      }
+      rateLimitMiddleware.sensitiveLimiterHandler(req, res)
+
+      expect(blacklistStub.add.calledOnceWith(req.ip)).to.be.true
+      expect(res.status.calledOnceWith(429)).to.be.true
+      expect(res.json.calledOnceWith({ error: 'Too many requests' })).to.be.true
     })
   })
 

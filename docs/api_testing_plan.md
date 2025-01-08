@@ -141,24 +141,137 @@ Ensuring correct endpoint behavior and interaction with other components. These 
 
 ---
 
-### 3. **End-to-End (E2E) Tests**
+### **3. End-to-End (E2E) Tests**
 
-Optional for simulating the complete API usage from a client perspective.
+End-to-End (E2E) tests simulate the complete API usage from a client perspective, ensuring that all components work together as expected. These tests are divided into two files:
 
-#### **Flows to Test:**
+1. **`usersFlow.e2e.test.js`**: Tests for user-related routes.
+2. **`moviesFlow.e2e.test.js`**: Tests for movie-related routes.
 
-- **User:**
+---
 
-  1. Registration.
-  2. Login.
-  3. Create resources (e.g., movies).
-  4. Update and delete resources.
-  5. Logout.
+#### **1. User Routes (`usersFlow.e2e.test.js`)**
 
-- **Authentication and Authorization:**
+##### **Routes to Test**
+- **Public Routes (No Authentication Required)**:
+  - `POST /user/login`: User login.
+  - `POST /user/register`: User registration.
+  - `GET /user/:username`: Fetch user details by username.
 
-  - Test access with different roles.
-  - Verify handling of expired tokens.
+- **Protected Routes (Authentication Required)**:
+  - `GET /user/refresh-token`: Refresh access token using a valid refresh token.
+  - `POST /user/logout`: Log out the user.
+
+- **Admin-Only Routes (Authentication + Admin Role Required)**:
+  - `DELETE /user/:id`: Delete a user by ID.
+  - `PATCH /user/:id`: Update a user by ID.
+
+##### **Testing Scenarios**
+- **Unauthenticated User**:
+  - Allowed: Register, login, fetch user details.
+  - Unauthorized: Refresh token, logout, delete/update user.
+
+- **Authenticated User (Non-Admin)**:
+  - Allowed: Refresh token, logout, fetch user details.
+  - Unauthorized: Delete/update user.
+
+- **Authenticated Admin User**:
+  - Allowed: All actions (refresh token, logout, fetch user details, delete/update user).
+
+- **Invalid Data**:
+  - Test invalid credentials, missing fields, invalid UUIDs, etc.
+
+##### **Example Test Cases**
+- **POST `/user/register`**:
+  - Valid data: Expect `201 Created`.
+  - Duplicate username: Expect `400 Bad Request`.
+
+- **POST `/user/login`**:
+  - Valid credentials: Expect `200 OK`.
+  - Invalid credentials: Expect `401 Unauthorized`.
+
+- **GET `/user/:username`**:
+  - Valid username: Expect `200 OK`.
+  - Non-existent username: Expect `404 Not Found`.
+
+- **GET `/user/refresh-token`**:
+  - Valid refresh token: Expect `200 OK`.
+  - Invalid refresh token: Expect `401 Unauthorized`.
+
+- **POST `/user/logout`**:
+  - Valid access token: Expect `200 OK`.
+  - Invalid access token: Expect `401 Unauthorized`.
+
+- **DELETE `/user/:id`**:
+  - Valid UUID and admin role: Expect `200 OK`.
+  - Invalid UUID: Expect `400 Bad Request`.
+  - Non-admin user: Expect `403 Forbidden`.
+
+- **PATCH `/user/:id`**:
+  - Valid UUID and admin role: Expect `200 OK`.
+  - Invalid UUID: Expect `400 Bad Request`.
+  - Non-admin user: Expect `403 Forbidden`.
+
+---
+
+#### **2. Movie Routes (`moviesFlow.e2e.test.js`)**
+
+##### **Routes to Test**
+- **Protected Routes (Authentication Required)**:
+  - `GET /movies/`: Fetch all movies.
+  - `GET /movies/:id`: Fetch a movie by ID.
+
+- **Admin-Only Routes (Authentication + Admin Role Required)**:
+  - `POST /movies/`: Create a new movie.
+  - `DELETE /movies/:id`: Delete a movie by ID.
+  - `PATCH /movies/:id`: Update a movie by ID.
+
+##### **Testing Scenarios**
+- **Unauthenticated User**:
+  - Unauthorized: All movie routes.
+
+- **Authenticated User (Non-Admin)**:
+  - Allowed: Fetch all movies, fetch a movie by ID.
+  - Unauthorized: Create, delete, or update a movie.
+
+- **Authenticated Admin User**:
+  - Allowed: All actions (fetch, create, delete, update movies).
+
+- **Invalid Data**:
+  - Test invalid UUIDs, missing fields, invalid access tokens, etc.
+
+##### **Example Test Cases**
+- **GET `/movies/`**:
+  - Valid access token: Expect `200 OK`.
+  - Invalid or missing access token: Expect `401 Unauthorized`.
+
+- **GET `/movies/:id`**:
+  - Valid UUID and access token: Expect `200 OK`.
+  - Invalid UUID: Expect `400 Bad Request`.
+  - Non-existent movie: Expect `404 Not Found`.
+
+- **POST `/movies/`**:
+  - Valid data and admin role: Expect `201 Created`.
+  - Invalid data: Expect `400 Bad Request`.
+  - Non-admin user: Expect `403 Forbidden`.
+
+- **DELETE `/movies/:id`**:
+  - Valid UUID and admin role: Expect `200 OK`.
+  - Invalid UUID: Expect `400 Bad Request`.
+  - Non-admin user: Expect `403 Forbidden`.
+
+- **PATCH `/movies/:id`**:
+  - Valid UUID and admin role: Expect `200 OK`.
+  - Invalid UUID: Expect `400 Bad Request`.
+  - Non-admin user: Expect `403 Forbidden`.
+
+---
+
+#### **Tools and Libraries**
+- **Supertest**: For making HTTP requests and validating responses.
+- **Mocha/Chai**: For writing and running tests.
+- **Sinon**: For mocking and stubbing dependencies.
+- **Database Cleanup**: Ensure a clean state before each test (e.g., delete test users and movies).
 
 ---
 
@@ -166,56 +279,10 @@ Optional for simulating the complete API usage from a client perspective.
 
 - **Mocha:** Test framework.
 - **Chai:** Assertion library.
-- **Chai as Promised:** Extended assertions for promises (not yet used in all tests).
+- **Chai as Promised:** Extended assertions for promises (not used in all tests).
 - **Supertest:** HTTP request simulation.
 - **Sinon:** Mocks and stubs for unit tests.
 - **ESMock:** Handles issues with ES module imports.
 - **nyc:** Code coverage measurement.
 
 ---
-
-## Initial Setup
-
-1. Install dependencies:
-   ```bash
-   npm install --save-dev mocha chai chai-as-promised supertest sinon nyc esmock
-   ```
-2. Create `tests/` directory with subdirectories for each component:
-   ```
-   tests/
-   ├── controllers/
-   ├── middlewares/
-   ├── routes/
-   ├── utils/
-   └── models/
-   ```
-3. Configure the test script in `package.json`:
-   ```json
-   "scripts": {
-     "test": "mocha --recursive tests"
-   }
-   ```
-4. Run tests:
-   ```bash
-   npm test
-   ```
-5. Measure coverage:
-   ```bash
-   npx nyc npm test
-   ```
-
----
-
-## Next Steps
-
-1. **Implement Unit Tests:**
-  Start with middlewares and basic utilities to validate their isolated behavior.
-
-2. **Design Integration Tests:**
-  Simulate HTTP requests to endpoints, validating the complete request-to-response flow, including middleware, controllers, and database interactions.
-  
-3. **Define E2E Flows:**
-  Simulate real-world scenarios from a client’s perspective to validate the entire API.
-
-4. **Automate Tests:**
-  Set up a CI/CD pipeline (e.g., GitHub Actions) to execute tests on every code change.

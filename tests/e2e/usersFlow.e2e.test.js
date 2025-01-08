@@ -339,6 +339,132 @@ describe('E2E Tests for User Routes', () => {
       expect(res.body).to.have.property('error', 'The requested resource was not found.')
     })
   })
+
+  describe('Update User Route', () => {
+    let adminAccessToken, testUserId
+
+    beforeEach(async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      await cleanupTestUser({ dbConn: dbConn.userConn })
+
+      const adminUser = {
+        username: 'testUserAdmin',
+        password: 'password123',
+        email: 'testuseradmin@example.com',
+      }
+      await request.post('/user/register').send(adminUser)
+      const loginRes = await request.post('/user/login').send({
+        username: 'testUserAdmin',
+        password: 'password123',
+      })
+      adminAccessToken = loginRes.headers.authorization.split(' ')[1]
+
+      const testUser = {
+        username: 'testUser',
+        password: 'password123',
+        email: 'testuser@example.com',
+      }
+      const registerRes = await request.post('/user/register').send(testUser)
+      testUserId = registerRes.body.id
+    })
+
+    it('should return 200 for successful user update', async () => {
+      const res = await request
+        .patch(`/user/${testUserId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ email: 'updatedemail@example.com' })
+
+      expect(res.status).to.equal(200)
+      expect(res.body).to.have.property('message', 'User updated successfully.')
+      expect(res.body).to.have.property('id', testUserId)
+    })
+
+    it('should return 200 for successful role update (Admin only)', async () => {
+      const res = await request
+        .patch(`/user/${testUserId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ role: 'Admin' })
+
+      expect(res.status).to.equal(200)
+      expect(res.body).to.have.property('message', 'User updated successfully.')
+      expect(res.body).to.have.property('id', testUserId)
+    })
+
+    it('should return 400 for update with invalid UUID', async () => {
+      const res = await request
+        .patch('/user/invalidUUID')
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ email: 'updatedemail@example.com' })
+
+      expect(res.status).to.equal(400)
+      expect(res.body).to.have.property('error', 'Invalid UUID format.')
+    })
+
+    it('should return 400 for update with no valid fields', async () => {
+      const res = await request
+        .patch(`/user/${testUserId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ invalidField: 'value' })
+
+      expect(res.status).to.equal(400)
+      expect(res.body).to.have.property('error', 'Invalid input provided.')
+    })
+
+    it('should return 400 for update with invalid role', async () => {
+      const res = await request
+        .patch(`/user/${testUserId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ role: 'InvalidRole' })
+
+      expect(res.status).to.equal(400)
+      expect(res.body).to.have.property('error', 'Invalid input provided.')
+    })
+
+    it('should return 404 for update of non-existent user', async () => {
+      const nonExistentUserId = '00000000-0000-0000-0000-000000000000'
+      const res = await request
+        .patch(`/user/${nonExistentUserId}`)
+        .set('Authorization', `Bearer ${adminAccessToken}`)
+        .send({ email: 'updatedemail@example.com' })
+
+      expect(res.status).to.equal(404)
+      expect(res.body).to.have.property('error', 'The requested resource was not found.')
+    })
+  })
+
+  describe('Get User by Username Route', () => {
+    beforeEach(async () => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+      await cleanupTestUser({ dbConn: dbConn.userConn })
+
+      const testUser = {
+        username: 'testUser',
+        password: 'password123',
+        email: 'testuser@example.com',
+      }
+      await request.post('/user/register').send(testUser)
+    })
+
+    it('should return 200 for successful user fetch', async () => {
+      const res = await request.get('/user/testUser')
+
+      expect(res.status).to.equal(200)
+      expect(res.body).to.have.property('username', 'testUser')
+      expect(res.body).to.have.property('email', 'testuser@example.com')
+      expect(res.body).to.not.have.property('password')
+    })
+
+    it('should return 404 for non-existent user', async () => {
+      const res = await request.get('/user/nonExistentUser')
+
+      expect(res.status).to.equal(404)
+      expect(res.body).to.have.property('error', 'The requested resource was not found.')
+    })
+  })
 })
 
 async function cleanupTestUser() {

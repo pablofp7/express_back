@@ -218,7 +218,7 @@ describe('User Routes (Integration Tests)', () => {
         .set('Cookie', ['refreshToken=valid-refresh-token'])
 
       expect(res.status).to.equal(200)
-      expect(res.body).to.have.property('message', 'Logout successful.')
+      expect(res.body).to.have.property('message', 'Logout successful')
     })
 
     it('should return 401 if no access token is provided', async () => {
@@ -360,7 +360,7 @@ describe('User Routes (Integration Tests)', () => {
       jwtVerifyStub.returns({ id: 1, role: 'admin' })
 
       dbConn.query.onFirstCall().resolves([{ id: validUserId }])
-      dbConn.executeTransaction.onFirstCall().resolves({ rows: [] })
+      dbConn.executeTransaction.onFirstCall().resolves([{ affectedRows: 1 }])
 
       const res = await request
         .patch(`/user/${validUserId}`)

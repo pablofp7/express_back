@@ -187,7 +187,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.secondCall.args[0]).to.equal('valid-access-token')
       expect(res.clearCookie.calledOnce).to.be.true
       expect(res.status.calledOnceWith(200)).to.be.true
-      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
+      expect(res.json.calledOnceWith({ message: 'Logout successful' })).to.be.true
     })
 
     it('should throw a CustomError when there is not a refreshToken', async () => {
@@ -230,7 +230,7 @@ describe('UserController', () => {
       expect(userModelMock.revokeToken.calledOnceWith('valid-refresh-token')).to.be.true
       expect(res.clearCookie.calledOnce).to.be.true
       expect(res.status.calledOnceWith(200)).to.be.true
-      expect(res.json.calledOnceWith({ message: 'Logout successful.' })).to.be.true
+      expect(res.json.calledOnceWith({ message: 'Logout successful' })).to.be.true
     })
 
     it('should throw a CustomError if the refreshToken is not found on the db', async () => {

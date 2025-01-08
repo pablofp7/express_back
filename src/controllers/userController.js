@@ -265,7 +265,7 @@ export class UserController {
       userData: req.body,
     })
 
-    if (!isUpdated) {
+    if (!isUpdated || isUpdated.affectedRows < 1) {
       throw new CustomError({
         origError: new Error(`User with ID ${id} not found`),
         errorType: ERROR_TYPES.general.NOT_FOUND,

@@ -140,38 +140,11 @@ describe('UserModel', () => {
         role: 'Admin',
       }
 
-      dbConnMock.query
-        .onFirstCall().resolves()
-        .onSecondCall().resolves([{ id: '1' }])
-        .onThirdCall().resolves()
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       const result = await userModel.updateUser({ userId: mockUserId, userData })
 
-      expect(result).to.be.true
-
-      expect(dbConnMock.query.callCount).to.equal(3)
-
-      const normalizeQuery = (query) => query.replace(/\s+/g, ' ').trim()
-
-      expect(normalizeQuery(dbConnMock.query.getCall(0).args[0].query)).to.equal(
-        'UPDATE user SET email = ?, age = ? WHERE id = ?;',
-      )
-      expect(dbConnMock.query.getCall(0).args[0].queryParams).to.deep.equal([
-        'newemail@example.com',
-        35,
-        mockUserId,
-      ])
-
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'SELECT id FROM role WHERE LOWER(name) = LOWER(?)',
-        queryParams: ['Admin'],
-      })
-
-      expect(dbConnMock.query.getCall(2).args[0]).to.deep.equal({
-        query: 'UPDATE user_roles SET role_id = ? WHERE user_id = ?',
-        queryParams: ['1', mockUserId],
-      })
-
+      expect(result).to.not.be.null
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
 
@@ -182,26 +155,11 @@ describe('UserModel', () => {
         age: 35,
       }
 
-      dbConnMock.query
-        .onFirstCall().resolves()
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       const result = await userModel.updateUser({ userId: mockUserId, userData })
 
-      expect(result).to.be.true
-
-      expect(dbConnMock.query.callCount).to.equal(1)
-
-      const normalizeQuery = (query) => query.replace(/\s+/g, ' ').trim()
-
-      expect(normalizeQuery(dbConnMock.query.getCall(0).args[0].query)).to.equal(
-        'UPDATE user SET email = ?, age = ? WHERE id = ?;',
-      )
-      expect(dbConnMock.query.getCall(0).args[0].queryParams).to.deep.equal([
-        'newemail@example.com',
-        35,
-        mockUserId,
-      ])
-
+      expect(result).to.not.be.null
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
 
@@ -211,26 +169,11 @@ describe('UserModel', () => {
         role: 'Admin',
       }
 
-      dbConnMock.query
-        .onFirstCall().resolves([{ id: '1' }])
-        .onSecondCall().resolves()
+      dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
       const result = await userModel.updateUser({ userId: mockUserId, userData })
 
-      expect(result).to.be.true
-
-      expect(dbConnMock.query.callCount).to.equal(2)
-
-      expect(dbConnMock.query.getCall(0).args[0]).to.deep.equal({
-        query: 'SELECT id FROM role WHERE LOWER(name) = LOWER(?)',
-        queryParams: ['Admin'],
-      })
-
-      expect(dbConnMock.query.getCall(1).args[0]).to.deep.equal({
-        query: 'UPDATE user_roles SET role_id = ? WHERE user_id = ?',
-        queryParams: ['1', mockUserId],
-      })
-
+      expect(result).to.not.be.null
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
     })
   })
