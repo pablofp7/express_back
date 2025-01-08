@@ -32,10 +32,12 @@ jobs:
         run: docker-compose up -d
 
       - name: Run ESLint
-        run: npx eslint .
+        run: pnpm eslint .
 
       - name: Run tests
         run: pnpm test
+        env:
+          NODE_ENV: test
 
       - name: Stop services
         run: docker-compose down
