@@ -20,27 +20,29 @@ describe('CustomError', () => {
 
   it('should throw an error if origError is missing', () => {
     const errorType = ERROR_TYPES.auth.ACCESS_DENIED
-  
+
     try {
       new CustomError({ errorType })
-    } catch (error) {
+    }
+    catch (error) {
       expect(error.message).to.equal('The "origError" parameter is required to create a CustomError.')
     }
   })
-  
+
   it('should throw an error if errorType is malformed', () => {
     const origError = new Error('Original error message')
-  
+
     try {
       new CustomError({ origError, errorType: { invalid: 'type' } })
       throw new Error('Expected an error to be thrown but none was thrown')
-    } catch (error) {
+    }
+    catch (error) {
       expect(error.message).to.equal(
-        'The "errorType" parameter must be well-formed or will default to a generic error.'
+        'The "errorType" parameter must be well-formed or will default to a generic error.',
       )
     }
   })
-  
+
   it('should default to SERVER_ERROR if errorType is not provided', () => {
     const origError = new Error('Original error message')
 
@@ -78,7 +80,7 @@ describe('CustomError', () => {
     const customError = new CustomError({ origError, errorType })
 
     expect(customError.toString()).to.equal(
-      'CustomError: GENERAL_NOT_FOUND (Status: 404) - The requested resource was not found.'
+      'CustomError: GENERAL_NOT_FOUND (Status: 404) - The requested resource was not found.',
     )
   })
 })

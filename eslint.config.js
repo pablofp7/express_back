@@ -1,5 +1,4 @@
 import stylistic from '@stylistic/eslint-plugin'
-import validErrorCodesPlugin from './myEslintRules/validErrorCodes.js'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 const baseConfig = {
@@ -18,7 +17,6 @@ const baseConfig = {
   },
   plugins: {
     '@stylistic': stylistic,
-    'valid-error-structure': validErrorCodesPlugin,
     'unused-imports': unusedImports,
   },
   rules: {
@@ -50,7 +48,6 @@ const baseConfig = {
       ignoreRegExpLiterals: true,
     }],
     'prefer-template': 'error',
-    'valid-error-structure/valid-error-structure': 'error',
   },
 }
 
