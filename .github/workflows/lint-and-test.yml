@@ -18,10 +18,10 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root --password=rootPassword"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          --health-cmd="mysqladmin ping -h localhost -u testUser --password=testPassword"
+          --health-interval=20s
+          --health-timeout=10s
+          --health-retries=5
         env:
           MYSQL_ROOT_PASSWORD: rootPassword
           MYSQL_DATABASE: testdb
@@ -29,7 +29,6 @@ jobs:
           MYSQL_PASSWORD: testPassword
         volumes:
           - ./sqlScripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-          
 
     steps:
       - name: Checkout code
@@ -48,7 +47,7 @@ jobs:
 
       - name: Wait for MySQL to be ready
         run: |
-          until mysql -h 127.0.0.1 -P 3306 -u testUser -ptestPassword -e "SHOW DATABASES;" > /dev/null 2>&1; do
+          until mysql -h mysql -P 3306 -u testUser -ptestPassword -e "SHOW DATABASES;" > /dev/null 2>&1; do
             echo "Waiting for MySQL..."
             sleep 5
           done
@@ -56,7 +55,7 @@ jobs:
 
       - name: Verify database initialization
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
+          mysql -h mysql -P 3306 -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
 
       - name: Run ESLint
         run: pnpm eslint .
