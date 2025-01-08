@@ -21,12 +21,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
+      - name: Install pnpm
+        run: |
+          npm install -g pnpm
+
       - name: Build and start services
         run: docker-compose up -d
-
-      # - name: Verify database initialization
-      #   run: |
-      #     docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
 
       - name: Run ESLint
         run: pnpm eslint .
