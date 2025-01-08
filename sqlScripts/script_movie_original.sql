@@ -1,4 +1,4 @@
--- This script initializes the database for an updated MySQL implementation.
+-- This script initializes the database for movies with the MySQL implementation.
 -- It includes example data for movies.
 
 
