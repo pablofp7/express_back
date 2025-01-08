@@ -36,8 +36,6 @@ jobs:
 
       - name: Run tests
         run: pnpm test
-        env:
-          NODE_ENV: test
 
       - name: Stop services
         run: docker-compose down

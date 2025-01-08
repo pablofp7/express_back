@@ -25,6 +25,7 @@ describe('Database Configuration Validation', () => {
       DB_URL_SQL_LOCAL: null,
       DB_URL_SQL_TURSO: 'https://turso-url',
       DB_TOKEN_SQL_TURSO: 'turso-token',
+      NODE_ENV: 'test',
     }
 
     sinon.stub(process, 'env').value(env)
