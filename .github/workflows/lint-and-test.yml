@@ -1,15 +1,15 @@
-name: Lint and Test
+name: CI Workflow
 
 on:
   push:
     branches:
-      - main  
+      - main
   pull_request:
     branches:
-      - main  
+      - main
 
 jobs:
-  lint-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +19,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20.18.0  
-          cache: 'pnpm'         
+          node-version: 20.18.0
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -29,7 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Run ESLint
-        run: pnpm eslint .
+        run: pnpm run lint
 
-      - name: Run Tests
+      - name: Run tests
         run: pnpm test
