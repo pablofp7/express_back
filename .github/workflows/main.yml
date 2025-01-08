@@ -19,7 +19,7 @@ jobs:
       - name: Set up Docker
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose
+          sudo apt-get install -y docker-compose mysql-client
 
       - name: Install pnpm
         run: |
@@ -33,14 +33,18 @@ jobs:
 
       - name: Run ESLint
         run: pnpm eslint .
-
+        
+      - name: Wait for MySQL to be ready
+        run: |
+          DB_HOST=localhost
+          until mysqladmin ping -h"$DB_HOST" --silent; do
+            echo "Waiting for MySQL..."
+            sleep 1
+          done
+          echo "MySQL is ready!"
+          
       - name: Run tests
         run: pnpm test
-
-      - name: Print MySQL logs
-        if: failure()
-        run: docker-compose logs mysql
-
 
       - name: Stop services
         run: docker-compose down
