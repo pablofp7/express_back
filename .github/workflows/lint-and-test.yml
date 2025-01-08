@@ -12,6 +12,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root --password=rootPassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        env:
+          MYSQL_ROOT_PASSWORD: rootPassword
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testUser
+          MYSQL_PASSWORD: testPassword
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,6 +42,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysql -h 127.0.0.1 -P 3306 -u testUser -ptestPassword -e "SHOW DATABASES;" > /dev/null 2>&1; do
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+          echo "MySQL is ready!"
 
       - name: Run ESLint
         run: pnpm eslint .
