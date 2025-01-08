@@ -19,8 +19,8 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h mysql -u testUser --password=testPassword"
-          --health-interval=30s
-          --health-timeout=20s
+          --health-interval=60s
+          --health-timeout=30s
           --health-retries=5
         env:
           MYSQL_ROOT_PASSWORD: rootPassword
@@ -52,6 +52,9 @@ jobs:
             sleep 5
           done
           echo "MySQL is ready!"
+
+      - name: Print MySQL logs
+        run: docker logs <container_id>
 
       - name: Verify database initialization
         run: |
