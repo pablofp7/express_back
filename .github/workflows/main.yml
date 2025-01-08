@@ -24,14 +24,6 @@ jobs:
       - name: Build and start services
         run: docker-compose up -d
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "SHOW DATABASES;" > /dev/null 2>&1; do
-            echo "Waiting for MySQL..."
-            sleep 5
-          done
-          echo "MySQL is ready!"
-
       - name: Verify database initialization
         run: |
           docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
