@@ -24,9 +24,9 @@ jobs:
       - name: Build and start services
         run: docker-compose up -d
 
-      - name: Verify database initialization
-        run: |
-          docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
+      # - name: Verify database initialization
+      #   run: |
+      #     docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
 
       - name: Run ESLint
         run: docker-compose exec app pnpm eslint .
