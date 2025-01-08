@@ -29,10 +29,10 @@ jobs:
       #     docker-compose exec mysql mysql -h mysql -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
 
       - name: Run ESLint
-        run: docker-compose exec app pnpm eslint .
+        run: pnpm eslint .
 
       - name: Run tests
-        run: docker-compose exec app pnpm test
+        run: pnpm test
 
       - name: Stop services
         run: docker-compose down
