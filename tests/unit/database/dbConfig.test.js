@@ -73,7 +73,7 @@ describe('Database Configuration Validation', () => {
 
       sinon.stub(console, 'error')
       sinon.stub(process, 'env').value(mockEnv)
-
+      process.env.NODE_ENV = 'test'
       await esmock('../../../src/database/dbConfig.js', {})
 
       expect(processExitStub.calledOnceWithExactly(1)).to.be.true
