@@ -60,8 +60,15 @@ This project is a backend developed with **Express.js** that follows a **Model-C
    ```
 
    Then edit the `.env` file and complete the necessary variables according to your environment.
+  
+4. Set up MySQL with Docker (optional)
+  To run a MySQL instance using Docker and initialize the database:
+  ```bash
+  docker compose up -d
+  ```
+  As the docker-compose.yml is already on the project.
 
-4. Start the server based on the database you want to use:
+5. Start the server based on the database you want to use:
 
    To use MySQL:
 
