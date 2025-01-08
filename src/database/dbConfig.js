@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const envFile = process.env.NODE_ENV === 'test' ? 'tests/e2e/testsEnv' : '.env'
+const envFile = process.env.NODE_ENV === 'test' ? './tests/e2e/testsEnv' : './.env'
 process.loadEnvFile(envFile, 'utf-8')
 
 const dbConfigSchema = z.object({
