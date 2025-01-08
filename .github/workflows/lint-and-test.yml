@@ -27,8 +27,8 @@ jobs:
           MYSQL_DATABASE: testdb
           MYSQL_USER: testUser
           MYSQL_PASSWORD: testPassword
-        volumes:
-          - ./sqlScripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+        # volumes:
+        #   - ./sqlScripts/init.sql:/docker-entrypoint-initdb.d/init.sql
 
     steps:
       - name: Checkout code
