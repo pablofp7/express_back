@@ -27,6 +27,8 @@ jobs:
           MYSQL_DATABASE: testdb
           MYSQL_USER: testUser
           MYSQL_PASSWORD: testPassword
+        volumes:
+          - ./sqlScripts/init.sql:/docker-entrypoint-initdb.d/init.sql
 
     steps:
       - name: Checkout code
@@ -50,6 +52,10 @@ jobs:
             sleep 5
           done
           echo "MySQL is ready!"
+
+      - name: Verify database initialization
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u testUser -ptestPassword -e "USE testdb; SHOW TABLES;"
 
       - name: Run ESLint
         run: pnpm eslint .
