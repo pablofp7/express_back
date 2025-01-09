@@ -21,6 +21,10 @@ describe('MovieController', () => {
     validateMovieStub = sinon.stub()
     validatePartialMovieStub = sinon.stub()
 
+    sinon.stub(console, 'log')
+    sinon.stub(console, 'warn')
+    sinon.stub(console, 'error')
+
     const MockedController = await esmock('../../../src/controllers/movieController.js', {
       '../../../src/utils/uuidValidation.js': { checkUUID: checkUUIDStub },
       '../../../src/utils/movieValidation.js': {
@@ -77,10 +81,11 @@ describe('MovieController', () => {
       const mockMovie = { id: 1, title: 'Movie A' }
 
       checkUUIDStub.resolves(true)
-      movieModelMock.getById.resolves(mockMovie)
+      movieModelMock.getById.resolves([mockMovie])
 
       await movieController.getById(req, res, next)
 
+      console.log(`Mock movie: ${JSON.stringify(mockMovie)}`)
       expect(checkUUIDStub.calledOnceWith('1')).to.be.true
       expect(movieModelMock.getById.calledOnceWith({ id: '1' })).to.be.true
       expect(res.json.calledOnceWith(mockMovie)).to.be.true

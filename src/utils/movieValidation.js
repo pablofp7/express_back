@@ -42,9 +42,11 @@ const movieSchema = z.object({
 })
 
 export async function validateMovie(input) {
-  return movieSchema.safeParse(input).success
+  const result = movieSchema.safeParse(input)
+  return result.success
 }
 
 export async function validatePartialMovie(input) {
-  return movieSchema.partial().safeParse(input).success
+  const result = movieSchema.partial().safeParse(input)
+  return result.success
 }

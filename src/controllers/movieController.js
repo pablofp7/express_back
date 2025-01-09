@@ -25,9 +25,10 @@ export class MovieController {
     }
 
     const movies = await this.movieModel.getById({ id })
-    console.log(movies)
     if ((Array.isArray(movies) && movies.length > 0) || (!Array.isArray(movies) && movies)) {
-      return res.status(200).json(movies)
+      const [desMovie] = movies
+      console.log(`Llamado con: ${JSON.stringify(desMovie)}`)
+      return res.status(200).json(desMovie)
     }
     else {
       throw new CustomError({
@@ -84,6 +85,7 @@ export class MovieController {
     }
 
     if (!await validatePartialMovie(input)) {
+      console.log('Salta error')
       throw new CustomError({
         origError: new Error('Invalid movie data'),
         errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
@@ -127,7 +129,7 @@ export class MovieController {
       })
     }
 
-    console.log('Actualización de una película: ', id)
+    console.log('Actualización de una película: ', updatedMovie)
     res.status(200).json({
       message: 'Movie updated successfully',
       movie: updatedMovie,

@@ -168,12 +168,12 @@ describe('Movie Routes (Integration Tests)', () => {
 
       const res = await request.get(`/movie/${movieId}`).set('Authorization', `Bearer ${validToken}`)
 
-      const expectedResult = [{
+      const expectedResult = {
         id: movieId,
         title: 'Inception',
         genre: ['Sci-Fi'],
         director: 'Christopher Nolan',
-      }]
+      }
 
       expect(res.status).to.equal(200)
       expect(res.body).to.deep.equal(expectedResult)
