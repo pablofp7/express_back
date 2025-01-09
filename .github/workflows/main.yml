@@ -12,14 +12,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      DB_NAME_SQL_LOCAL: testdb
+      DB_HOST_SQL_LOCAL: localhost
+      DB_USER_SQL_LOCAL: testUser
+      DB_PASSWORD_SQL_LOCAL: testPassword
+      DB_PORT_SQL_LOCAL: 3306
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Install MySQL Server
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose mysql-client
+          sudo apt-get install -y mysql-server
+
+      - name: Start MySQL Service
+        run: |
+          sudo systemctl start mysql
+
+      - name: Configure MySQL
+        run: |
+          # Create the database
+          sudo mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME_SQL_LOCAL;"
+
+          # Create the user and grant privileges
+          sudo mysql -e "CREATE USER IF NOT EXISTS '$DB_USER_SQL_LOCAL'@'$DB_HOST_SQL_LOCAL' IDENTIFIED BY '$DB_PASSWORD_SQL_LOCAL';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME_SQL_LOCAL.* TO '$DB_USER_SQL_LOCAL'@'$DB_HOST_SQL_LOCAL';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
 
       - name: Install pnpm
         run: |
@@ -28,23 +49,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build and start services
-        run: docker-compose up -d
-
-      - name: Run ESLint
-        run: pnpm eslint .
-        
       - name: Wait for MySQL to be ready
         run: |
-          DB_HOST=localhost
-          until mysqladmin ping -h"$DB_HOST" --silent; do
+          until mysqladmin ping -h"$DB_HOST_SQL_LOCAL" --silent; do
             echo "Waiting for MySQL..."
             sleep 1
           done
           echo "MySQL is ready!"
-          
+
+      - name: Verify MySQL Connection
+        run: |
+          mysql -h "$DB_HOST_SQL_LOCAL" -u "$DB_USER_SQL_LOCAL" -p"$DB_PASSWORD_SQL_LOCAL" -e "USE $DB_NAME_SQL_LOCAL; SHOW TABLES;"
+
+      - name: Run ESLint
+        run: pnpm eslint .
+
       - name: Run tests
         run: pnpm test
-
-      - name: Stop services
-        run: docker-compose down
