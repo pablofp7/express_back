@@ -10,6 +10,9 @@ describe('originCallback', () => {
 
   beforeEach(() => {
     callback = sinon.stub()
+    sinon.stub(console, 'log')
+    sinon.stub(console, 'warn')
+    sinon.stub(console, 'error')
   })
 
   afterEach(() => {

@@ -43,8 +43,8 @@ describe('MovieModel', () => {
   describe('getAll', () => {
     it('should return all the movies when the genre is not provided', async () => {
       const mockMovies = [
-        { id: '1', title: 'Movie A', rate: 4.5, genres: 'Action, Comedy' },
-        { id: '2', title: 'Movie B', rate: null, genres: null },
+        { id: '1', title: 'Movie A', rate: 4.5, genre: 'Action, Comedy' },
+        { id: '2', title: 'Movie B', rate: null, genre: null },
       ]
 
       dbConnMock.query.resolves(mockMovies)
@@ -56,14 +56,14 @@ describe('MovieModel', () => {
       expect(dbConnMock.query.getCall(0).args[0].queryParams).to.deep.equal([])
 
       expect(result).to.deep.equal([
-        { id: '1', title: 'Movie A', rate: '4.5', genres: 'Action, Comedy' },
-        { id: '2', title: 'Movie B', rate: null, genres: null },
+        { id: '1', title: 'Movie A', rate: '4.5', genre: 'Action, Comedy' },
+        { id: '2', title: 'Movie B', rate: null, genre: null },
       ])
     })
 
     it('should return movies filtered by genre', async () => {
       const mockMovies = [
-        { id: '1', title: 'Movie A', rate: 4.5, genres: 'Action' },
+        { id: '1', title: 'Movie A', rate: 4.5, genre: 'Action' },
       ]
 
       dbConnMock.query.resolves(mockMovies)
@@ -75,13 +75,13 @@ describe('MovieModel', () => {
       expect(dbConnMock.query.getCall(0).args[0].queryParams).to.deep.equal(['action'])
 
       expect(result).to.deep.equal([
-        { id: '1', title: 'Movie A', rate: '4.5', genres: 'Action' },
+        { id: '1', title: 'Movie A', rate: '4.5', genre: 'Action' },
       ])
     })
   })
 
   describe('getById', () => {
-    it('shoud return a movie with its genres', async () => {
+    it('shoud return a movie with its genre', async () => {
       const mockMovie = [
         {
           id: 'mocked-id',
@@ -91,7 +91,7 @@ describe('MovieModel', () => {
           duration: 120,
           poster: 'mocked-poster',
           rate: 4.5,
-          genres: 'Action, Comedy',
+          genre: 'Action, Comedy',
         },
       ]
 
@@ -110,13 +110,13 @@ describe('MovieModel', () => {
         movie.poster, 
         movie.rate, 
         movie.id AS id, 
-        GROUP_CONCAT(DISTINCT genre.name) AS genres
+        GROUP_CONCAT(DISTINCT genre.name) AS genre
       FROM 
         movie
       LEFT JOIN 
-        movie_genres ON movie.id = movie_genres.movie_id
+        movie_genre ON movie.id = movie_genre.movie_id
       LEFT JOIN 
-        genre ON movie_genres.genre_id = genre.id
+        genre ON movie_genre.genre_id = genre.id
       WHERE 
         movie.id = ?
       GROUP BY 
@@ -134,14 +134,14 @@ describe('MovieModel', () => {
           duration: 120,
           poster: 'mocked-poster',
           rate: 4.5,
-          genres: 'Action, Comedy',
+          genre: ['Action', 'Comedy'],
         },
       ])
     })
   })
 
   describe('create', () => {
-    it('should create a movie with its genres', async () => {
+    it('should create a movie with its genre', async () => {
       const input = {
         title: 'Mocked Movie',
         year: 2023,
@@ -152,13 +152,13 @@ describe('MovieModel', () => {
         genre: ['Action', 'Comedy'],
       }
 
-      sinon.stub(movieModel, 'checkGenres').resolves([
+      sinon.stub(movieModel, 'checkGenre').resolves([
         { genreId: '1', genre: 'Action' },
         { genreId: '2', genre: 'Comedy' },
       ])
       dbConnMock.executeTransaction.callsFake(async (steps) => {
         for (const step of steps) {
-          await step() // Simula ejecutar cada paso en la transacción
+          await step()
         }
         return [, [
           { genreId: '1', genre: 'Action' },
@@ -176,7 +176,7 @@ describe('MovieModel', () => {
         duration: input.duration,
         poster: input.poster,
         rate: input.rate,
-        genres: ['Action', 'Comedy'],
+        genre: ['Action', 'Comedy'],
       })
 
       expect(dbConnMock.query.callCount).to.equal(3)
@@ -187,7 +187,7 @@ describe('MovieModel', () => {
   })
 
   describe('delete', () => {
-    it('should remove a movie and its associated genres', async () => {
+    it('should remove a movie and its associated genre', async () => {
       const movieId = 'mocked-id'
 
       dbConnMock.executeTransaction.resolves([, { affectedRows: 1 }])
@@ -201,29 +201,29 @@ describe('MovieModel', () => {
   })
 
   describe('update', () => {
-    it('should update a movie\'s fields and genres', async () => {
+    it('should update a movie\'s fields and genre', async () => {
       const movieId = 'mocked-id'
       const fields = [
         ['title', 'Updated Movie Title'],
         ['duration', 140],
       ]
-      const genres = ['Action', 'Comedy']
+      const genre = ['Action', 'Comedy']
 
       dbConnMock.executeTransaction.resolves([{ affectedRows: 1 }])
 
-      sinon.stub(movieModel, 'checkGenres').resolves([
+      sinon.stub(movieModel, 'checkGenre').resolves([
         { genreId: '1', genre: 'Action' },
         { genreId: '2', genre: 'Comedy' },
       ])
 
-      const result = await movieModel.update({ id: movieId, fields, genre: genres })
+      const result = await movieModel.update({ id: movieId, fields, genre })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
 
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
 
-    it('should update only the movie fields when no genres are provided', async () => {
+    it('should update only the movie fields when no genre are provided', async () => {
       const movieId = 'mocked-id'
       const fields = [['title', 'Updated Movie Title']]
 
@@ -236,27 +236,32 @@ describe('MovieModel', () => {
       expect(result).to.deep.equal({ affectedRows: 1 })
     })
 
-    it('should only update the genres when no fields are provided', async () => {
+    it('should only update the genre when no fields are provided', async () => {
       const movieId = 'mocked-id'
-      const genres = ['Drama', 'Thriller']
+      const genre = ['Drama', 'Thriller']
 
       dbConnMock.executeTransaction.resolves([, { affectedRows: 2 }])
 
-      sinon.stub(movieModel, 'checkGenres').resolves([
+      sinon.stub(movieModel, 'checkGenre').resolves([
         { genreId: '3', genre: 'Drama' },
         { genreId: '4', genre: 'Thriller' },
       ])
 
-      const result = await movieModel.update({ id: movieId, fields: [], genre: genres })
+      const result = await movieModel.update({ id: movieId, fields: [], genre })
 
       expect(dbConnMock.executeTransaction.calledOnce).to.be.true
       expect(result).to.deep.equal(undefined)
     })
   })
 
-  describe('checkGenres', () => {
-    it('should handle existing and non-existing genres', async () => {
-      const genres = ['Action', 'New Genre']
+  describe('checkGenre', () => {
+    beforeEach(() => {
+      sinon.stub(console, 'log')
+      sinon.stub(console, 'warn')
+      sinon.stub(console, 'error')
+    })
+    it('should handle existing and non-existing genre', async () => {
+      const genre = ['Action', 'New Genre']
 
       dbConnMock.query
         .onFirstCall().resolves([{ id: '1', name: 'Action' }])
@@ -265,7 +270,7 @@ describe('MovieModel', () => {
         .onCall(3).resolves([{ id: '1' }])
         .onCall(4).resolves([{ id: '2' }])
 
-      const result = await movieModel.checkGenres(genres)
+      const result = await movieModel.checkGenre(genre)
 
       expect(dbConnMock.query.callCount).to.equal(5)
 
@@ -301,7 +306,7 @@ describe('MovieModel', () => {
     })
 
     it('should throw an error if a genre ID is not found', async () => {
-      const genres = ['NonExistentGenre']
+      const genre = ['NonExistentGenre']
 
       dbConnMock.query
         .onFirstCall().resolves([])
@@ -309,7 +314,7 @@ describe('MovieModel', () => {
         .onCall(2).resolves([])
 
       try {
-        await movieModel.checkGenres(genres)
+        await movieModel.checkGenre(genre)
       }
       catch (error) {
         expect(error).to.be.instanceOf(CustomError)

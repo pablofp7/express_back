@@ -49,6 +49,9 @@ describe('UserController', () => {
       getHeader: sinon.stub().returns('refreshToken=value; Path=/; HttpOnly'),
     }
 
+    sinon.stub(console, 'log')
+    sinon.stub(console, 'warn')
+    sinon.stub(console, 'error')
     next = sinon.stub()
   })
 

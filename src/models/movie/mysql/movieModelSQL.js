@@ -21,19 +21,19 @@ export class MovieModel {
       query = `
         SELECT 
           movie.*,
-          GROUP_CONCAT(DISTINCT genre.name) AS genres
+          GROUP_CONCAT(DISTINCT genre.name) AS genre
         FROM 
           movie
         JOIN 
-          movie_genres ON movie.id = movie_genres.movie_id
+          movie_genre ON movie.id = movie_genre.movie_id
         JOIN 
-          genre ON genre.id = movie_genres.genre_id
+          genre ON genre.id = movie_genre.genre_id
         WHERE 
           movie.id IN (
             SELECT movie.id
             FROM movie
-            JOIN movie_genres ON movie.id = movie_genres.movie_id
-            JOIN genre ON genre.id = movie_genres.genre_id
+            JOIN movie_genre ON movie.id = movie_genre.movie_id
+            JOIN genre ON genre.id = movie_genre.genre_id
             WHERE LOWER(genre.name) = ?
           )
         GROUP BY 
@@ -45,13 +45,13 @@ export class MovieModel {
       query = `
         SELECT 
           movie.*,
-          GROUP_CONCAT(genre.name) AS genres
+          GROUP_CONCAT(genre.name) AS genre
         FROM 
           movie
         LEFT JOIN 
-          movie_genres ON movie.id = movie_genres.movie_id
+          movie_genre ON movie.id = movie_genre.movie_id
         LEFT JOIN 
-          genre ON genre.id = movie_genres.genre_id
+          genre ON genre.id = movie_genre.genre_id
         GROUP BY 
           movie.id;
       `
@@ -69,8 +69,8 @@ export class MovieModel {
         movieResponse.rate = String(movie.rate)
       }
 
-      if (movie.genres) {
-        movieResponse.genres = movie.genres
+      if (movie.genre) {
+        movieResponse.genre = movie.genre
           .split(',')
           .map((g) => g.trim())
           .join(', ')
@@ -93,13 +93,13 @@ export class MovieModel {
         movie.poster, 
         movie.rate, 
         movie.id AS id, 
-        GROUP_CONCAT(DISTINCT genre.name) AS genres
+        GROUP_CONCAT(DISTINCT genre.name) AS genre
       FROM 
         movie
       LEFT JOIN 
-        movie_genres ON movie.id = movie_genres.movie_id
+        movie_genre ON movie.id = movie_genre.movie_id
       LEFT JOIN 
-        genre ON movie_genres.genre_id = genre.id
+        genre ON movie_genre.genre_id = genre.id
       WHERE 
         movie.id = ?
       GROUP BY 
@@ -114,15 +114,15 @@ export class MovieModel {
     return movies.map((movie) => {
       const movieResponse = { ...movie }
 
-      // if (movie.rate) {
-      //   movieResponse.rate = String(movie.rate)
-      // }
-
-      if (movie.genres) {
-        movieResponse.genres = movie.genres
-          .split(',')
-          .map((genre) => genre.trim())
-          .join(', ')
+      if (movie.genre) {
+        if (Array.isArray(movie.genre)) {
+          movieResponse.genre = movie.genre
+        }
+        else if (typeof movie.genre === 'string') {
+          movieResponse.genre = movie.genre
+            .split(',')
+            .map((g) => g.trim())
+        }
       }
 
       return movieResponse
@@ -140,22 +140,22 @@ export class MovieModel {
       queryParams: [uuid, title, year, director, duration, poster, rate],
     })
 
-    const verifyAndInsertGenres = async () => {
-      const genresIDs = await this.checkGenres(genre)
+    const verifyAndInsertgenre = async () => {
+      const genreIDs = await this.checkGenre(genre)
       await Promise.all(
-        genresIDs.map(({ genreId }) =>
+        genreIDs.map(({ genreId }) =>
           this.databaseConnection.query({
-            query: 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)',
+            query: 'INSERT INTO movie_genre (movie_id, genre_id) VALUES (?, ?)',
             queryParams: [uuid, genreId],
           }),
         ),
       )
-      return genresIDs
+      return genreIDs
     }
 
-    const [, genresIDs] = await this.databaseConnection.executeTransaction([
+    const [, genreIDs] = await this.databaseConnection.executeTransaction([
       insertMovie,
-      verifyAndInsertGenres,
+      verifyAndInsertgenre,
     ])
 
     return {
@@ -166,13 +166,13 @@ export class MovieModel {
       duration,
       poster,
       rate,
-      genres: genresIDs.map(({ genre: g }) => g),
+      genre: genreIDs.map(({ genre: g }) => g),
     }
   }
 
   async delete({ id }) {
     const deleteRelations = async () => await this.databaseConnection.query({
-      query: 'DELETE FROM movie_genres WHERE movie_id = ?',
+      query: 'DELETE FROM movie_genre WHERE movie_id = ?',
       queryParams: [id],
     })
 
@@ -191,6 +191,10 @@ export class MovieModel {
 
   async update({ id, fields, genre }) {
     let query, queryParams
+    let genreIDs = null
+    if (genre) {
+      genreIDs = await this.checkGenre(genre)
+    }
 
     const updateFields = async () => {
       if (fields.length > 0) {
@@ -215,9 +219,9 @@ export class MovieModel {
       }
     }
 
-    const updateGenres = async () => {
+    const updategenre = async () => {
       if (genre) {
-        query = 'DELETE FROM movie_genres WHERE movie_id = ?'
+        query = 'DELETE FROM movie_genre WHERE movie_id = ?'
         queryParams = [id]
 
         await this.databaseConnection.query({
@@ -225,11 +229,9 @@ export class MovieModel {
           queryParams,
         })
 
-        const genresIDs = await this.checkGenres(genre)
-
         await Promise.all(
-          genresIDs.map(({ genreId }) => {
-            query = 'INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)'
+          genreIDs.map(({ genreId }) => {
+            query = 'INSERT INTO movie_genre (movie_id, genre_id) VALUES (?, ?)'
             queryParams = [id, genreId]
             return this.databaseConnection.query({
               query,
@@ -237,23 +239,23 @@ export class MovieModel {
             })
           }),
         )
-        return genresIDs
+        return genreIDs
       }
       else {
         return null
       }
     }
 
-    const [result] = await this.databaseConnection.executeTransaction([updateFields, updateGenres])
-
+    const [result] = await this.databaseConnection.executeTransaction([updateFields, updategenre])
     return result
   }
 
-  async checkGenres(genres) {
+  async checkGenre(received_genres) {
+    console.log(`Checking ${received_genres}`)
     const genreIds = []
-    const nonExistingGenres = []
+    const nonExistinggenre = []
 
-    for (const genre of genres) {
+    for (const genre of received_genres) {
       const trimmedGenre = genre.trim()
       const rows = await this.databaseConnection.query({
         query: `
@@ -266,13 +268,13 @@ export class MovieModel {
       }
       else {
         console.log(`El género "${trimmedGenre}" no existe.`)
-        nonExistingGenres.push(trimmedGenre)
+        nonExistinggenre.push(trimmedGenre)
       }
     }
 
-    if (nonExistingGenres.length > 0) {
+    if (nonExistinggenre.length > 0) {
       await Promise.all(
-        nonExistingGenres.map((genre) => {
+        nonExistinggenre.map((genre) => {
           return this.databaseConnection.query({
             query: 'INSERT INTO genre (name) VALUES (?)',
             queryParams: [genre],
@@ -281,9 +283,8 @@ export class MovieModel {
       )
     }
 
-    for (const genre of genres) {
+    for (const genre of received_genres) {
       const trimmedGenre = genre.trim()
-
       const rows = await this.databaseConnection.query({
         query: `
           SELECT id FROM genre WHERE LOWER(name) = LOWER(?)`,

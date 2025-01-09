@@ -11,7 +11,7 @@ services:
       MYSQL_USER: testUser               
       MYSQL_PASSWORD: testPassword       
     volumes:
-      - ./sqlScripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./sqlScripts/init_sql_server.sql:/docker-entrypoint-initdb.d/init_sql_server.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s

@@ -106,13 +106,12 @@ export class MovieController {
 
     if (fields.length === 0 && !genre) {
       throw new CustomError({
-        origError: new Error('No valid fields or genres provided to update'),
+        origError: new Error('No valid fields or genre provided to update'),
         errorType: ERROR_TYPES.movie.VALIDATION_ERROR,
       })
     }
 
     const result = await this.movieModel.update({ id, fields, genre })
-
     if (!result || result.affectedRows === 0) {
       throw new CustomError({
         origError: new Error(`Movie with id ${id} not found`),
@@ -121,7 +120,6 @@ export class MovieController {
     }
 
     const [updatedMovie] = await this.movieModel.getById({ id })
-    console.log(`result vale: ${result}. Mientras que updatedmovie: ${updatedMovie}`)
     if (!updatedMovie) {
       throw new CustomError({
         origError: new Error(`Movie with id ${id} not found after update`),

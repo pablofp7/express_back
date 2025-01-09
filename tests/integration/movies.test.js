@@ -171,7 +171,7 @@ describe('Movie Routes (Integration Tests)', () => {
       const expectedResult = [{
         id: movieId,
         title: 'Inception',
-        genre: 'Sci-Fi',
+        genre: ['Sci-Fi'],
         director: 'Christopher Nolan',
       }]
 
@@ -252,10 +252,11 @@ describe('Movie Routes (Integration Tests)', () => {
       dbConn.executeTransaction.onFirstCall().resolves([,[{ genre: 'Drama', genreId: 1 }, { genre: 'Action', genreId: 2 }]])
       const res = await request.post('/movie').set('Authorization', `Bearer ${validAdminToken}`).send(movieData)
 
+      console.log(res.body)
       expect(res.status).to.equal(201)
       expect(res.body).to.have.property('id')
       expect(res.body).to.have.property('title', 'Dunkirk')
-      expect(res.body).to.have.property('genres').that.deep.equal(['Drama', 'Action'])
+      expect(res.body).to.have.property('genre').that.deep.equal(['Drama', 'Action'])
       expect(res.body).to.have.property('director', 'Christopher Nolan')
       expect(res.body).to.have.property('year', 2017)
       expect(res.body).to.have.property('duration', 106)
@@ -444,10 +445,14 @@ describe('Movie Routes (Integration Tests)', () => {
       jwtVerifyStub.returns({ id: 1, role: 'admin' })
 
       dbConn.query.onFirstCall().resolves([{ id: 1, token: validAdminToken }])
-      dbConn.executeTransaction.onFirstCall().resolves([{ affectedRows: 1 }])
-      dbConn.query.onSecondCall().resolves([updatedMovie])
+      dbConn.query.onCall(1).resolves([{ genre: 'Drama', id: 1 }])
+      dbConn.query.onCall(2).resolves([{ genre: 'Action', id: 2 }])
+      dbConn.query.onCall(3).resolves([{ genre: 'Drama', id: 1 }])
+      dbConn.query.onCall(4).resolves([{ genre: 'Action', id: 2 }])
+      dbConn.query.onCall(5).resolves([updatedMovie])
+      dbConn.executeTransaction.onFirstCall().resolves([{ affectedRows: 1 }, updatedMovie])
 
-      const res = await request.patch(`/movie/${movieId}`).set('Authorization', `Bearer ${validAdminToken}`).send(updateData)
+      const res = await request.patch(`/movie/${movieId}`).set('Authorization', `Bearer ${validAdminToken}`).send(updatedMovie)
 
       console.log(`Expected movie: ${JSON.stringify(updatedMovie)}`)
       console.log(`Res body: ${JSON.stringify(res.body.movie)}`)
