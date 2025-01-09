@@ -283,6 +283,5 @@ End-to-End (E2E) tests simulate the complete API usage from a client perspective
 - **Supertest:** HTTP request simulation.
 - **Sinon:** Mocks and stubs for unit tests.
 - **ESMock:** Handles issues with ES module imports.
-- **nyc:** Code coverage measurement.
 
 ---

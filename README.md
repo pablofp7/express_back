@@ -194,17 +194,6 @@ You can run all tests or select a specific type using the following commands:
   ```bash
   npm run test:e2e
   ```
-
-### **Test Coverage**
-
-To measure test coverage, use the following command:
-
-```bash
-npx nyc npm test
-```
-
-This will generate a coverage report indicating which parts of the code are tested and which are not.
-
 <!-- ## Contribution
 
 1. Fork this repository.

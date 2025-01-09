@@ -1,0 +1,7 @@
+{
+  "include": ["src/**/*.js"], 
+  "exclude": ["node_modules"], 
+  "reporter": ["text", "html"], 
+  "all": true 
+}
+
