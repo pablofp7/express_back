@@ -53,11 +53,6 @@ jobs:
           done
           echo "MySQL is ready!"
 
-      - name: Verify MySQL Connection and Print Tables
-        run: |
-          echo "Showing tables in database $DB_NAME_SQL_LOCAL:"
-          mysql -h "$DB_HOST_SQL_LOCAL" -u "$DB_USER_SQL_LOCAL" -p"$DB_PASSWORD_SQL_LOCAL" -e "USE $DB_NAME_SQL_LOCAL; SHOW TABLES;"
-
       - name: Run ESLint
         run: pnpm eslint .
 
