@@ -170,6 +170,25 @@ describe('E2E Tests for Movies Routes', () => {
       expect(movieRes.status).to.equal(403)
       expect(movieRes.body).to.have.property('error', 'Access denied.')
     })
+
+    it('should return 401 for unauthenticated users', async () => {
+      const newMovie = {
+        title: 'Test Movie',
+        year: 2014,
+        genre: ['Action', 'Adventure'],
+        director: 'DirectorTest',
+        poster: 'https://www.mubis.es/media/users/10697/139077/cine-invisible-original.jpg',
+        rate: 10,
+        duration: 123,
+      }
+
+      const movieRes = await request
+        .post('/movie/')
+        .send(newMovie)
+
+      expect(movieRes.status).to.equal(401)
+      expect(movieRes.body).to.have.property('error', 'No token provided.')
+    })
   })
 
   describe('GetById Route', () => {
@@ -199,6 +218,14 @@ describe('E2E Tests for Movies Routes', () => {
 
       expect(movieRes.status).to.equal(404)
       expect(movieRes.body).to.have.property('error', 'Movie not found.')
+    })
+
+    it('should return 401 for unauthenticated users', async () => {
+      const movieRes = await request
+        .get(`/movie/${createdMovieId}`)
+
+      expect(movieRes.status).to.equal(401)
+      expect(movieRes.body).to.have.property('error', 'No token provided.')
     })
   })
 
@@ -242,6 +269,21 @@ describe('E2E Tests for Movies Routes', () => {
       expect(movieRes.status).to.equal(403)
       expect(movieRes.body).to.have.property('error', 'Access denied.')
     })
+
+    it('should return 401 for unauthenticated users', async () => {
+      const updatedMovie = {
+        title: 'Interstellar Updated',
+        genre: ['Sci-Fi'],
+        year: 2014,
+      }
+
+      const movieRes = await request
+        .patch(`/movie/${createdMovieId}`)
+        .send(updatedMovie)
+
+      expect(movieRes.status).to.equal(401)
+      expect(movieRes.body).to.have.property('error', 'No token provided.')
+    })
   })
 
   describe('Delete Route', () => {
@@ -270,6 +312,14 @@ describe('E2E Tests for Movies Routes', () => {
 
       expect(movieRes.status).to.equal(403)
       expect(movieRes.body).to.have.property('error', 'Access denied.')
+    })
+
+    it('should return 401 for unauthenticated users', async () => {
+      const movieRes = await request
+        .delete(`/movie/${createdMovieId}`)
+
+      expect(movieRes.status).to.equal(401)
+      expect(movieRes.body).to.have.property('error', 'No token provided.')
     })
   })
 })
