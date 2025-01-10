@@ -2,7 +2,7 @@ import stylistic from '@stylistic/eslint-plugin'
 import unusedImports from 'eslint-plugin-unused-imports'
 
 const baseConfig = {
-	ignores: ['**/node_modules/**', '**/dist/**'],
+  ignores: ['**/node_modules/**', '**/dist/**'],
   languageOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
