@@ -16,7 +16,7 @@ DB_URL_FREESQL="https://freesql.com"
 
 #Credenciales BBDD Mysql local
 DB_NAME_SQL_LOCAL=testdb
-DB_HOST_SQL_LOCAL='localhost'
+DB_HOST_SQL_LOCAL='db'
 DB_USER_SQL_LOCAL='testUser'
 DB_PASSWORD_SQL_LOCAL='testPassword'
 DB_PORT_SQL_LOCAL=3306
