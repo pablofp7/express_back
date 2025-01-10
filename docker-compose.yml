@@ -17,3 +17,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  backend:
+    container_name: backend_container
+    image: node:20-slim  
+    working_dir: /app
+    volumes:
+      - .:/app 
+    ports:
+      - "33333:33333"  
+    environment:
+      NODE_ENV: test 
+      DB_HOST: db  
+      DB_USER: testUser
+      DB_PASSWORD: testPassword
+      DB_NAME: testdb
+    command: pnpm start:test 
+    depends_on:
+      db:
+        condition: service_healthy  
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" 
+        max-file: "3"
